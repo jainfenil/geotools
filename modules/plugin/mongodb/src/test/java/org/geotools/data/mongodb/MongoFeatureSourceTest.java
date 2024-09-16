@@ -17,6 +17,9 @@
  */
 package org.geotools.data.mongodb;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -25,13 +28,20 @@ import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.filter.And;
+import org.opengis.filter.BinaryLogicOperator;
+import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
+import org.opengis.filter.IncludeFilter;
+import org.opengis.filter.Or;
 import org.opengis.filter.PropertyIsBetween;
 import org.opengis.filter.PropertyIsEqualTo;
 import org.opengis.filter.PropertyIsGreaterThan;
 import org.opengis.filter.PropertyIsLessThan;
 import org.opengis.filter.PropertyIsLike;
 import org.opengis.filter.PropertyIsNull;
+import org.opengis.filter.sort.SortBy;
+import org.opengis.filter.sort.SortOrder;
 import org.opengis.filter.spatial.BBOX;
 
 public abstract class MongoFeatureSourceTest extends MongoTestSupport {
@@ -53,12 +63,9 @@ public abstract class MongoFeatureSourceTest extends MongoTestSupport {
                 source.getBounds(q));
 
         SimpleFeatureCollection features = source.getFeatures(q);
-        SimpleFeatureIterator it = features.features();
-        try {
+        try (SimpleFeatureIterator it = features.features()) {
             assertTrue(it.hasNext());
             assertFeature(it.next(), 1);
-        } finally {
-            it.close();
         }
     }
 
@@ -71,18 +78,14 @@ public abstract class MongoFeatureSourceTest extends MongoTestSupport {
         Query q = new Query("ft1", f);
 
         assertEquals(1, source.getCount(q));
-        ReferencedEnvelope e = source.getBounds();
         assertEquals(
                 new ReferencedEnvelope(2d, 0d, 2d, 0d, DefaultGeographicCRS.WGS84),
                 source.getBounds(q));
 
         SimpleFeatureCollection features = source.getFeatures(q);
-        SimpleFeatureIterator it = features.features();
-        try {
+        try (SimpleFeatureIterator it = features.features()) {
             assertTrue(it.hasNext());
             assertFeature(it.next(), 0);
-        } finally {
-            it.close();
         }
     }
 
@@ -99,12 +102,9 @@ public abstract class MongoFeatureSourceTest extends MongoTestSupport {
                 source.getBounds(q));
 
         SimpleFeatureCollection features = source.getFeatures(q);
-        SimpleFeatureIterator it = features.features();
-        try {
+        try (SimpleFeatureIterator it = features.features()) {
             assertTrue(it.hasNext());
             assertFeature(it.next(), 1);
-        } finally {
-            it.close();
         }
 
         // check full string match
@@ -143,16 +143,13 @@ public abstract class MongoFeatureSourceTest extends MongoTestSupport {
                 source.getBounds(q));
 
         SimpleFeatureCollection features = source.getFeatures(q);
-        SimpleFeatureIterator it = features.features();
-        try {
+        try (SimpleFeatureIterator it = features.features()) {
             assertTrue(it.hasNext());
             SimpleFeature feature = it.next();
             assertFeature(feature, 1, false);
             // the stringProperty attribute should not be returned, since it was
             // used in the post-filter, but was not listed among the properties to fetch
             assertNull(feature.getAttribute("properties.stringProperty"));
-        } finally {
-            it.close();
         }
     }
 
@@ -226,12 +223,9 @@ public abstract class MongoFeatureSourceTest extends MongoTestSupport {
                 source.getBounds(q));
 
         SimpleFeatureCollection features = source.getFeatures(q);
-        SimpleFeatureIterator it = features.features();
-        try {
+        try (SimpleFeatureIterator it = features.features()) {
             assertTrue(it.hasNext());
             assertFeature(it.next(), 0);
-        } finally {
-            it.close();
         }
 
         // test no-match filter
@@ -262,12 +256,9 @@ public abstract class MongoFeatureSourceTest extends MongoTestSupport {
                 source.getBounds(q));
 
         SimpleFeatureCollection features = source.getFeatures(q);
-        SimpleFeatureIterator it = features.features();
-        try {
+        try (SimpleFeatureIterator it = features.features()) {
             assertTrue(it.hasNext());
             assertFeature(it.next(), 0);
-        } finally {
-            it.close();
         }
 
         // test no-match filter
@@ -288,5 +279,151 @@ public abstract class MongoFeatureSourceTest extends MongoTestSupport {
         SimpleFeatureSource source = dataStore.getFeatureSource("ft1");
         Query q = new Query("ft1", isNull);
         assertEquals(2, source.getCount(q));
+    }
+
+    public void testOrPostFilter() throws Exception {
+        FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
+        PropertyIsLike f1 =
+                ff.like(ff.property("properties.stringProperty"), "on%", "%", "_", "\\");
+        PropertyIsLike f2 =
+                ff.like(ff.property("properties.stringProperty"), "no%", "%", "_", "\\");
+        Or or = ff.or(f1, f2);
+        checkBinaryLogicOperatorFilterSplitting(or);
+    }
+
+    public void testAndPostFilter() throws Exception {
+        FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
+        PropertyIsLike f1 =
+                ff.like(ff.property("properties.stringProperty"), "on%", "%", "_", "\\");
+        PropertyIsLike f2 =
+                ff.like(ff.property("properties.stringProperty"), "no%", "%", "_", "\\");
+        And and = ff.and(f1, f2);
+        checkBinaryLogicOperatorFilterSplitting(and);
+    }
+
+    public void testSingleSortBy() throws Exception {
+        FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
+        SortBy[] sorts =
+                new SortBy[] {
+                    ff.sort("properties.doubleProperty", SortOrder.DESCENDING),
+                };
+
+        SimpleFeatureSource source = dataStore.getFeatureSource("ft1");
+        assertTrue(source.getQueryCapabilities().supportsSorting(sorts));
+        Query q = new Query("ft1", Filter.INCLUDE);
+        q.setSortBy(sorts);
+
+        SimpleFeatureCollection features = source.getFeatures(q);
+        try (SimpleFeatureIterator it = features.features()) {
+            List<Double> doubleValues = new ArrayList<>(3);
+            while (it.hasNext()) {
+                SimpleFeature feature = it.next();
+                doubleValues.add((Double) feature.getAttribute("properties.doubleProperty"));
+            }
+            assertEquals(doubleValues.size(), 3);
+            Double first = doubleValues.get(0);
+            Double second = doubleValues.get(1);
+            Double third = doubleValues.get(2);
+            assertTrue(first > second);
+            assertTrue(second > third);
+        }
+    }
+
+    public void testTwoSortBy() throws Exception {
+        FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
+        // sort before desc on string value a,b,b obtaining b,b,a
+        // then asc on date 2015-01-01T00:00, 2015-01-01T16:30, 2015-01-01T21:30
+        // obtaining second, third, one
+        SortBy[] sorts =
+                new SortBy[] {
+                    ff.sort("properties.stringProperty2", SortOrder.DESCENDING),
+                    ff.sort("properties.dateProperty", SortOrder.ASCENDING),
+                };
+
+        SimpleFeatureSource source = dataStore.getFeatureSource("ft1");
+        assertTrue(source.getQueryCapabilities().supportsSorting(sorts));
+        Query q = new Query("ft1", Filter.INCLUDE);
+        q.setSortBy(sorts);
+
+        SimpleFeatureCollection features = source.getFeatures(q);
+        try (SimpleFeatureIterator it = features.features()) {
+            List<Date> dates = new ArrayList<>(3);
+            List<String> stringAttributes = new ArrayList<>(3);
+            while (it.hasNext()) {
+                SimpleFeature feature = it.next();
+                dates.add((Date) feature.getAttribute("properties.dateProperty"));
+                stringAttributes.add((String) feature.getAttribute("properties.stringProperty2"));
+            }
+            assertEquals(stringAttributes.get(0), "b");
+            assertEquals(stringAttributes.get(1), "b");
+            assertEquals(stringAttributes.get(2), "a");
+            assertEquals(dates.size(), 3);
+            Date first = dates.get(0);
+            Date second = dates.get(1);
+            Date third = dates.get(2);
+            assertTrue(first.before(second));
+            assertTrue(second.after(third));
+        }
+    }
+
+    public void testTwoSortByWithNullableAttribute() throws Exception {
+        FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
+        // sort before on nullable so that second sort overcome
+        SortBy[] sorts =
+                new SortBy[] {
+                    ff.sort("properties.nullableAttribute", SortOrder.DESCENDING),
+                    ff.sort("properties.dateProperty", SortOrder.ASCENDING),
+                };
+
+        SimpleFeatureSource source = dataStore.getFeatureSource("ft1");
+        assertTrue(source.getQueryCapabilities().supportsSorting(sorts));
+        Query q = new Query("ft1", Filter.INCLUDE);
+        q.setSortBy(sorts);
+
+        SimpleFeatureCollection features = source.getFeatures(q);
+        try (SimpleFeatureIterator it = features.features()) {
+            List<Date> dates = new ArrayList<>(3);
+            while (it.hasNext()) {
+                SimpleFeature feature = it.next();
+                dates.add((Date) feature.getAttribute("properties.dateProperty"));
+            }
+            assertEquals(dates.size(), 3);
+            Date first = dates.get(0);
+            Date second = dates.get(1);
+            Date third = dates.get(2);
+            assertTrue(first.before(second));
+            assertTrue(second.before(third));
+        }
+    }
+
+    public void testNullSortBy() throws Exception {
+        SortBy[] sorts = new SortBy[] {SortBy.NATURAL_ORDER};
+
+        SimpleFeatureSource source = dataStore.getFeatureSource("ft1");
+        Query q = new Query("ft1", Filter.INCLUDE);
+        q.setSortBy(sorts);
+
+        SimpleFeatureCollection features = source.getFeatures(q);
+        try (SimpleFeatureIterator it = features.features()) {
+            List<Double> doubleValues = new ArrayList<>(3);
+            while (it.hasNext()) {
+                SimpleFeature feature = it.next();
+                doubleValues.add((Double) feature.getAttribute("properties.doubleProperty"));
+            }
+            assertEquals(doubleValues.size(), 3);
+        }
+    }
+
+    private void checkBinaryLogicOperatorFilterSplitting(BinaryLogicOperator filter)
+            throws Exception {
+        SimpleFeatureSource source = dataStore.getFeatureSource("ft1");
+        assertTrue(source instanceof MongoFeatureStore);
+        MongoFeatureStore mongoStore = (MongoFeatureStore) source;
+        MongoFeatureSource mongoSource = mongoStore.delegate;
+        Filter[] filters = mongoSource.splitFilter(filter);
+        Filter preFilter = filters[0];
+        assertTrue(preFilter instanceof BinaryLogicOperator);
+        Filter postFilter = filters[1];
+        assertTrue(postFilter instanceof IncludeFilter);
     }
 }

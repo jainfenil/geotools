@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import org.bson.types.ObjectId;
 import org.geotools.data.mongodb.complex.JsonSelectAllFunction;
 import org.geotools.data.mongodb.complex.JsonSelectFunction;
+import org.geotools.filter.FilterAttributeExtractor;
 import org.geotools.util.Converters;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -112,6 +113,9 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
     /** The schmema the encoder will use as reference to drive filter encoding */
     SimpleFeatureType featureType;
 
+    /** The whole world in WGS84 */
+    private static final Envelope WORLD = new Envelope(-179.99, 179.99, -89.99, 89.99);
+
     public FilterToMongo(CollectionMapper mapper) {
         this(mapper, new MongoGeometryBuilder());
     }
@@ -133,8 +137,6 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
      *
      * <p>The type of the attributes may drive how the filter is translated to a mongodb query
      * document.
-     *
-     * @param featureType
      */
     public void setFeatureType(SimpleFeatureType featureType) {
         this.featureType = featureType;
@@ -213,8 +215,44 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
     @Override
     public Object visit(Not filter, Object extraData) {
         BasicDBObject output = asDBObject(extraData);
+        // in case of a not operator we cannot simply wrap the child filter
+        // with a $not since mongo syntax is {property:{$not:{operator-expression}}}
+        // thus using a Visitor to find the PropertyName
+        class PropertyNameFinder extends FilterAttributeExtractor {
+            List<PropertyName> pNames = new ArrayList<>();
+
+            @Override
+            public Object visit(PropertyName expression, Object data) {
+                pNames.add(expression);
+                return super.visit(expression, data);
+            }
+
+            PropertyName getPropertyName() {
+                if (pNames.isEmpty()) {
+                    return null;
+                } else {
+                    return pNames.get(0);
+                }
+            }
+        }
+        PropertyNameFinder finder = new PropertyNameFinder();
+        filter.getFilter().accept(finder, null);
+        PropertyName pn = finder.getPropertyName();
+        // gets child filter as it is
         BasicDBObject expr = (BasicDBObject) filter.getFilter().accept(this, null);
-        output.put("$not", expr);
+        BasicDBObject dbObject;
+        if (pn != null) {
+            String strPn = mapper.getPropertyPath(pn.getPropertyName());
+            // get only the operator expression
+            Object exprValue = expr.get(strPn);
+            dbObject = new BasicDBObject("$not", exprValue);
+            // move up the PropertyName
+            output.put(strPn, dbObject);
+        } else {
+            // no PropertyName found throwing exception
+            throw new UnsupportedOperationException(
+                    "No propertyName found, cannot use $not as top level operator");
+        }
         return output;
     }
 
@@ -239,7 +277,7 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
 
     @Override
     public Object visit(PropertyIsEqualTo filter, Object extraData) {
-        return encodeBinaryComparisonOp(filter, null, extraData);
+        return encodeBinaryComparisonOp(filter, "$eq", extraData);
     }
 
     BasicDBObject encodeBinaryComparisonOp(
@@ -278,9 +316,8 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
     }
 
     private Class<?> getValueType(Expression e) {
-        Class<?> valueType = null;
 
-        valueType = getJsonSelectType(e);
+        Class<?> valueType = getJsonSelectType(e);
         if (valueType != null) {
             return valueType;
         }
@@ -367,7 +404,7 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
         // force full string match
         regex = "^" + regex + "$";
         Pattern p = Pattern.compile(regex, flags);
-        output.put((String) expr, p);
+        output.put(expr, p);
 
         return output;
     }
@@ -375,9 +412,12 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
     @Override
     public Object visit(PropertyIsNull filter, Object extraData) {
         BasicDBObject output = asDBObject(extraData);
-        String prop = convert(filter.getExpression().evaluate(null), String.class);
-        // mongodb filter { item: null } supports both: null value and nonexistent attribute
-        output.put(prop, null);
+        String prop = convert(filter.getExpression().accept(this, null), String.class);
+        // $eq matches either contain the item field whose value is null
+        // or that do not contain the field
+        BasicDBObject propIsNull = new BasicDBObject();
+        propIsNull.put("$eq", null);
+        output.put(prop, propIsNull);
         return output;
     }
 
@@ -387,7 +427,7 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
 
         Set<Identifier> ids = filter.getIdentifiers();
 
-        List<ObjectId> objectIds = new ArrayList<ObjectId>(ids.size());
+        List<ObjectId> objectIds = new ArrayList<>(ids.size());
         for (Identifier id : ids) {
             objectIds.add(new ObjectId(id.toString()));
         }
@@ -410,6 +450,11 @@ public class FilterToMongo implements FilterVisitor, ExpressionVisitor {
         Object e1 = filter.getExpression1().accept(this, Geometry.class);
 
         Envelope envelope = filter.getExpression2().evaluate(null, Envelope.class);
+
+        // Mongodb cannot deal with filters using geometries that span beyond the whole world
+        if (!WORLD.contains(envelope)) {
+            envelope = envelope.intersection(WORLD);
+        }
 
         DBObject geometryDBObject = geometryBuilder.toObject(envelope);
         addCrsToGeometryDBObject(geometryDBObject);

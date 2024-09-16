@@ -53,7 +53,7 @@ public class TileMatrixSet {
 
     private String wellKnownScaleSet;
 
-    CoordinateReferenceSystem coordinateReferenceSystem;
+    private CoordinateReferenceSystem coordinateReferenceSystem;
 
     private CRSEnvelope bbox;
 
@@ -65,7 +65,7 @@ public class TileMatrixSet {
 
     public void setCRS(String crs) throws IllegalArgumentException {
         try {
-            this.coordinateReferenceSystem = parseCoordinateReferenceSystem(crs);
+            this.setCoordinateReferenceSystem(parseCoordinateReferenceSystem(crs));
         } catch (Exception ex) {
             throw new IllegalArgumentException(
                     "Can't parse crs " + crs + ":" + ex.getMessage(), ex);
@@ -96,8 +96,14 @@ public class TileMatrixSet {
     protected CoordinateReferenceSystem parseCoordinateReferenceSystem(String crs)
             throws NoSuchAuthorityCodeException, FactoryException {
 
+        /**
+         * Take care of various badly behaved CRS that persist in the Web Mapping Community
+         * urn:ogc:def:crs:EPSG:6.18:3:3857 - comes from a typo in the WMTS spec
+         * (https://portal.ogc.org/files/?artifact_id=50398)
+         */
         if (crs.equalsIgnoreCase("epsg:900913")
-                || crs.equalsIgnoreCase("urn:ogc:def:crs:EPSG::900913")) {
+                || crs.equalsIgnoreCase("urn:ogc:def:crs:EPSG::900913")
+                || crs.equalsIgnoreCase("urn:ogc:def:crs:EPSG:6.18:3:3857")) {
             return WEB_MERCATOR_CRS;
         }
 
@@ -135,6 +141,7 @@ public class TileMatrixSet {
         this.wellKnownScaleSet = wellKnownScaleSet;
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getIdentifier()).append("\t").append(getCrs()).append("\n");
@@ -147,5 +154,9 @@ public class TileMatrixSet {
     /** @return the number of levels in this MatrixSet */
     public int size() {
         return matrices.size();
+    }
+
+    public void setCoordinateReferenceSystem(CoordinateReferenceSystem coordinateReferenceSystem) {
+        this.coordinateReferenceSystem = coordinateReferenceSystem;
     }
 }

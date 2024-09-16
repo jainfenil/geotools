@@ -47,11 +47,7 @@ import org.opengis.feature.simple.SimpleFeatureType;
  */
 @SuppressWarnings("PMD.SystemPrintln")
 public class Toolbox {
-    /**
-     * read args and delegate jobs
-     *
-     * @param args
-     */
+    /** read args and delegate jobs */
     static String MissingXMLConfig = "Missing XML config file ";
 
     static String MissingShapeFile = "Missing shape file ";
@@ -143,6 +139,7 @@ public class Toolbox {
         shapeDS.dispose();
     }
 
+    @SuppressWarnings("PMD.CloseResource") // writers are actually closed
     protected void generalizeShapeFile(
             File shapeFile, DataStore shapeDS, File targetDir, Double[] distanceArray)
             throws IOException {
@@ -152,14 +149,12 @@ public class Toolbox {
         DataStore[] dataStores = createDataStores(shapeFile, targetDir, ftype, distanceArray);
 
         SimpleFeatureCollection fcoll = fs.getFeatures();
-        SimpleFeatureIterator it = fcoll.features();
-        try {
+        List<FeatureWriter<SimpleFeatureType, SimpleFeature>> writers = new ArrayList<>();
+        try (SimpleFeatureIterator it = fcoll.features()) {
             int countTotal = fcoll.size();
 
-            List<FeatureWriter<SimpleFeatureType, SimpleFeature>> writers =
-                    new ArrayList<FeatureWriter<SimpleFeatureType, SimpleFeature>>();
-            for (int i = 0; i < dataStores.length; i++) {
-                writers.add(dataStores[i].getFeatureWriter(typeName, Transaction.AUTO_COMMIT));
+            for (DataStore dataStore : dataStores) {
+                writers.add(dataStore.getFeatureWriter(typeName, Transaction.AUTO_COMMIT));
             }
 
             int counter = 0;
@@ -178,11 +173,14 @@ public class Toolbox {
                 counter++;
                 showProgress(countTotal, counter);
             }
-            for (FeatureWriter<SimpleFeatureType, SimpleFeature> w : writers) {
-                w.close();
-            }
         } finally {
-            it.close();
+            for (FeatureWriter<SimpleFeatureType, SimpleFeature> w : writers) {
+                try {
+                    w.close();
+                } catch (Exception e) {
+                    // ignore on purpose and move on
+                }
+            }
         }
 
         for (DataStore ds : dataStores) {
@@ -216,7 +214,7 @@ public class Toolbox {
 
             File file = new File(newShapeFileDirName + newShapeFileRelativeName);
 
-            Map<String, Serializable> params = new HashMap<String, Serializable>();
+            Map<String, Serializable> params = new HashMap<>();
             params.put(ShapefileDataStoreFactory.URLP.key, file.toURI().toURL());
             result[i] = factory.createNewDataStore(params);
             result[i].createSchema(ft);

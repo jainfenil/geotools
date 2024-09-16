@@ -20,7 +20,15 @@
  */
 package org.geotools.referencing.operation.projection;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.asin;
+import static java.lang.Math.atan2;
+import static java.lang.Math.cos;
+import static java.lang.Math.hypot;
+import static java.lang.Math.log;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
 
 import java.awt.geom.Point2D;
 import java.util.Collection;
@@ -125,11 +133,10 @@ public class LambertAzimuthalEqualArea extends MapProjection {
         APA1 = P11 * es3 + P10 * es2;
         APA2 = P20 * es3;
 
-        final double sinphi;
         qp = qsfn(1);
         rq = sqrt(0.5 * qp);
         mmf = 0.5 / (1 - excentricitySquared);
-        sinphi = sin(latitudeOfOrigin);
+        final double sinphi = sin(latitudeOfOrigin);
         if (isSpherical) {
             sinb1 = sin(latitudeOfOrigin);
             cosb1 = cos(latitudeOfOrigin);
@@ -279,9 +286,9 @@ public class LambertAzimuthalEqualArea extends MapProjection {
                         lambda = 0.0;
                         phi = latitudeOfOrigin;
                     } else {
-                        double sCe, cCe, ab;
-                        sCe = 2.0 * asin(0.5 * rho / rq);
-                        cCe = cos(sCe);
+                        double ab;
+                        double sCe = 2.0 * asin(0.5 * rho / rq);
+                        double cCe = cos(sCe);
                         sCe = sin(sCe);
                         x *= sCe;
                         if (mode == OBLIQUE) {
@@ -433,9 +440,9 @@ public class LambertAzimuthalEqualArea extends MapProjection {
             // Compute using ellipsoidal formulas, for comparaison later.
             assert (ptDst = super.inverseTransformNormalized(x, y, ptDst)) != null;
 
-            double lambda, phi;
+            double lambda;
             final double rh = hypot(x, y);
-            phi = rh * 0.5;
+            double phi = rh * 0.5;
             if (phi > 1.0) {
                 throw new ProjectionException(ErrorKeys.TOLERANCE_ERROR);
             }

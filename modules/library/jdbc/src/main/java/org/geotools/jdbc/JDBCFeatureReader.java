@@ -124,6 +124,9 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
     protected JDBCReaderCallback callback = JDBCReaderCallback.NULL;
     private int[] attributeRsIndex;
 
+    /** enum support */
+    EnumMapper[] enumMappers;
+
     public JDBCFeatureReader(
             String sql,
             Connection cx,
@@ -138,8 +141,15 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
         st = cx.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         st.setFetchSize(featureSource.getDataStore().getFetchSize());
 
-        ((BasicSQLDialect) featureSource.getDataStore().getSQLDialect())
-                .onSelect(st, cx, featureType);
+        SQLDialect sqlDialect = featureSource.getDataStore().getSQLDialect();
+        if (sqlDialect instanceof BasicSQLDialect) {
+            ((BasicSQLDialect) sqlDialect).onSelect(st, cx, featureType);
+        } else if (sqlDialect instanceof PreparedStatementSQLDialect
+                && st instanceof PreparedStatement) {
+            ((PreparedStatementSQLDialect) sqlDialect)
+                    .onSelect((PreparedStatement) st, cx, featureType);
+        }
+
         runQuery(() -> st.executeQuery(sql), st);
     }
 
@@ -239,6 +249,15 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
 
         callback = dataStore.getCallbackFactory().createReaderCallback();
         callback.init(this);
+
+        // mapped enumeration support
+        List<AttributeDescriptor> descriptors = featureType.getAttributeDescriptors();
+        enumMappers = new EnumMapper[descriptors.size()];
+        for (int i = 0; i < enumMappers.length; i++) {
+            AttributeDescriptor ad = descriptors.get(i);
+            EnumMapper mapper = (EnumMapper) ad.getUserData().get(JDBCDataStore.JDBC_ENUM_MAP);
+            enumMappers[i] = mapper;
+        }
     }
 
     @FunctionalInterface
@@ -275,6 +294,7 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
         this.st = other.st;
         this.rs = other.rs;
         this.md = other.md;
+        this.enumMappers = other.enumMappers;
     }
 
     public void setNext(Boolean next) {
@@ -407,16 +427,23 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
                 // user (being the feature type reverse engineerd, it's unlikely a true
                 // conversion will be needed)
                 if (value != null) {
-                    Class binding = type.getType().getBinding();
-                    Object converted = Converters.convert(value, binding);
+                    EnumMapper mapper = enumMappers[i];
+                    Object converted = null;
+                    if (mapper != null) {
+                        value = mapper.fromInteger(Converters.convert(value, Integer.class));
+                        converted = value;
+                    } else {
+                        converted = dataStore.dialect.convertValue(value, type);
+                    }
+
                     if (converted != null && converted != value) {
                         value = converted;
                         if (dataStore.getLogger().isLoggable(Level.FINER)) {
                             String msg =
                                     value
                                             + " is not of type "
-                                            + binding.getName()
-                                            + ", attempting conversion";
+                                            + type.getType().getBinding().getName()
+                                            + ", value was converted";
                             dataStore.getLogger().finer(msg);
                         }
                     }
@@ -483,12 +510,10 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
      * Builds an array containing the position in the result set for each attribute. It takes into
      * account that rs positions start by one, about the exposed primary keys, and the fact that
      * exposed pk can be only partially selected in the output
-     *
-     * @return
      */
     private int[] buildAttributeRsIndex() {
         LinkedHashSet<String> pkColumns = dataStore.getColumnNames(pkey);
-        List<String> pkColumnsList = new ArrayList<String>(pkColumns);
+        List<String> pkColumnsList = new ArrayList<>(pkColumns);
         int[] indexes = new int[featureType.getAttributeCount()];
         int exposedPks = 0;
         for (int i = 0; i < indexes.length; i++) {
@@ -576,8 +601,9 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
 
         /** name index */
         HashMap<String, Integer> index;
+
         /** user data */
-        HashMap<Object, Object> userData = new HashMap<Object, Object>();
+        HashMap<Object, Object> userData = new HashMap<>();
 
         /** true if primary keys are not returned (the default is false) */
         boolean exposePrimaryKeys;
@@ -610,7 +636,7 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
             dirty = new boolean[values.length];
 
             // set up name lookup
-            index = new HashMap<String, Integer>();
+            index = new HashMap<>();
 
             int offset = 0;
 
@@ -727,6 +753,7 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
                                 values[index] = rs.getObject(rsindex);
                             }
                         }
+
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     } catch (SQLException e) {
@@ -737,7 +764,11 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
                     }
                 }
             }
-            return values[index];
+            Object value = values[index];
+            EnumMapper mapper = enumMappers[index];
+            if (mapper != null)
+                value = mapper.fromInteger(Converters.convert(value, Integer.class));
+            return value;
         }
 
         public void setAttribute(String name, Object value) {
@@ -757,6 +788,8 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
             if (dataStore.getLogger().isLoggable(Level.FINE)) {
                 dataStore.getLogger().fine("Setting " + index + " to " + value);
             }
+            EnumMapper mapper = enumMappers[index];
+            if (mapper != null) value = mapper.fromString(Converters.convert(value, String.class));
             values[index] = value;
             dirty[index] = true;
         }
@@ -779,6 +812,7 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
             return isDirty(index.get(name));
         }
 
+        /** Just releasing references, not an actual "Closeable" close */
         public void close() {
             rs = null;
             cx = null;
@@ -890,6 +924,7 @@ public class JDBCFeatureReader implements FeatureReader<SimpleFeatureType, Simpl
             return true;
         }
 
+        @SuppressWarnings("unchecked")
         public void setValue(Object value) {
             setValue((Collection<Property>) value);
         }

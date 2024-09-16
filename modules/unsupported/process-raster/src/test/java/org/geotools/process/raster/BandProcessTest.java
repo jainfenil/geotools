@@ -52,7 +52,6 @@ import org.opengis.coverage.grid.GridCoverageReader;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.metadata.spatial.PixelOrientation;
 import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 
 /**
@@ -122,7 +121,7 @@ public class BandProcessTest {
     @Test
     public void testEqualImages() {
         // Creation of a GridCoverage List
-        List<GridCoverage2D> coverages = new ArrayList<GridCoverage2D>();
+        List<GridCoverage2D> coverages = new ArrayList<>();
         coverages.add(coverage1);
         coverages.add(coverage2);
 
@@ -195,7 +194,7 @@ public class BandProcessTest {
     @Test
     public void testROI() throws IOException, MismatchedDimensionException, TransformException {
         // Creation of a GridCoverage List
-        List<GridCoverage2D> coverages = new ArrayList<GridCoverage2D>();
+        List<GridCoverage2D> coverages = new ArrayList<>();
         coverages.add(coverage1);
         coverages.add(coverage2);
 
@@ -261,14 +260,6 @@ public class BandProcessTest {
         assertEqualImageDim(mergedImg, selected1.getRenderedImage());
         assertEqualImageDim(mergedImg, selected2.getRenderedImage());
 
-        // Ensure equal images inside ROI. This requires cropping the images
-
-        // World to grid transform for mapping the ROI in the Raster apsce
-        MathTransform2D tr =
-                coverage1.getGridGeometry().getCRSToGrid2D(PixelOrientation.UPPER_LEFT);
-        // ROI object inthe Raster Space
-        ROI roi = new ROIGeometry(JTS.transform(geo, tr));
-
         // Coverage Crop for the final coverages
         CropCoverage crop = new CropCoverage();
 
@@ -292,7 +283,7 @@ public class BandProcessTest {
     @Test
     public void testDifferentImages() {
         // Creation of a GridCoverage List
-        List<GridCoverage2D> coverages = new ArrayList<GridCoverage2D>();
+        List<GridCoverage2D> coverages = new ArrayList<>();
         coverages.add(coverage1);
         coverages.add(coverage3);
 
@@ -371,12 +362,7 @@ public class BandProcessTest {
         ensureEqualImages(srcImg, crop2);
     }
 
-    /**
-     * Ensure that the input Images have the same dimensions
-     *
-     * @param mergedImg
-     * @param srcImg1
-     */
+    /** Ensure that the input Images have the same dimensions */
     private void assertEqualImageDim(RenderedImage mergedImg, RenderedImage srcImg1) {
         Assert.assertEquals(mergedImg.getMinX(), srcImg1.getMinX());
         Assert.assertEquals(mergedImg.getMinY(), srcImg1.getMinY());
@@ -384,12 +370,7 @@ public class BandProcessTest {
         Assert.assertEquals(mergedImg.getHeight(), srcImg1.getHeight());
     }
 
-    /**
-     * Method for checking that two bounding box are equals
-     *
-     * @param sourceEnv
-     * @param dstEnv
-     */
+    /** Method for checking that two bounding box are equals */
     private void assertEqualBBOX(Envelope2D sourceEnv, Envelope2D dstEnv) {
         double srcX = sourceEnv.x;
         double srcY = sourceEnv.y;
@@ -407,12 +388,7 @@ public class BandProcessTest {
         Assert.assertEquals(srcH, dstH, TOLERANCE);
     }
 
-    /**
-     * Method for checking that two images are equal
-     *
-     * @param source0
-     * @param source1
-     */
+    /** Method for checking that two images are equal */
     private void ensureEqualImages(RenderedImage source0, RenderedImage source1) {
         ImageWorker w = new ImageWorker(source0);
         // Subtraction between the two images
@@ -424,12 +400,7 @@ public class BandProcessTest {
         assertEquals(0, mean, TOLERANCE);
     }
 
-    /**
-     * Method for creating the ROI to test
-     *
-     * @param coverage
-     * @return
-     */
+    /** Method for creating the ROI to test */
     private Geometry createGeometry(GridCoverage2D coverage) {
         // Selection of the Envelope associated to the Coverage
         Envelope2D envelope = coverage.getEnvelope2D();
@@ -472,14 +443,7 @@ public class BandProcessTest {
         return poly;
     }
 
-    /**
-     * Method for checking if the coverage values outside ROI are NoData
-     *
-     * @param coverage
-     * @param feature
-     * @throws MismatchedDimensionException
-     * @throws TransformException
-     */
+    /** Method for checking if the coverage values outside ROI are NoData */
     private void ensureNoDataOutside(GridCoverage2D coverage, Geometry geom)
             throws MismatchedDimensionException, TransformException {
         // World to Grid transform used to project the Geometry to the RasterSpace

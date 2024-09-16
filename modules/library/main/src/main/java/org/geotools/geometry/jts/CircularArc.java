@@ -16,7 +16,12 @@
  */
 package org.geotools.geometry.jts;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.atan2;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
 
 import java.util.Arrays;
 import org.locationtech.jts.geom.Coordinate;
@@ -309,12 +314,7 @@ public class CircularArc {
         radius = Double.NaN;
     }
 
-    /**
-     * Checks if the two doubles provided are at a distance less than EPS
-     *
-     * @param a
-     * @param b
-     */
+    /** Checks if the two doubles provided are at a distance less than EPS */
     static boolean equals(double a, double b) {
         return Math.abs(a - b) < EPS;
     }
@@ -325,11 +325,7 @@ public class CircularArc {
         return result;
     }
 
-    /**
-     * Expands the given envelope
-     *
-     * @param envelope
-     */
+    /** Expands the given envelope */
     void expandEnvelope(Envelope envelope) {
         initializeCenterRadius();
 

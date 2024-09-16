@@ -104,8 +104,6 @@ public class EmfAppSchemaParser {
      * @param crs the CRS to be assigned to the geometric attributes in the parsed feature type.
      *     This information shall be provided here as the schema itself has no knowledge of the CRS
      *     used.
-     * @return
-     * @throws IOException
      */
     public static SimpleFeatureType parseSimpleFeatureType(
             final Configuration wfsConfiguration,
@@ -123,32 +121,28 @@ public class EmfAppSchemaParser {
     /**
      * Go through FeatureType description and convert to a SimpleFeatureType. Also ignores
      * AbstractFeatureType contributions such as name etc...
-     *
-     * @param realType
-     * @return
-     * @throws DataSourceException
      */
     public static SimpleFeatureType toSimpleFeatureType(final FeatureType realType)
             throws DataSourceException {
-        List<PropertyDescriptor> attributes;
         Collection<PropertyDescriptor> descriptors = realType.getDescriptors();
-        attributes = new ArrayList<PropertyDescriptor>(descriptors);
-        List<String> simpleProperties = new ArrayList<String>();
+        List<PropertyDescriptor> attributes = new ArrayList<>(descriptors);
+        List<String> simpleProperties = new ArrayList<>();
 
         // HACK HACK!! the parser sets no namespace to the properties so we're
         // doing a hardcode property name black list
         final Set<String> ignoreList =
-                new HashSet<String>(
+                new HashSet<>(
                         Arrays.asList(
                                 new String[] {
                                     GML.location.getLocalPart(),
-                                            GML.metaDataProperty.getLocalPart(),
-                                    GML.description.getLocalPart(), GML.name.getLocalPart(),
+                                    GML.metaDataProperty.getLocalPart(),
+                                    GML.description.getLocalPart(),
+                                    GML.name.getLocalPart(),
                                     GML.boundedBy.getLocalPart()
                                 }));
 
         if (attributes.size() > ignoreList.size()) {
-            Set<String> firstAtts = new HashSet<String>();
+            Set<String> firstAtts = new HashSet<>();
             for (int i = 0; i < ignoreList.size(); i++) {
                 firstAtts.add(attributes.get(i).getName().getLocalPart());
             }
@@ -205,8 +199,6 @@ public class EmfAppSchemaParser {
      * @param crs the CRS to be assigned to the geometric attributes in the parsed feature type.
      *     This information shall be provided here as the schema itself has no knowledge of the CRS
      *     used.
-     * @return
-     * @throws IOException
      */
     public static SimpleFeatureType parse(
             final Configuration wfsConfiguration,
@@ -217,7 +209,7 @@ public class EmfAppSchemaParser {
             throws IOException {
         XSDElementDeclaration elementDecl = parseFeatureType(featureName, schemaLocation);
 
-        Map bindings = wfsConfiguration.setupBindings();
+        Map<QName, Object> bindings = wfsConfiguration.setupBindings();
         if (mappedBindings != null) {
             bindings.putAll(mappedBindings);
         }
@@ -281,13 +273,7 @@ public class EmfAppSchemaParser {
         }
     }
 
-    /**
-     * TODO: add connectionfactory parameter to handle authentication, gzip, etc
-     *
-     * @param featureTypeName
-     * @param schemaLocation
-     * @return
-     */
+    /** TODO: add connectionfactory parameter to handle authentication, gzip, etc */
     private static XSDElementDeclaration parseFeatureType(
             final QName featureTypeName, final URL schemaLocation) throws DataSourceException {
         ApplicationSchemaConfiguration configuration;
@@ -303,8 +289,8 @@ public class EmfAppSchemaParser {
             throw new DataSourceException("Error parsing feature type for " + featureTypeName, e);
         }
 
-        XSDElementDeclaration elementDeclaration;
-        elementDeclaration = schemaIndex.getElementDeclaration(featureTypeName);
+        XSDElementDeclaration elementDeclaration =
+                schemaIndex.getElementDeclaration(featureTypeName);
         schemaIndex.destroy();
         if (elementDeclaration == null) {
             throw new DataSourceException("No XSDElementDeclaration found for " + featureTypeName);

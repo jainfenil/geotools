@@ -31,7 +31,6 @@ import org.geotools.data.Query;
 import org.geotools.data.ServiceInfo;
 import org.geotools.data.Transaction;
 import org.geotools.data.collection.DelegateFeatureReader;
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.util.SoftValueHashMap;
@@ -47,6 +46,7 @@ import org.opengis.filter.Filter;
  *
  * @author Andrea Aime - GeoSolutions
  */
+@SuppressWarnings("unchecked") // don't know how to make it work without raw types...
 class DataAccessStoreWrapper implements DataStore {
 
     DataAccess delegate;
@@ -139,13 +139,7 @@ class DataAccessStoreWrapper implements DataStore {
         return DataUtilities.simple(delegate.getFeatureSource(name));
     }
 
-    /**
-     * Returns a qualified name from an unqualified type name. Ensures a single value is found.
-     *
-     * @param typeName
-     * @return
-     * @throws IOException
-     */
+    /** Returns a qualified name from an unqualified type name. Ensures a single value is found. */
     private Name getNameFromLocal(String typeName) throws IOException {
         Name result = NAME_CACHE.get(typeName);
         if (result == null) {
@@ -179,9 +173,7 @@ class DataAccessStoreWrapper implements DataStore {
         if (fs instanceof SimpleFeatureStore) {
             ((SimpleFeatureStore) fs).setTransaction(transaction);
         }
-        SimpleFeatureIterator iterator = fs.getFeatures().features();
-        return new DelegateFeatureReader<SimpleFeatureType, SimpleFeature>(
-                fs.getSchema(), iterator);
+        return new DelegateFeatureReader<>(fs.getSchema(), fs.getFeatures().features());
     }
 
     @Override

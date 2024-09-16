@@ -121,7 +121,7 @@ public class XMLHandlerHints implements Map<String, Object> {
      */
     public static final Integer VALUE_FILTER_COMPLIANCE_HIGH = Integer.valueOf(2);
 
-    private Map<String, Object> map = new HashMap<String, Object>();
+    private Map<String, Object> map = new HashMap<>();
 
     public void clear() {
         map.clear();
@@ -184,7 +184,6 @@ public class XMLHandlerHints implements Map<String, Object> {
      * by {@link GeoTools#getEntityResolver(org.geotools.util.factory.Hints)} (usually {@link
      * PreventLocalEntityResolver} unless otherwise configured).
      *
-     * @param hints
      * @return EntityResolver provided by hints, or non-null default provided by {@link
      *     Hints#ENTITY_RESOLVER}.
      */

@@ -17,7 +17,7 @@
 package org.geotools.renderer.crs;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,8 +73,6 @@ public class ProjectionHandlerFinder {
     /**
      * Programmatically sets the number of wraps per direction the wrapping projection handlers will
      * apply
-     *
-     * @param wrapLimit
      */
     public static void setWrapLimit(int wrapLimit) {
         ProjectionHandlerFinder.WRAP_LIMIT = wrapLimit;
@@ -82,8 +80,7 @@ public class ProjectionHandlerFinder {
 
     private static LazySet<ProjectionHandlerFactory> getProjectionHandlerFactories() {
         Hints hints = GeoTools.getDefaultHints();
-        return new LazySet<ProjectionHandlerFactory>(
-                registry.getFactories(ProjectionHandlerFactory.class, null, hints));
+        return new LazySet<>(registry.getFactories(ProjectionHandlerFactory.class, null, hints));
     }
 
     /**
@@ -92,12 +89,11 @@ public class ProjectionHandlerFinder {
      * @param renderingArea The area to be painted (mind, the CRS must be property set for
      *     projection handling to work)
      * @param wrap Enable continuous map wrapping if it's possible for the current projection
-     * @throws FactoryException
      */
     public static ProjectionHandler getHandler(
             ReferencedEnvelope renderingArea, CoordinateReferenceSystem sourceCrs, boolean wrap)
             throws FactoryException {
-        return getHandler(renderingArea, sourceCrs, wrap, new HashMap());
+        return getHandler(renderingArea, sourceCrs, wrap, Collections.emptyMap());
     }
 
     /**
@@ -108,13 +104,12 @@ public class ProjectionHandlerFinder {
      * @param wrap Enable continuous map wrapping if it's possible for the current projection
      * @param projectionParameters map of options for the projection handler, allows finer
      *     configuration of the handler from the final user of it
-     * @throws FactoryException
      */
     public static ProjectionHandler getHandler(
             ReferencedEnvelope renderingArea,
             CoordinateReferenceSystem sourceCrs,
             boolean wrap,
-            Map projectionParameters)
+            Map<String, Object> projectionParameters)
             throws FactoryException {
         if (renderingArea.getCoordinateReferenceSystem() == null) return null;
 

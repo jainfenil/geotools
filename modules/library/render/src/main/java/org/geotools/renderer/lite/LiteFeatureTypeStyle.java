@@ -89,22 +89,17 @@ final class LiteFeatureTypeStyle {
     /**
      * use this for only the 1st FTS. We don't actually create an image for it -- we just use the
      * graphics. WATCH OUT FOR THIS. NOTE: image=null in this case
-     *
-     * @param graphics
-     * @param ruleList
-     * @param elseRuleList
-     * @param transformation
      */
     public LiteFeatureTypeStyle(
             Layer layer,
             Graphics2D graphics,
-            List ruleList,
-            List elseRuleList,
+            List<Rule> ruleList,
+            List<Rule> elseRuleList,
             Expression transformation) {
         this.layer = layer;
         this.graphics = graphics;
-        this.ruleList = (Rule[]) ruleList.toArray(new Rule[ruleList.size()]);
-        this.elseRules = (Rule[]) elseRuleList.toArray(new Rule[elseRuleList.size()]);
+        this.ruleList = ruleList.toArray(new Rule[ruleList.size()]);
+        this.elseRules = elseRuleList.toArray(new Rule[elseRuleList.size()]);
         this.transformation = transformation;
     }
 }

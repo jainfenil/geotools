@@ -16,10 +16,12 @@
  */
 package org.geotools.data.shapefile;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -63,8 +65,8 @@ public class ShapefileQuadTreeReadWriteTest extends TestCaseSupport {
 
     @Test
     public void testAll() throws Throwable {
-        for (int i = 0, ii = files.length; i < ii; i++) {
-            test(files[i]);
+        for (String file : files) {
+            test(file);
         }
     }
 
@@ -101,9 +103,9 @@ public class ShapefileQuadTreeReadWriteTest extends TestCaseSupport {
 
     private DataStore createDataStore(ShapefileDataStoreFactory fac, URL url, boolean memoryMapped)
             throws IOException {
-        Map params = new HashMap();
+        Map<String, Serializable> params = new HashMap<>();
         params.put(ShapefileDataStoreFactory.URLP.key, url);
-        params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.valueOf(true));
+        params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.TRUE);
         DataStore createDataStore = fac.createDataStore(params);
         return createDataStore;
     }
@@ -115,8 +117,7 @@ public class ShapefileQuadTreeReadWriteTest extends TestCaseSupport {
             ShapefileDataStoreFactory maker,
             boolean memorymapped)
             throws IOException, MalformedURLException {
-        DataStore s;
-        s = createDataStore(maker, tmp.toURI().toURL(), memorymapped);
+        DataStore s = createDataStore(maker, tmp.toURI().toURL(), memorymapped);
 
         s.createSchema(type);
         SimpleFeatureStore store = (SimpleFeatureStore) s.getFeatureSource(s.getTypeNames()[0]);
@@ -152,9 +153,7 @@ public class ShapefileQuadTreeReadWriteTest extends TestCaseSupport {
             ShapefileDataStoreFactory maker,
             boolean memorymapped)
             throws IOException, MalformedURLException, Exception {
-        DataStore s;
-        String typeName;
-        s = createDataStore(maker, tmp.toURI().toURL(), memorymapped);
+        DataStore s = createDataStore(maker, tmp.toURI().toURL(), memorymapped);
 
         s.createSchema(type);
 
@@ -164,7 +163,7 @@ public class ShapefileQuadTreeReadWriteTest extends TestCaseSupport {
         s.dispose();
 
         s = createDataStore(new ShapefileDataStoreFactory(), tmp.toURI().toURL(), true);
-        typeName = s.getTypeNames()[0];
+        String typeName = s.getTypeNames()[0];
 
         SimpleFeatureCollection two = s.getFeatureSource(typeName).getFeatures();
 
@@ -214,20 +213,16 @@ public class ShapefileQuadTreeReadWriteTest extends TestCaseSupport {
         }
     }
 
-    /**
-     * Test optimized getBounds(). Testing when filter is a bbox filter and a fidfilter
-     *
-     * @throws Exception
-     */
+    /** Test optimized getBounds(). Testing when filter is a bbox filter and a fidfilter */
     @Test
     public void testGetBoundsQuery() throws Exception {
         File file = copyShapefiles("shapes/streams.shp");
 
         ShapefileDataStoreFactory fac = new ShapefileDataStoreFactory();
 
-        Map params = new HashMap();
+        Map<String, Serializable> params = new HashMap<>();
         params.put(ShapefileDataStoreFactory.URLP.key, file.toURI().toURL());
-        params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.valueOf(true));
+        params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.TRUE);
         ShapefileDataStore ds = (ShapefileDataStore) fac.createDataStore(params);
 
         FilterFactory2 ff =
@@ -254,9 +249,5 @@ public class ShapefileQuadTreeReadWriteTest extends TestCaseSupport {
 
         assertTrue(result == null || result.equals(bounds));
         ds.dispose();
-    }
-
-    public static final void main(String[] args) throws Exception {
-        junit.textui.TestRunner.run(suite(ShapefileQuadTreeReadWriteTest.class));
     }
 }

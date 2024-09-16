@@ -39,7 +39,7 @@ public class ShapefileDirectoryFactory extends ShapefileDataStoreFactory {
         return "Takes a directory of shapefiles and exposes it as a data store";
     }
 
-    public boolean canProcess(Map params) {
+    public boolean canProcess(Map<String, ?> params) {
         // we don't try to steal single shapefiles away from the main factory
         if (super.canProcess(params)) {
             try {

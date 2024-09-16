@@ -112,7 +112,7 @@ public final class MarchingSquaresVectorizer {
             java.util.logging.Logger.getLogger("MarchingSquaresVectorizer");
 
     public static final List<Range<Integer>> DEFAULT_RANGES =
-            Collections.singletonList(new Range<Integer>(Integer.class, 0, 0));
+            Collections.singletonList(new Range<>(Integer.class, 0, 0));
 
     public static final double DEFAULT_SIMPLIFIER_FACTOR = 2.0d;
 
@@ -202,7 +202,7 @@ public final class MarchingSquaresVectorizer {
      * A stack containing images we need to dispose. We dispose them at the end of the processing to
      * avoid cache thrashing
      */
-    private Stack<RenderedImage> imagesStack = new Stack<RenderedImage>();
+    private Stack<RenderedImage> imagesStack = new Stack<>();
 
     /** Simple image properties holder to have all imageProperties grouped into a single place */
     private ImageProperties imageProperties = new ImageProperties();
@@ -233,7 +233,7 @@ public final class MarchingSquaresVectorizer {
         private void isFullyInvalid(
                 List<Polygon> geometriesList, RenderedImage inputRI, RenderingHints localHints)
                 throws Exception {
-            if (geometriesList.size() == 0) {
+            if (geometriesList.isEmpty()) {
                 // Must be a fully "invalid-Pixels" image, or an error occurred
                 ImageWorker w = new ImageWorker(inputRI);
 
@@ -403,11 +403,7 @@ public final class MarchingSquaresVectorizer {
         return footprint;
     }
 
-    /**
-     * When set to {@code true} (the default) will perform collinear vertices removal
-     *
-     * @param removeCollinear
-     */
+    /** When set to {@code true} (the default) will perform collinear vertices removal */
     public void setRemoveCollinear(boolean removeCollinear) {
         this.removeCollinear = removeCollinear;
     }
@@ -415,18 +411,12 @@ public final class MarchingSquaresVectorizer {
     /**
      * When set to {@code true} (the default) will perform extra checks on the output polygons to
      * make sure they are valid geometries
-     *
-     * @param forceValid
      */
     public void setForceValid(boolean forceValid) {
         this.forceValid = forceValid;
     }
 
-    /**
-     * When set to {@code true}, a simplified version of the footprint will be returned too
-     *
-     * @param computeSimplifiedFootprint
-     */
+    /** When set to {@code true}, a simplified version of the footprint will be returned too */
     public void setComputeSimplifiedFootprint(boolean computeSimplifiedFootprint) {
         this.computeSimplifiedFootprint = computeSimplifiedFootprint;
     }
@@ -434,8 +424,6 @@ public final class MarchingSquaresVectorizer {
     /**
      * Specifies which type of imageLoading ({@link ImageLoadingType}) to be used, {@link
      * ImageLoadingType#DEFERRED} vs {@link ImageLoadingType#IMMEDIATE}
-     *
-     * @param imageLoadingType
      */
     public void setImageLoadingType(ImageLoadingType imageLoadingType) {
         this.imageLoadingType = imageLoadingType;
@@ -445,11 +433,7 @@ public final class MarchingSquaresVectorizer {
         return imageLoadingType;
     }
 
-    /**
-     * Executes the MarchingSquares algorithm to find the footprint.
-     *
-     * @throws Exception
-     */
+    /** Executes the MarchingSquares algorithm to find the footprint. */
     public void process() throws Exception {
         int sampleDataType = -1;
         RandomIter iter = null;
@@ -498,7 +482,7 @@ public final class MarchingSquaresVectorizer {
             sampleDataType = inputRI.getSampleModel().getDataType();
             bitSet = new DrawableBitSet(imageProperties.width, imageProperties.height);
 
-            List<Polygon> geometriesList = new ArrayList<Polygon>();
+            List<Polygon> geometriesList = new ArrayList<>();
 
             final ScanInfo scanInfo = new ScanInfo();
             identifyGeometries(iter, sampleDataType, geometriesList, scanInfo);
@@ -559,13 +543,7 @@ public final class MarchingSquaresVectorizer {
         }
     }
 
-    /**
-     * Compute the I (Luminance) component of (HSI) from the RGB image
-     *
-     * @param inputRI
-     * @param localHints
-     * @return
-     */
+    /** Compute the I (Luminance) component of (HSI) from the RGB image */
     private RenderedImage computeLuminance(RenderedImage inputRI, RenderingHints localHints) {
         int numBands = inputRI.getSampleModel().getNumBands();
         final int tr = inputRI.getColorModel().getTransparency();
@@ -604,13 +582,9 @@ public final class MarchingSquaresVectorizer {
     /**
      * Check if the provided geometries list is empty. In case the reference raster doesn't contain
      * any valid points (isAllZeros), then return an empty GeometryCollection
-     *
-     * @param geometriesList
-     * @param isAllZeros
-     * @return
      */
     private boolean noGeometries(final List<Polygon> geometriesList, final boolean isAllZeros) {
-        if (geometriesList.size() == 0) {
+        if (geometriesList.isEmpty()) {
             if (isAllZeros) {
                 footprint = EMPTY_GEOMETRY;
                 simplifiedFootprint = EMPTY_GEOMETRY;
@@ -627,15 +601,11 @@ public final class MarchingSquaresVectorizer {
     /**
      * If validation is requested, scan the geometries and build valid polygons (in case they
      * aren't) by also removing holes.
-     *
-     * @param geometriesList
-     * @return
      */
     private List<Polygon> validateGeometries(List<Polygon> geometriesList) {
-        if (forceValid && (geometriesList.size() > 0)) {
-            List<Polygon> validated = new ArrayList<Polygon>(geometriesList.size());
-            for (int i = 0; i < geometriesList.size(); i++) {
-                Polygon polygon = geometriesList.get(i);
+        if (forceValid && (!geometriesList.isEmpty())) {
+            List<Polygon> validated = new ArrayList<>(geometriesList.size());
+            for (Polygon polygon : geometriesList) {
                 if (!polygon.isValid()) {
                     List<Polygon> validPolygons = JTS.makeValid(polygon, true);
                     validated.addAll(validPolygons);
@@ -652,10 +622,6 @@ public final class MarchingSquaresVectorizer {
      * Compute the footprint.
      *
      * @param geometriesList the List of all the geometries found across the dataset
-     * @param transform
-     * @throws MismatchedDimensionException
-     * @throws TransformException
-     * @throws FactoryException
      */
     private void computeFootprint(List<Polygon> geometriesList, MathTransform transform)
             throws MismatchedDimensionException, TransformException, FactoryException {
@@ -673,7 +639,7 @@ public final class MarchingSquaresVectorizer {
         // Compute the ROIShape
         if (!innerGeometry.isEmpty()) {
             LiteShape2 shape = new LiteShape2(innerGeometry, TRANSLATED_TX, null, false);
-            roiShape = (ROIShape) new ROIShape(shape);
+            roiShape = new ROIShape(shape);
         }
     }
 
@@ -683,9 +649,6 @@ public final class MarchingSquaresVectorizer {
      * @param geometriesList the list of available geometries
      * @param polygonIndex the index of the polygon to be simplified.
      * @param area the area of the reference polygon.
-     * @param transform
-     * @throws MismatchedDimensionException
-     * @throws TransformException
      */
     private void computeSimplifiedFootprint(
             final List<Polygon> geometriesList,
@@ -904,10 +867,6 @@ public final class MarchingSquaresVectorizer {
     /**
      * Rescale the image to byte/ushort and setup a lookup which maps valid values to zero. The
      * algorithm will indeed looks for zero (after the lookup mapping), which means valid pixels
-     *
-     * @param inputRI
-     * @param localHints
-     * @return
      */
     private RenderedImage prepareMaskingLookup(RenderedImage inputRI, RenderingHints localHints) {
         final int dataType = inputRI.getSampleModel().getDataType();
@@ -964,14 +923,7 @@ public final class MarchingSquaresVectorizer {
         return inputRI;
     }
 
-    /**
-     * Check if the image is fully covered by only valid values
-     *
-     * @param iter
-     * @param refValue
-     * @param geometriesList
-     * @return
-     */
+    /** Check if the image is fully covered by only valid values */
     private boolean checkFullyCovered(
             RandomIter iter, final int refValue, final List<Polygon> geometriesList) {
         int[] yvals = new int[] {imageProperties.minY, imageProperties.maxY};
@@ -999,14 +951,7 @@ public final class MarchingSquaresVectorizer {
         return true;
     }
 
-    /**
-     * Check if the image is fully covered by only valid values
-     *
-     * @param iter
-     * @param refValue
-     * @param geometriesList
-     * @return
-     */
+    /** Check if the image is fully covered by only valid values */
     private boolean checkFullyCovered(
             RandomIter iter, double refValue, List<Polygon> geometriesList) {
         for (int y = imageProperties.minY;
@@ -1052,14 +997,7 @@ public final class MarchingSquaresVectorizer {
         geometriesList.add(polygon);
     }
 
-    /**
-     * @param initialX
-     * @param initialY
-     * @param awtPolygon
-     * @param sampleDataType
-     * @return
-     * @throws TransformException
-     */
+    /** */
     private Polygon identifyPerimeter(
             final RandomIter iter,
             final int initialX,
@@ -1089,7 +1027,7 @@ public final class MarchingSquaresVectorizer {
 
         final Point2D worldPosition = new Point2D.Double(initialX - 1, initialY - 1);
         Coordinate startCoordinate = new Coordinate(worldPosition.getX(), worldPosition.getY());
-        List<Coordinate> coordinateList = new ArrayList<Coordinate>(200);
+        List<Coordinate> coordinateList = new ArrayList<>(200);
 
         int x = initialX;
         int y = initialY;
@@ -1214,7 +1152,7 @@ public final class MarchingSquaresVectorizer {
         coordinateList.add(startCoordinate);
 
         Coordinate[] coordinateArray =
-                (Coordinate[]) coordinateList.toArray(new Coordinate[coordinateList.size()]);
+                coordinateList.toArray(new Coordinate[coordinateList.size()]);
 
         LinearRing linearRing = GF.createLinearRing(coordinateArray);
         Polygon polygon = GF.createPolygon(linearRing, null);
@@ -1225,11 +1163,6 @@ public final class MarchingSquaresVectorizer {
     /**
      * Simple utility method checking if the tested pixel belongs to a lower corner 2*2 checker
      * board.
-     *
-     * @param x
-     * @param y
-     * @param sampleDataType
-     * @return
      */
     private boolean isLowerCorner(RandomIter iter, int x, int y, int sampleDataType) {
         return (value(iter, x + 1, y, sampleDataType, false) == 4)
@@ -1304,13 +1237,7 @@ public final class MarchingSquaresVectorizer {
         return false;
     }
 
-    /**
-     * Simple check returning where two double values are equal
-     *
-     * @param value
-     * @param pValue
-     * @return
-     */
+    /** Simple check returning where two double values are equal */
     public static final boolean areEqual(double value, double pValue) {
         return Math.abs(value - pValue) < DELTA;
     }

@@ -17,13 +17,8 @@
 package org.geotools.referencing.factory.epsg.hsql;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.TransformedDirectPosition;
 import org.geotools.metadata.iso.citation.Citations;
@@ -34,9 +29,12 @@ import org.geotools.referencing.operation.AbstractCoordinateOperation;
 import org.geotools.referencing.operation.AuthorityBackedFactory;
 import org.geotools.referencing.operation.BufferedCoordinateOperationFactory;
 import org.geotools.referencing.operation.TransformTestBase;
-import org.geotools.util.Arguments;
 import org.geotools.util.Classes;
 import org.geotools.util.factory.Hints;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.IdentifiedObject;
@@ -59,7 +57,7 @@ import org.opengis.referencing.operation.Transformation;
  * @version $Id$
  * @author Martin Desruisseaux (IRD)
  */
-public class OperationFactoryTest extends TestCase {
+public class OperationFactoryTest {
 
     protected CRSAuthorityFactory crsAuthFactory;
 
@@ -68,30 +66,6 @@ public class OperationFactoryTest extends TestCase {
 
     /** The default transformations factory. */
     protected CoordinateOperationFactory opFactory;
-
-    /**
-     * Run the suite from the command line. If {@code "-log"} flag is specified on the command-line,
-     * then the logger will be set to {@link Level#CONFIG}. This is usefull for tracking down which
-     * data source is actually used.
-     */
-    public static void main(final String[] args) {
-        final Arguments arguments = new Arguments(args);
-        final boolean log = arguments.getFlag("-log");
-        arguments.getRemainingArguments(0);
-        org.geotools.util.logging.Logging.GEOTOOLS.forceMonolineConsoleOutput(
-                log ? Level.CONFIG : null);
-        junit.textui.TestRunner.run(suite());
-    }
-
-    /** Returns the test suite. */
-    public static Test suite() {
-        return new TestSuite(OperationFactoryTest.class);
-    }
-
-    /** Constructs a test case with the given name. */
-    public OperationFactoryTest(final String name) {
-        super(name);
-    }
 
     /** Returns the first identifier for the specified object. */
     private static String getIdentifier(final IdentifiedObject object) {
@@ -102,7 +76,8 @@ public class OperationFactoryTest extends TestCase {
      * Sets up the fixture, for example, open a network connection. This method is called before a
      * test is executed.
      */
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         if (crsAuthFactory == null) {
             crsAuthFactory = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null);
         }
@@ -118,38 +93,40 @@ public class OperationFactoryTest extends TestCase {
      * Tears down the fixture, for example, close a network connection. This method is called after
      * a test is executed.
      */
-    protected void tearDown() throws Exception {}
+    @After
+    public void tearDown() throws Exception {}
 
     /**
      * Tests the creation of an operation from EPSG:4230 to EPSG:4326. They are the same CRS than
      * the one tested in {@link DefaultDataSourceTest#testTransformations}.
      */
+    @Test
     public void testCreate() throws FactoryException {
-        CoordinateReferenceSystem sourceCRS;
-        CoordinateReferenceSystem targetCRS;
-        CoordinateOperation operation;
 
         crsAuthFactory = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null);
         opFactory = ReferencingFactoryFinder.getCoordinateOperationFactory(null);
-        sourceCRS = crsAuthFactory.createCoordinateReferenceSystem("4230");
-        targetCRS = crsAuthFactory.createCoordinateReferenceSystem("4326");
-        operation = opFactory.createOperation(sourceCRS, targetCRS);
+        CoordinateReferenceSystem sourceCRS =
+                crsAuthFactory.createCoordinateReferenceSystem("4230");
+        CoordinateReferenceSystem targetCRS =
+                crsAuthFactory.createCoordinateReferenceSystem("4326");
+        CoordinateOperation operation = opFactory.createOperation(sourceCRS, targetCRS);
 
-        assertSame(sourceCRS, operation.getSourceCRS());
-        assertSame(targetCRS, operation.getTargetCRS());
-        assertSame(operation, opFactory.createOperation(sourceCRS, targetCRS));
-        assertTrue(
+        Assert.assertSame(sourceCRS, operation.getSourceCRS());
+        Assert.assertSame(targetCRS, operation.getTargetCRS());
+        Assert.assertSame(operation, opFactory.createOperation(sourceCRS, targetCRS));
+        Assert.assertTrue(
                 "Expected a buffered factory but got " + opFactory.getClass().getName(),
                 opFactory instanceof BufferedCoordinateOperationFactory);
-        assertTrue(
+        Assert.assertTrue(
                 "EPSG authority factory not found.",
                 ((BufferedCoordinateOperationFactory) opFactory)
                                 .getImplementationHints()
                                 .get(Hints.COORDINATE_OPERATION_FACTORY)
                         instanceof AuthorityBackedFactory);
-        assertEquals("1612", getIdentifier(operation)); // See comment in DefaultDataSourceTest.
-        assertEquals(1.0, AbstractCoordinateOperation.getAccuracy(operation), 1E-6);
-        assertTrue(operation instanceof Transformation);
+        Assert.assertEquals(
+                "1612", getIdentifier(operation)); // See comment in DefaultDataSourceTest.
+        Assert.assertEquals(1.0, AbstractCoordinateOperation.getAccuracy(operation), 1E-6);
+        Assert.assertTrue(operation instanceof Transformation);
         /*
          * Tests a transformation not backed directly by an authority factory.
          * However, the inverse transform may exist in the authority factory.
@@ -157,27 +134,28 @@ public class OperationFactoryTest extends TestCase {
         sourceCRS = crsAuthFactory.createCoordinateReferenceSystem("4326");
         targetCRS = crsAuthFactory.createCoordinateReferenceSystem("2995");
         operation = opFactory.createOperation(sourceCRS, targetCRS);
-        assertTrue(
+        Assert.assertTrue(
                 "This test needs an operation not backed by the EPSG factory.",
                 operation.getIdentifiers().isEmpty());
         // Should contains exactly one transformations and an arbitrary number of conversions.
-        assertTrue(operation instanceof ConcatenatedOperation);
+        Assert.assertTrue(operation instanceof ConcatenatedOperation);
         int count = 0;
-        for (final Iterator it = ((ConcatenatedOperation) operation).getOperations().iterator();
-                it.hasNext(); ) {
-            final CoordinateOperation op = (CoordinateOperation) it.next();
+        for (org.opengis.referencing.operation.SingleOperation singleOperation :
+                ((ConcatenatedOperation) operation).getOperations()) {
+            final CoordinateOperation op = (CoordinateOperation) singleOperation;
             if (op instanceof Transformation) {
                 count++;
             } else {
-                assertTrue(
+                Assert.assertTrue(
                         "Expected Conversion but got "
                                 + Classes.getShortName(AbstractCoordinateOperation.getType(op))
                                 + ". ",
                         (op instanceof Conversion));
             }
         }
-        assertEquals("The coordinate operation should contains exactly 1 transformation", 1, count);
-        assertTrue(AbstractCoordinateOperation.getAccuracy(operation) <= 25);
+        Assert.assertEquals(
+                "The coordinate operation should contains exactly 1 transformation", 1, count);
+        Assert.assertTrue(AbstractCoordinateOperation.getAccuracy(operation) <= 25);
     }
 
     /**
@@ -186,6 +164,7 @@ public class OperationFactoryTest extends TestCase {
      *
      * <p>This test isolates a regression introduced during GEOT-22 change of vector library.
      */
+    @Test
     public void testTransformedDirectPosition() throws Exception {
         CoordinateReferenceSystem requestedCRS =
                 CRS.parseWKT(
@@ -246,14 +225,15 @@ public class OperationFactoryTest extends TestCase {
         // geoserver vecmath:  TransformedDirectPosition[214741.10238960697, 26957.60506898933]
         // geoserver    ejml:  TransformedDirectPosition[214636.7447572897,  27218.077500249085]
         // geotools     ejml:  TransformedDirectPosition[214636.7447572897,  27218.077500249085]
-        assertEquals(expected.getOrdinate(0), arbitraryToInternal.getOrdinate(0), 1e-9);
-        assertEquals(expected.getOrdinate(1), arbitraryToInternal.getOrdinate(1), 1e-9);
+        Assert.assertEquals(expected.getOrdinate(0), arbitraryToInternal.getOrdinate(0), 1e-9);
+        Assert.assertEquals(expected.getOrdinate(1), arbitraryToInternal.getOrdinate(1), 1e-9);
     }
 
     /**
      * Tests findOperations method for a pair of known CRSs. 23030 (Projected) to 4326 (geographic
      * 2D) with different datum
      */
+    @Test
     public void testFindOperationsProjected2Geographic() throws Exception {
         String source = "EPSG:23030";
         String target = "EPSG:4326";
@@ -262,7 +242,8 @@ public class OperationFactoryTest extends TestCase {
 
         Set<CoordinateOperation> operations = findOperations(source, target);
         int size = operations.size();
-        assertTrue(size >= min); // at least min operations should be registered in the database for
+        Assert.assertTrue(
+                size >= min); // at least min operations should be registered in the database for
         // this CRS pair
         assertOperationContained(operations, expectedText);
     }
@@ -271,13 +252,14 @@ public class OperationFactoryTest extends TestCase {
      * Tests findOperations method for a pair of known CRSs. 25830 (Projected) to 3035 (Projected),
      * same datum
      */
+    @Test
     public void testFindOperationsProjected2ProjectedSameDatum() throws Exception {
         String source = "EPSG:25830";
         String target = "EPSG:3035";
         String expectedText = "AUTHORITY[\"EPSG\",\"19986\"]";
 
         Set<CoordinateOperation> operations = findOperations(source, target);
-        assertTrue(operations.size() == 1); // same datum, exactly one operation expected
+        Assert.assertEquals(1, operations.size()); // same datum, exactly one operation expected
         assertOperationContained(operations, expectedText);
     }
 
@@ -285,6 +267,7 @@ public class OperationFactoryTest extends TestCase {
      * Tests findOperations method for a pair of known CRSs. 23030 (Projected) to 3034 (Projected),
      * with different datum
      */
+    @Test
     public void testFindOperationsProjected2ProjectedDiffDatum() throws Exception {
         String source = "EPSG:3034";
         String target = "EPSG:23030";
@@ -293,7 +276,8 @@ public class OperationFactoryTest extends TestCase {
 
         Set<CoordinateOperation> operations = findOperations(source, target);
         int size = operations.size();
-        assertTrue(size >= min); // at least min operations should be registered in the database for
+        Assert.assertTrue(
+                size >= min); // at least min operations should be registered in the database for
         // this CRS pair
         assertOperationContained(operations, expectedText);
     }
@@ -302,6 +286,7 @@ public class OperationFactoryTest extends TestCase {
      * Tests findOperations method for a pair of known CRSs. 4258 (Geographic2D) to 4326
      * (Geographic2D), with different datum
      */
+    @Test
     public void testFindOperationsGeographic2Geographic() throws Exception {
         String source = "EPSG:4258";
         String target = "EPSG:4326";
@@ -310,7 +295,8 @@ public class OperationFactoryTest extends TestCase {
 
         Set<CoordinateOperation> operations = findOperations(source, target);
         int size = operations.size();
-        assertTrue(size >= min); // at least min operations should be registered in the database for
+        Assert.assertTrue(
+                size >= min); // at least min operations should be registered in the database for
         // this CRS pair
         assertOperationContained(operations, expectedText);
     }
@@ -319,6 +305,7 @@ public class OperationFactoryTest extends TestCase {
      * Tests findOperations method for a pair of known CRSs when a nadcon grid transformation exists
      * among them: 4258 (Geographic2D) to 4326 (Geographic2D) with different datum
      */
+    @Test
     public void testFindOperationsGeographic2GeographicNadCon() throws Exception {
         String source = "EPSG:4138";
         String target = "EPSG:4326";
@@ -327,7 +314,8 @@ public class OperationFactoryTest extends TestCase {
 
         Set<CoordinateOperation> operations = findOperations(source, target);
         int size = operations.size();
-        assertTrue(size >= min); // at least min operations should be registered in the database for
+        Assert.assertTrue(
+                size >= min); // at least min operations should be registered in the database for
         // this CRS pair
         assertOperationContained(operations, expectedText);
     }
@@ -339,19 +327,14 @@ public class OperationFactoryTest extends TestCase {
      *   <li>the source CRS of the operation matches the expected source
      *   <li>the target CRS of the operation matches the expected target
      *   <li>Tests the math transform using TransformTestBase.assertInterfaced
-     *
-     * @param sourceCRS
-     * @param targetCRS
-     * @param operations
-     * @param expectedTransformationText
      */
     public void assertOperations(
             CoordinateReferenceSystem sourceCRS,
             CoordinateReferenceSystem targetCRS,
             Set<CoordinateOperation> operations) {
         for (CoordinateOperation operation : operations) {
-            assertSame(sourceCRS, operation.getSourceCRS());
-            assertSame(targetCRS, operation.getTargetCRS());
+            Assert.assertSame(sourceCRS, operation.getSourceCRS());
+            Assert.assertSame(targetCRS, operation.getTargetCRS());
             final MathTransform transform = operation.getMathTransform();
             TransformTestBase.assertInterfaced(transform);
         }
@@ -360,9 +343,6 @@ public class OperationFactoryTest extends TestCase {
     /**
      * Asserts that at least one of the operations contains the <code>expectedText</code> in the
      * output of toString() method
-     *
-     * @param operations
-     * @param expectedText
      */
     public void assertOperationContained(Set<CoordinateOperation> operations, String expectedText) {
         boolean textFound = false;
@@ -371,7 +351,7 @@ public class OperationFactoryTest extends TestCase {
                 textFound = true;
             }
         }
-        assertTrue(textFound);
+        Assert.assertTrue(textFound);
     }
 
     /**
@@ -383,8 +363,6 @@ public class OperationFactoryTest extends TestCase {
      * @param target The code of the target CRS to test
      * @return The set of found operations in direct order
      * @see #assertOperations(CoordinateReferenceSystem, CoordinateReferenceSystem, Set)
-     * @throws NoSuchAuthorityCodeException
-     * @throws FactoryException
      */
     public Set<CoordinateOperation> findOperations(String source, String target)
             throws NoSuchAuthorityCodeException, FactoryException {
@@ -401,7 +379,7 @@ public class OperationFactoryTest extends TestCase {
         // try reverse order
         opFactory = ReferencingFactoryFinder.getCoordinateOperationFactory(null);
         Set<CoordinateOperation> reverseOperations = opFactory.findOperations(targetCRS, sourceCRS);
-        assertEquals(size, reverseOperations.size());
+        Assert.assertEquals(size, reverseOperations.size());
 
         assertOperations(targetCRS, sourceCRS, reverseOperations);
         return operations;
@@ -410,17 +388,13 @@ public class OperationFactoryTest extends TestCase {
     /**
      * Ensures the provided source and target CRS match the source and target CRS of the operation.
      * Ensures the operation math transform passes TransformTestBase.assertInterfaced assertion.
-     *
-     * @param operation
-     * @param sourceCRS
-     * @param targetCRS
      */
     public static void assertOperation(
             CoordinateOperation operation,
             CoordinateReferenceSystem sourceCRS,
             CoordinateReferenceSystem targetCRS) {
-        assertSame(sourceCRS, operation.getSourceCRS());
-        assertSame(targetCRS, operation.getTargetCRS());
+        Assert.assertSame(sourceCRS, operation.getSourceCRS());
+        Assert.assertSame(targetCRS, operation.getTargetCRS());
         TransformTestBase.assertInterfaced(operation.getMathTransform());
     }
 
@@ -430,36 +404,37 @@ public class OperationFactoryTest extends TestCase {
      * (Projected+Vertical) using same datum. EPSG:25831+EPSG:5783 (Projected+Vertical) to EPSG:5554
      * (Projected+Vertical) using same datum.
      */
+    @Test
     public void testCreateOperationCompound2CompoundVertical() throws Exception {
-        final CRSAuthorityFactory crsAuthFactory;
-        final CoordinateOperationFactory opFactory;
-        CoordinateReferenceSystem sourceCRS, sourceHorizontalCRS, sourceVerticalCRS;
-        CoordinateReferenceSystem targetCRS;
-        CoordinateOperation operation;
-        Map<String, Object> properties;
-        CoordinateReferenceSystem[] elements;
 
         CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
-        crsAuthFactory = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null);
-        opFactory = ReferencingFactoryFinder.getCoordinateOperationFactory(null);
+        final CRSAuthorityFactory crsAuthFactory =
+                ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null);
+        final CoordinateOperationFactory opFactory =
+                ReferencingFactoryFinder.getCoordinateOperationFactory(null);
 
-        sourceCRS = crsAuthFactory.createCoordinateReferenceSystem("EPSG:5555");
-        targetCRS = crsAuthFactory.createCoordinateReferenceSystem("EPSG:5554");
+        CoordinateReferenceSystem sourceCRS =
+                crsAuthFactory.createCoordinateReferenceSystem("EPSG:5555");
+        CoordinateReferenceSystem targetCRS =
+                crsAuthFactory.createCoordinateReferenceSystem("EPSG:5554");
         // direct order
-        operation = opFactory.createOperation(sourceCRS, targetCRS);
+        CoordinateOperation operation = opFactory.createOperation(sourceCRS, targetCRS);
         assertOperation(operation, sourceCRS, targetCRS);
 
         // try reverse order
         operation = opFactory.createOperation(targetCRS, sourceCRS);
         assertOperation(operation, targetCRS, sourceCRS);
 
-        sourceHorizontalCRS = crsAuthFactory.createCoordinateReferenceSystem("EPSG:25831");
-        sourceVerticalCRS = crsAuthFactory.createCoordinateReferenceSystem("EPSG:5783");
-        properties = new HashMap<String, Object>();
+        CoordinateReferenceSystem sourceHorizontalCRS =
+                crsAuthFactory.createCoordinateReferenceSystem("EPSG:25831");
+        CoordinateReferenceSystem sourceVerticalCRS =
+                crsAuthFactory.createCoordinateReferenceSystem("EPSG:5783");
+        Map<String, Object> properties = new HashMap<>();
         properties.put(
                 IdentifiedObject.NAME_KEY,
                 new NamedIdentifier(Citations.fromName("TEST"), "Compound 28530+5783"));
-        elements = new CoordinateReferenceSystem[] {sourceHorizontalCRS, sourceVerticalCRS};
+        CoordinateReferenceSystem[] elements =
+                new CoordinateReferenceSystem[] {sourceHorizontalCRS, sourceVerticalCRS};
         sourceCRS = crsFactory.createCompoundCRS(properties, elements);
 
         // direct order

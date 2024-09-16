@@ -330,7 +330,6 @@ public class ReferencedEnvelope extends Envelope
     /**
      * Make sure that the specified location uses the same CRS as this one.
      *
-     * @param location
      * @throws MismatchedReferenceSystemException if the CRS are incompatible.
      */
     protected void ensureCompatibleReferenceSystem(DirectPosition location) {
@@ -492,11 +491,7 @@ public class ReferencedEnvelope extends Envelope
         }
         expandToInclude(ReferencedEnvelope.reference(bbox));
     }
-    /**
-     * Expand to include the provided DirectPosition
-     *
-     * @param pt
-     */
+    /** Expand to include the provided DirectPosition */
     public void expandToInclude(DirectPosition pt) {
         Coordinate coordinate = new Coordinate(pt.getOrdinate(0), pt.getOrdinate(1));
         expandToInclude(coordinate);
@@ -691,12 +686,12 @@ public class ReferencedEnvelope extends Envelope
         delta[2] = getMinimum(1) - other.getMinimum(1);
         delta[3] = getMaximum(1) - other.getMaximum(1);
 
-        for (int i = 0; i < delta.length; i++) {
+        for (double v : delta) {
             /*
              * As per Envelope2D#boundsEquals we use ! here to
              * catch any NaN values
              */
-            if (!(Math.abs(delta[i]) <= eps)) {
+            if (!(Math.abs(v) <= eps)) {
                 return false;
             }
         }
@@ -849,7 +844,6 @@ public class ReferencedEnvelope extends Envelope
      * is, itself is returned. If not <code>new ReferencedEnvelpe(e)</code> is returned.
      *
      * @param e The envelope.
-     * @return
      */
     public static ReferencedEnvelope reference(ReferencedEnvelope e) {
         return reference((org.opengis.geometry.Envelope) e);

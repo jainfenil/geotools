@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -60,8 +59,7 @@ public class DataAccessRegistry implements Repository {
     protected InterpolationProperties properties = null;
 
     /** Data Access Resources */
-    protected List<DataAccess<FeatureType, Feature>> registry =
-            new ArrayList<DataAccess<FeatureType, Feature>>();
+    protected List<DataAccess<FeatureType, Feature>> registry = new ArrayList<>();
 
     /** Sole constructor */
     protected DataAccessRegistry() {}
@@ -81,9 +79,7 @@ public class DataAccessRegistry implements Repository {
     /**
      * Get a feature source for built features with supplied feature type name.
      *
-     * @param featureTypeName
      * @return feature source
-     * @throws IOException
      */
     public synchronized FeatureSource<FeatureType, Feature> featureSource(Name name)
             throws IOException {
@@ -163,13 +159,13 @@ public class DataAccessRegistry implements Repository {
         // step 1: collect all hidden data access instances that are still referenced by some other
         // data access
         boolean canSafelyRemove = true;
-        Set<DataAccess<?, ?>> stillReferencedHiddenDataAccesses = new HashSet<DataAccess<?, ?>>();
+        Set<DataAccess<?, ?>> stillReferencedHiddenDataAccesses = new HashSet<>();
         for (DataAccess<FeatureType, Feature> da : registry) {
             if (da instanceof AppSchemaDataAccess) {
                 AppSchemaDataAccess asda = (AppSchemaDataAccess) da;
                 if (!asda.hidden) {
                     // reach out to all referenced (directly or indirectly) DataAccesses
-                    Set<DataAccess<?, ?>> reachedDataAccesses = new HashSet<DataAccess<?, ?>>();
+                    Set<DataAccess<?, ?>> reachedDataAccesses = new HashSet<>();
                     canSafelyRemove =
                             canSafelyRemove
                                     && reachOutToReferencedDataAccesses(
@@ -187,8 +183,7 @@ public class DataAccessRegistry implements Repository {
         // step 2: remove hidden data access instances that are no more referenced;
         // this step is performed only if no polymorphic nested mapping was found
         if (canSafelyRemove) {
-            List<DataAccess<FeatureType, Feature>> copyRegistry =
-                    new ArrayList<DataAccess<FeatureType, Feature>>(registry);
+            List<DataAccess<FeatureType, Feature>> copyRegistry = new ArrayList<>(registry);
             for (DataAccess<FeatureType, Feature> da : copyRegistry) {
                 if (da instanceof AppSchemaDataAccess) {
                     AppSchemaDataAccess asda = (AppSchemaDataAccess) da;
@@ -263,8 +258,7 @@ public class DataAccessRegistry implements Repository {
      * tests.
      */
     public synchronized void disposeAndUnregisterAll() {
-        List<DataAccess<FeatureType, Feature>> copyRegistry =
-                new ArrayList<DataAccess<FeatureType, Feature>>(registry);
+        List<DataAccess<FeatureType, Feature>> copyRegistry = new ArrayList<>(registry);
         for (DataAccess<FeatureType, Feature> da : copyRegistry) {
             da.dispose();
         }
@@ -277,8 +271,6 @@ public class DataAccessRegistry implements Repository {
      * doesn't, then it will match the targetElementName.
      *
      * @param name Feature type name
-     * @return
-     * @throws IOException
      */
     public synchronized boolean hasAccessName(Name name) throws IOException {
         for (DataAccess<FeatureType, Feature> dataAccess : registry) {
@@ -295,8 +287,6 @@ public class DataAccessRegistry implements Repository {
      * it doesn't, then it will match the targetElementName.
      *
      * @param name Feature type name
-     * @return
-     * @throws IOException
      */
     public synchronized boolean hasAppSchemaAccessName(Name name) throws IOException {
         for (DataAccess<FeatureType, Feature> dataAccess : registry) {
@@ -313,9 +303,7 @@ public class DataAccessRegistry implements Repository {
      * Get a feature type mapping from a registered app-schema data access. Please note that this is
      * only possible for app-schema data access instances.
      *
-     * @param featureTypeName
      * @return feature type mapping
-     * @throws IOException
      */
     public synchronized FeatureTypeMapping mappingByName(Name name) throws IOException {
         for (DataAccess<FeatureType, Feature> dataAccess : registry) {
@@ -346,10 +334,6 @@ public class DataAccessRegistry implements Repository {
     /**
      * Return true if a type name is mapped in one of the registered app-schema data accesses as
      * targetElementName, regardless whether or not mappingName exists.
-     *
-     * @param featureTypeName
-     * @return
-     * @throws IOException
      */
     public synchronized boolean hasAppSchemaTargetElement(Name name) throws IOException {
         for (DataAccess<FeatureType, Feature> dataAccess : registry) {
@@ -386,9 +370,7 @@ public class DataAccessRegistry implements Repository {
     /**
      * Get a feature source for built features with supplied feature type name.
      *
-     * @param featureTypeName
      * @return feature source
-     * @throws IOException
      */
     public static FeatureSource<FeatureType, Feature> getFeatureSource(Name featureTypeName)
             throws IOException {
@@ -436,8 +418,6 @@ public class DataAccessRegistry implements Repository {
      * doesn't, then it will match the targetElementName.
      *
      * @param featureTypeName Feature type name
-     * @return
-     * @throws IOException
      */
     public static boolean hasName(Name featureTypeName) throws IOException {
         return getInstance().hasAccessName(featureTypeName);
@@ -451,13 +431,11 @@ public class DataAccessRegistry implements Repository {
      * Throws data source exception if mapping is not found.
      *
      * @param featureTypeName Name of feature type
-     * @throws IOException
      */
     protected void throwDataSourceException(Name featureTypeName) throws IOException {
-        List<Name> typeNames = new ArrayList<Name>();
-        for (Iterator<DataAccess<FeatureType, Feature>> dataAccessIterator = registry.iterator();
-                dataAccessIterator.hasNext(); ) {
-            typeNames.addAll(dataAccessIterator.next().getNames());
+        List<Name> typeNames = new ArrayList<>();
+        for (DataAccess<FeatureType, Feature> featureTypeFeatureDataAccess : registry) {
+            typeNames.addAll(featureTypeFeatureDataAccess.getNames());
         }
         throw new DataSourceException(
                 "Feature type "

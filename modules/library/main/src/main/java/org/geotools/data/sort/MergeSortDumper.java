@@ -38,7 +38,7 @@ import org.opengis.filter.sort.SortBy;
 
 class MergeSortDumper {
 
-    static final boolean canSort(SimpleFeatureType schema, SortBy[] sortBy) {
+    static final boolean canSort(SimpleFeatureType schema, SortBy... sortBy) {
         if (sortBy == SortBy.UNSORTED) {
             return true;
         }
@@ -77,12 +77,7 @@ class MergeSortDumper {
         return getDelegateReader(reader, query.getSortBy(), maxFeatures);
     }
 
-    /**
-     * Gets the max amount amount of features to keep in memory from the query and system hints
-     *
-     * @param query
-     * @return
-     */
+    /** Gets the max amount amount of features to keep in memory from the query and system hints */
     static int getMaxFeatures(Query query) {
         Hints hints = null;
         if (query != null) {
@@ -102,7 +97,8 @@ class MergeSortDumper {
         if (maxFeatures < 0) {
             maxFeatures = getMaxFeatures(Query.ALL);
         }
-        Comparator<SimpleFeature> comparator = SortedFeatureReader.getComparator(sortBy);
+        Comparator<SimpleFeature> comparator =
+                SortedFeatureReader.getComparator(sortBy, reader.getFeatureType());
 
         // easy case, no sorting needed
         if (comparator == null) {
@@ -123,8 +119,8 @@ class MergeSortDumper {
         int count = 0;
         File file = null;
         SimpleFeatureIO io = null;
-        List<SimpleFeature> features = new ArrayList<SimpleFeature>();
-        List<FeatureBlockReader> readers = new ArrayList<FeatureBlockReader>();
+        List<SimpleFeature> features = new ArrayList<>();
+        List<FeatureBlockReader> readers = new ArrayList<>();
         boolean cleanFile = true;
         try {
             // read and store into files as necessary
@@ -161,6 +157,7 @@ class MergeSortDumper {
                 // reader based on the collection contents
                 Collections.sort(features, comparator);
 
+                @SuppressWarnings("PMD.CloseResource") // returned in wrapper
                 SimpleFeatureIterator fi = new ListFeatureCollection(schema, features).features();
                 return new DelegateSimpleFeatureReader(schema, fi);
             } else {
@@ -179,13 +176,7 @@ class MergeSortDumper {
         }
     }
 
-    /**
-     * Writes the feature attributes to a binary file
-     *
-     * @param features
-     * @return
-     * @throws IOException
-     */
+    /** Writes the feature attributes to a binary file */
     static FeatureBlockReader storeToFile(SimpleFeatureIO io, List<SimpleFeature> features)
             throws IOException {
         long start = io.getOffset();

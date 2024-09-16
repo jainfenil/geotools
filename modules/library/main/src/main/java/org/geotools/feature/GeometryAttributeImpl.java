@@ -68,7 +68,7 @@ public class GeometryAttributeImpl extends AttributeImpl implements GeometryAttr
     }
 
     public void setValue(Object newValue) throws IllegalArgumentException, IllegalStateException {
-        super.setValue((Geometry) newValue);
+        super.setValue(newValue);
     }
 
     public void setValue(Geometry geometry) {
@@ -83,14 +83,12 @@ public class GeometryAttributeImpl extends AttributeImpl implements GeometryAttr
     /**
      * Returns the non null envelope of this attribute. If the attribute's geometry is <code>null
      * </code> the returned Envelope <code>isNull()</code> is true.
-     *
-     * @return
      */
     public synchronized BoundingBox getBounds() {
         if (bounds == null) {
             ReferencedEnvelope bbox =
                     new ReferencedEnvelope(getType().getCoordinateReferenceSystem());
-            Geometry geom = (Geometry) getValue();
+            Geometry geom = getValue();
             if (geom != null) {
                 bbox.expandToInclude(geom.getEnvelopeInternal());
             } else {

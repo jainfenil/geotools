@@ -55,7 +55,7 @@ import org.opengis.referencing.datum.VerticalDatumType;
 import org.opengis.temporal.Position;
 import si.uom.NonSI;
 import si.uom.SI;
-import tec.uom.se.format.SimpleUnitFormat;
+import tech.units.indriya.format.SimpleUnitFormat;
 import ucar.nc2.Attribute;
 import ucar.nc2.constants.AxisType;
 import ucar.nc2.constants.CF;
@@ -117,11 +117,19 @@ public class NetCDFCRSUtilities {
      */
     private static final String[] SECONDS = {"second", "sec", "seconds since"};
 
-    public static final Set<String> VERTICAL_AXIS_NAMES = new HashSet<String>();
+    public static final Set<String> VERTICAL_AXIS_NAMES = new HashSet<>();
     /** The mapping between UCAR axis type and ISO axis directions. */
-    private static final Map<AxisType, String> DIRECTIONS = new HashMap<AxisType, String>(16);
+    private static final Map<AxisType, String> DIRECTIONS = new HashMap<>(16);
 
-    private static final Map<AxisType, String> OPPOSITES = new HashMap<AxisType, String>(16);
+    private static final Map<AxisType, String> OPPOSITES = new HashMap<>(16);
+
+    /**
+     * this flag states if an automatic conversion from km to m should happen with axis/coordinates
+     */
+    public static final String CONVERT_AXIS_KM_KEY =
+            "org.geotools.coverage.io.netcdf.convertAxis.km";
+
+    private static final boolean CONVERT_AXIS_KM;
 
     static {
         add(AxisType.Time, "future", "past");
@@ -138,6 +146,9 @@ public class NetCDFCRSUtilities {
         VERTICAL_AXIS_NAMES.add("z");
         VERTICAL_AXIS_NAMES.add("depth");
         VERTICAL_AXIS_NAMES.add("pressure");
+
+        // Default is false, resulting into no automatic conversion anymore
+        CONVERT_AXIS_KM = Boolean.parseBoolean(System.getProperty(CONVERT_AXIS_KM_KEY, "false"));
     }
 
     /** The object to use for parsing and formatting units. */
@@ -186,12 +197,7 @@ public class NetCDFCRSUtilities {
         return new String[] {units, direction};
     }
 
-    /**
-     * Get the {@link AxisDirection} object related to the specified direction
-     *
-     * @param direction
-     * @return
-     */
+    /** Get the {@link AxisDirection} object related to the specified direction */
     static AxisDirection getDirection(final String direction) {
         return AxisDirection.valueOf(direction);
     }
@@ -222,9 +228,8 @@ public class NetCDFCRSUtilities {
                 AxisType axisType = zAxis.getAxisType();
 
                 String v_crsName = "Unknown";
-                String v_datumName = "Unknown";
                 String v_datumType = null;
-                v_datumName =
+                String v_datumName =
                         new Identification("Mean Sea Level", null, null, "EPSG:5100").getName();
 
                 if (axisType == AxisType.RadialAzimuth
@@ -408,11 +413,7 @@ public class NetCDFCRSUtilities {
                                 .getCRSFactory()
                                 .createTemporalCRS(crsMap, temporalDatum, timeCS);
             }
-        } catch (FactoryException e) {
-            if (LOGGER.isLoggable(Level.FINE))
-                LOGGER.log(Level.FINE, "Unable to parse temporal CRS", e);
-            temporalCRS = null;
-        } catch (ParseException e) {
+        } catch (FactoryException | ParseException e) {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.log(Level.FINE, "Unable to parse temporal CRS", e);
             temporalCRS = null;
@@ -450,7 +451,6 @@ public class NetCDFCRSUtilities {
      * @param direction the {@linkplain AxisDirection direction} of the axis.
      * @param unitName the unit of measure string.
      * @return a proper {@link CoordinateSystemAxis} instance or {@code null} if unable to build it.
-     * @throws FactoryException
      */
     static CoordinateSystemAxis getAxis(
             final String axisName, final AxisDirection direction, final String unitName)
@@ -503,10 +503,15 @@ public class NetCDFCRSUtilities {
             return SI.DAY;
         } else {
             try {
-                return (Unit<?>) UNIT_FORMAT.parse(unitName);
+                return UNIT_FORMAT.parse(unitName);
             } catch (UnsupportedOperationException e) {
                 throw new FactoryException("Unit not known : " + unitName, e);
             }
         }
+    }
+
+    /** Return true if the NetCDF CRS Parsing machinery will convert km coordinates to meter */
+    public static boolean isConvertAxisKm() {
+        return CONVERT_AXIS_KM;
     }
 }

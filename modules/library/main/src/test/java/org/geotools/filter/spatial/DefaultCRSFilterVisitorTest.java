@@ -16,7 +16,7 @@
  */
 package org.geotools.filter.spatial;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -47,7 +47,6 @@ public class DefaultCRSFilterVisitorTest {
     @Test
     public void force3DCRS3DEnvelope() throws Exception {
         CoordinateReferenceSystem crs = CRS.decode("EPSG:4939", true);
-        CoordinateReferenceSystem hcrs = CRS.getHorizontalCRS(crs);
         BBOX bbox =
                 ff.bbox(
                         ff.property("the_geom"),

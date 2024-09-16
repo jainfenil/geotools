@@ -39,6 +39,7 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.gce.imagemosaic.SpatialRequestHelper.CoverageProperties;
 import org.geotools.geometry.Envelope2D;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.CRS;
 import org.geotools.util.factory.Hints;
 import org.locationtech.jts.geom.Geometry;
 import org.opengis.feature.type.GeometryDescriptor;
@@ -51,6 +52,7 @@ import org.opengis.parameter.ParameterValue;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 
 /**
@@ -92,6 +94,10 @@ public class RasterLayerRequest {
     private double[] virtualNativeResolution;
 
     private boolean heterogeneousGranules = false;
+
+    private boolean heterogeneousCRS = false;
+
+    private boolean useAlternativeCRS = false;
 
     RasterManager rasterManager;
 
@@ -141,7 +147,7 @@ public class RasterLayerRequest {
     /** Flag specifying whether we need to set the ROI in any case in the output mosaic */
     private boolean setRoiProperty;
 
-    private final Map<String, List> requestedAdditionalDomains = new HashMap<String, List>();
+    private final Map<String, List> requestedAdditionalDomains = new HashMap<>();
 
     // the bands parameter define the order and which bands should be returned
     private int[] bands;
@@ -160,6 +166,8 @@ public class RasterLayerRequest {
     private GeneralParameterValue[] params;
 
     private Envelope2D requestedBounds;
+
+    private GridGeometry2D requestedGridGeometry;
 
     public List<?> getElevation() {
         return elevation;
@@ -181,6 +189,10 @@ public class RasterLayerRequest {
         return filter;
     }
 
+    public Envelope2D getRequestedBounds() {
+        return requestedBounds;
+    }
+
     public List<?> getRequestedTimes() {
         return requestedTimes;
     }
@@ -195,6 +207,10 @@ public class RasterLayerRequest {
 
     public boolean isHeterogeneousGranules() {
         return heterogeneousGranules;
+    }
+
+    public boolean isUseAlternativeCRS() {
+        return useAlternativeCRS;
     }
 
     public ExcessGranulePolicy getExcessGranuleRemovalPolicy() {
@@ -214,15 +230,13 @@ public class RasterLayerRequest {
     }
 
     public Map<String, List> getRequestedAdditionalDomains() {
-        return new HashMap<String, List>(requestedAdditionalDomains);
+        return new HashMap<>(requestedAdditionalDomains);
     }
 
     /**
      * Build a new {@code CoverageRequest} given a set of input parameters.
      *
      * @param params The {@code GeneralParameterValue}s to initialize this request
-     * @param baseGridCoverage2DReader
-     * @throws IOException
      */
     public RasterLayerRequest(
             final GeneralParameterValue[] params, final RasterManager rasterManager)
@@ -237,6 +251,7 @@ public class RasterLayerRequest {
         // //
         this.rasterManager = rasterManager;
         this.heterogeneousGranules = rasterManager.heterogeneousGranules;
+        this.heterogeneousCRS = rasterManager.heterogeneousCRS;
         CoverageProperties coverageProperties = new CoverageProperties();
         coverageProperties.setBBox(rasterManager.spatialDomainManager.coverageBBox);
         coverageProperties.setRasterArea(rasterManager.spatialDomainManager.coverageRasterArea);
@@ -266,6 +281,9 @@ public class RasterLayerRequest {
                 }
             }
         }
+
+        checkAlternativeCRSIsSupported();
+        computeRequestedGridGeometry();
         // re-compute bbox now tha we have the read params ready
         coverageProperties.setBBox(computeCoverageBoundingBox(rasterManager));
 
@@ -278,6 +296,62 @@ public class RasterLayerRequest {
         checkReadType();
         spatialRequestHelper.setAccurateResolution(accurateResolution);
         spatialRequestHelper.compute();
+    }
+
+    private void checkAlternativeCRSIsSupported() throws IOException {
+        if (heterogeneousCRS && useAlternativeCRS && requestedBounds != null) {
+            CoordinateReferenceSystem requestedCRS = requestedBounds.getCoordinateReferenceSystem();
+            Integer requestedEpsgCode = null;
+            try {
+                requestedEpsgCode = CRS.lookupEpsgCode(requestedCRS, false);
+            } catch (FactoryException e) {
+                throw new IOException(
+                        "Exception occurred while looking for an "
+                                + "epsgCode on the provided crs: "
+                                + requestedCRS,
+                        e);
+            }
+            // Enable alternative CRS Output support only when the requested CRS doesn't match
+            // the coverage's one. In that case, proceed with the standard approach
+            if (rasterManager.hasAlternativeCRS(requestedEpsgCode)
+                    && !CRS.equalsIgnoreMetadata(
+                            requestedCRS, spatialRequestHelper.getReferenceCRS(false))) {
+                // Initialize the alternativeCRS Output Coverage properties
+                spatialRequestHelper.setSupportingAlternativeCRSOutput(true);
+                CoverageProperties alternativeProperties = new CoverageProperties();
+                alternativeProperties.setCrs2D(requestedCRS);
+                alternativeProperties.setBBox(ReferencedEnvelope.reference(requestedBounds));
+                spatialRequestHelper.setAlternativeProperties(alternativeProperties);
+            } else {
+                // We can't support the alternative CRS so let's disable it
+                useAlternativeCRS = false;
+            }
+        }
+    }
+
+    private void computeRequestedGridGeometry() throws IOException {
+        if (requestedGridGeometry != null) {
+            if (heterogeneousCRS && !useAlternativeCRS) {
+                GridEnvelope2D paddedRange =
+                        new GridEnvelope2D(requestedGridGeometry.getGridRange2D());
+                paddedRange.setBounds(
+                        paddedRange.x - DEFAULT_PADDING,
+                        paddedRange.y - DEFAULT_PADDING,
+                        paddedRange.width + DEFAULT_PADDING * 2,
+                        paddedRange.height + DEFAULT_PADDING * 2);
+
+                GridGeometry2D padded =
+                        new GridGeometry2D(
+                                paddedRange,
+                                requestedGridGeometry.getGridToCRS(),
+                                requestedGridGeometry.getCoordinateReferenceSystem());
+                spatialRequestHelper.setRequestedGridGeometry(padded.toCanonical());
+            } else {
+                // Do not apply any padding if we are going to produce output in requested CRS.
+                // It will result in no reprojection
+                spatialRequestHelper.setRequestedGridGeometry(requestedGridGeometry.toCanonical());
+            }
+        }
     }
 
     protected ReferencedEnvelope computeCoverageBoundingBox(final RasterManager rasterManager)
@@ -303,7 +377,7 @@ public class RasterLayerRequest {
             // ... load only the default geometry if possible
             final GeometryDescriptor gd = granules.getSchema().getGeometryDescriptor();
             if (gd != null) {
-                query.setPropertyNames(new String[] {gd.getLocalName()});
+                query.setPropertyNames(gd.getLocalName());
             }
             SimpleFeatureCollection features = granules.getGranules(query);
             ReferencedEnvelope envelope = DataUtilities.bounds(features);
@@ -543,7 +617,7 @@ public class RasterLayerRequest {
      * @param param the input {@code ParamaterValue} object
      * @param name the name of the parameter
      */
-    private void extractParameter(ParameterValue<?> param, Identifier name) {
+    private void extractParameter(ParameterValue<?> param, Identifier name) throws IOException {
 
         // //
         //
@@ -553,30 +627,17 @@ public class RasterLayerRequest {
         if (name.equals(AbstractGridFormat.READ_GRIDGEOMETRY2D.getName())) {
             final Object value = param.getValue();
             if (value == null) return;
-            final GridGeometry2D gg = (GridGeometry2D) value;
-            this.requestedBounds = gg.getEnvelope2D();
-
-            if (rasterManager
-                    .getConfiguration()
-                    .getCatalogConfigurationBean()
-                    .isHeterogeneousCRS()) {
-                GridEnvelope2D paddedRange = new GridEnvelope2D(gg.getGridRange2D());
-                paddedRange.setBounds(
-                        paddedRange.x - DEFAULT_PADDING,
-                        paddedRange.y - DEFAULT_PADDING,
-                        paddedRange.width + DEFAULT_PADDING * 2,
-                        paddedRange.height + DEFAULT_PADDING * 2);
-
-                GridGeometry2D padded =
-                        new GridGeometry2D(
-                                paddedRange, gg.getGridToCRS(), gg.getCoordinateReferenceSystem());
-                spatialRequestHelper.setRequestedGridGeometry(padded.toCanonical());
-            } else {
-                spatialRequestHelper.setRequestedGridGeometry(gg.toCanonical());
-            }
+            this.requestedGridGeometry = (GridGeometry2D) value;
+            this.requestedBounds = requestedGridGeometry.getEnvelope2D();
             return;
         }
 
+        if (name.equals(ImageMosaicFormat.OUTPUT_TO_ALTERNATIVE_CRS.getName())) {
+            final Object value = param.getValue();
+            if (value == null) return;
+            useAlternativeCRS = ((Boolean) value).booleanValue();
+            return;
+        }
         // //
         //
         // Use JAI ImageRead parameter
@@ -791,7 +852,7 @@ public class RasterLayerRequest {
             final Object value = param.getValue();
             if (value == null) return;
             final List<?> dates = (List<?>) value;
-            if (dates == null || dates.size() <= 0) {
+            if (dates == null || dates.isEmpty()) {
                 return;
             }
 
@@ -870,7 +931,7 @@ public class RasterLayerRequest {
         if (name.equals(ImageMosaicFormat.MASKING_BUFFER_PIXELS.getName())) {
             final Object value = param.getValue();
             if (value == null) return;
-            maskingBufferPixels = (double) param.doubleValue();
+            maskingBufferPixels = param.doubleValue();
             return;
         }
 

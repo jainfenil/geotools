@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.measure.MetricPrefix;
 import javax.measure.Unit;
 import javax.measure.quantity.Angle;
 import javax.measure.quantity.Time;
@@ -86,7 +87,6 @@ import org.opengis.referencing.operation.OperationNotFoundException;
 import org.opengis.referencing.operation.Transformation;
 import si.uom.NonSI;
 import si.uom.SI;
-import tec.uom.se.unit.MetricPrefix;
 
 /**
  * Creates {@linkplain CoordinateOperation coordinate operations}. This factory is capable to find
@@ -710,7 +710,8 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
          */
         final TimeCS sourceCS = sourceCRS.getCoordinateSystem();
         final TimeCS targetCS = targetCRS.getCoordinateSystem();
-        final Unit targetUnit = targetCS.getAxis(0).getUnit();
+        @SuppressWarnings("unchecked")
+        final Unit<Time> targetUnit = (Unit<Time>) targetCS.getAxis(0).getUnit();
         double epochShift = sourceDatum.getOrigin().getTime() - targetDatum.getOrigin().getTime();
         epochShift = MILLISECOND.getConverterTo(targetUnit).convert(epochShift);
         /*
@@ -873,8 +874,8 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
                 }
                 final int sourceDim = getDimension(sourceCRS);
                 final int targetDim = getDimension(targetCRS);
-                final ParameterValueGroup parameters;
-                parameters = getMathTransformFactory().getDefaultParameters(molodenskiMethod);
+                final ParameterValueGroup parameters =
+                        getMathTransformFactory().getDefaultParameters(molodenskiMethod);
                 parameters.parameter("src_semi_major").setValue(sourceEllipsoid.getSemiMajorAxis());
                 parameters.parameter("src_semi_minor").setValue(sourceEllipsoid.getSemiMinorAxis());
                 parameters.parameter("tgt_semi_major").setValue(targetEllipsoid.getSemiMajorAxis());
@@ -884,14 +885,13 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
                 parameters.parameter("dz").setValue(bursaWolf.dz);
                 parameters.parameter("dim").setValue(sourceDim);
                 if (sourceDim == targetDim) {
-                    final CoordinateOperation step1, step2, step3;
                     final GeographicCRS normSourceCRS = normalize(sourceCRS, true);
                     final GeographicCRS normTargetCRS = normalize(targetCRS, true);
-                    step1 = createOperationStep(sourceCRS, normSourceCRS);
-                    step2 =
+                    final CoordinateOperation step1 = createOperationStep(sourceCRS, normSourceCRS);
+                    final CoordinateOperation step2 =
                             createFromParameters(
                                     identifier, normSourceCRS, normTargetCRS, parameters);
-                    step3 = createOperationStep(normTargetCRS, targetCRS);
+                    final CoordinateOperation step3 = createOperationStep(normTargetCRS, targetCRS);
                     return concatenate(step1, step2, step3);
                 }
                 // TODO: Need some way to pass 'targetDim' to Molodenski.
@@ -997,14 +997,13 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
          */
         final GeographicCRS sourceGeo = sourceCRS.getBaseCRS();
         final GeographicCRS targetGeo = targetCRS.getBaseCRS();
-        Set<CoordinateOperation> step1, step2, step3;
 
-        step1 = tryDB(sourceCRS, sourceGeo, limit);
+        Set<CoordinateOperation> step1 = tryDB(sourceCRS, sourceGeo, limit);
         if (step1.isEmpty()) step1 = findOperationSteps(sourceCRS, sourceGeo, limit);
-        step2 = tryDB(sourceGeo, targetGeo, limit);
+        Set<CoordinateOperation> step2 = tryDB(sourceGeo, targetGeo, limit);
         if (step2.isEmpty())
             step2 = Collections.singleton(createOperationStep(sourceGeo, targetGeo));
-        step3 = tryDB(targetGeo, targetCRS, limit);
+        Set<CoordinateOperation> step3 = tryDB(targetGeo, targetCRS, limit);
         if (step3.isEmpty()) step3 = findOperationSteps(targetGeo, targetCRS, limit);
         return concatenate(step1, step2, step3);
     }
@@ -1067,7 +1066,7 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
             throws FactoryException {
         GeographicCRS base = targetCRS.getBaseCRS();
         CoordinateOperation step2 = targetCRS.getConversionFromBase();
-        HashSet<CoordinateOperation> result = new HashSet<CoordinateOperation>();
+        HashSet<CoordinateOperation> result = new HashSet<>();
         Set<CoordinateOperation> step1Candidates = tryDB(sourceCRS, base, limit);
         if (step1Candidates.isEmpty()) {
             CoordinateOperation step1 = createOperationStep(sourceCRS, base);
@@ -1138,7 +1137,7 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
             throws FactoryException {
         final GeographicCRS base = sourceCRS.getBaseCRS();
         CoordinateOperation step1 = sourceCRS.getConversionFromBase();
-        HashSet<CoordinateOperation> result = new HashSet<CoordinateOperation>();
+        HashSet<CoordinateOperation> result = new HashSet<>();
         Set<CoordinateOperation> step2Candidates = tryDB(base, targetCRS, limit);
         if (step2Candidates.isEmpty()) {
             CoordinateOperation step2 = createOperationStep(base, targetCRS);
@@ -1175,9 +1174,8 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
         final GeodeticDatum targetDatum = targetCRS.getDatum();
         final CoordinateSystem sourceCS = sourceCRS.getCoordinateSystem();
         final CoordinateSystem targetCS = targetCRS.getCoordinateSystem();
-        final double sourcePM, targetPM;
-        sourcePM = getGreenwichLongitude(sourceDatum.getPrimeMeridian());
-        targetPM = getGreenwichLongitude(targetDatum.getPrimeMeridian());
+        final double sourcePM = getGreenwichLongitude(sourceDatum.getPrimeMeridian());
+        final double targetPM = getGreenwichLongitude(targetDatum.getPrimeMeridian());
         if (equalsIgnorePrimeMeridian(sourceDatum, targetDatum)) {
             if (sourcePM == targetPM) {
                 /*
@@ -1269,16 +1267,16 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
         final GeocentricCRS normTargetCRS = normalize(targetCRS, datum);
         final Ellipsoid ellipsoid = datum.getEllipsoid();
         final Unit unit = ellipsoid.getAxisUnit();
-        final ParameterValueGroup param;
-        param = getMathTransformFactory().getDefaultParameters("Ellipsoid_To_Geocentric");
+        final ParameterValueGroup param =
+                getMathTransformFactory().getDefaultParameters("Ellipsoid_To_Geocentric");
         param.parameter("semi_major").setValue(ellipsoid.getSemiMajorAxis(), unit);
         param.parameter("semi_minor").setValue(ellipsoid.getSemiMinorAxis(), unit);
         param.parameter("dim").setValue(getDimension(normSourceCRS));
 
-        final CoordinateOperation step1, step2, step3;
-        step1 = createOperationStep(sourceCRS, normSourceCRS);
-        step2 = createFromParameters(GEOCENTRIC_CONVERSION, normSourceCRS, normTargetCRS, param);
-        step3 = createOperationStep(normTargetCRS, targetCRS);
+        final CoordinateOperation step1 = createOperationStep(sourceCRS, normSourceCRS);
+        final CoordinateOperation step2 =
+                createFromParameters(GEOCENTRIC_CONVERSION, normSourceCRS, normTargetCRS, param);
+        final CoordinateOperation step3 = createOperationStep(normTargetCRS, targetCRS);
         return concatenate(step1, step2, step3);
     }
 
@@ -1298,16 +1296,16 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
         final GeocentricCRS normSourceCRS = normalize(sourceCRS, datum);
         final Ellipsoid ellipsoid = datum.getEllipsoid();
         final Unit unit = ellipsoid.getAxisUnit();
-        final ParameterValueGroup param;
-        param = getMathTransformFactory().getDefaultParameters("Geocentric_To_Ellipsoid");
+        final ParameterValueGroup param =
+                getMathTransformFactory().getDefaultParameters("Geocentric_To_Ellipsoid");
         param.parameter("semi_major").setValue(ellipsoid.getSemiMajorAxis(), unit);
         param.parameter("semi_minor").setValue(ellipsoid.getSemiMinorAxis(), unit);
         param.parameter("dim").setValue(getDimension(normTargetCRS));
 
-        final CoordinateOperation step1, step2, step3;
-        step1 = createOperationStep(sourceCRS, normSourceCRS);
-        step2 = createFromParameters(GEOCENTRIC_CONVERSION, normSourceCRS, normTargetCRS, param);
-        step3 = createOperationStep(normTargetCRS, targetCRS);
+        final CoordinateOperation step1 = createOperationStep(sourceCRS, normSourceCRS);
+        final CoordinateOperation step2 =
+                createFromParameters(GEOCENTRIC_CONVERSION, normSourceCRS, normTargetCRS, param);
+        final CoordinateOperation step3 = createOperationStep(normTargetCRS, targetCRS);
         return concatenate(step1, step2, step3);
     }
 
@@ -1759,8 +1757,6 @@ public class DefaultCoordinateOperationFactory extends AbstractCoordinateOperati
      * org.opengis.referencing.operation.CoordinateOperationAuthorityFactory}. If no coordinate
      * operation was found in the database, then this method returns {@code null}.
      *
-     * @param sourceCRS
-     * @param targetCRS
      * @param limit The maximum number of operations to be returned. Use -1 to return all the
      *     available operations. Use 1 to return just one operations. Currently, the behavior for
      *     other values of {@code limit} is undefined.

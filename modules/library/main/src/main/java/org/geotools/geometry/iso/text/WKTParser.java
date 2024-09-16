@@ -33,7 +33,10 @@ import org.opengis.geometry.aggregate.AggregateFactory;
 import org.opengis.geometry.aggregate.MultiPrimitive;
 import org.opengis.geometry.coordinate.GeometryFactory;
 import org.opengis.geometry.coordinate.LineString;
+import org.opengis.geometry.coordinate.Position;
 import org.opengis.geometry.primitive.Curve;
+import org.opengis.geometry.primitive.CurveSegment;
+import org.opengis.geometry.primitive.OrientableCurve;
 import org.opengis.geometry.primitive.Point;
 import org.opengis.geometry.primitive.PrimitiveFactory;
 import org.opengis.geometry.primitive.Ring;
@@ -116,8 +119,6 @@ public class WKTParser {
      * Provide a GeometryFactory for the parser.
      *
      * <p>Should be called prior to use.
-     *
-     * @param factory
      */
     public void setFactory(GeometryFactory factory) {
         this.geometryFactory = factory;
@@ -127,8 +128,6 @@ public class WKTParser {
      * Provide a PrimitiveFactory for the parser.
      *
      * <p>Should be called prior to use.
-     *
-     * @param factory
      */
     public void setFactory(PrimitiveFactory factory) {
         this.primitiveFactory = factory;
@@ -137,8 +136,6 @@ public class WKTParser {
      * Provide a PositionFactory for the parser.
      *
      * <p>Should be called prior to use.
-     *
-     * @param factory
      */
     public void setFactory(PositionFactory factory) {
         this.positionFactory = factory;
@@ -232,14 +229,12 @@ public class WKTParser {
     /**
      * Returns a list of DirectPosition objects which it read from the StreamTokenizer
      *
-     * @param tokenizer
      * @return a <code>List\<DirectPosition\></code>
-     * @throws IOException
-     * @throws ParseException
      */
-    private List getCoordinates(StreamTokenizer tokenizer) throws IOException, ParseException {
+    private List<Position> getCoordinates(StreamTokenizer tokenizer)
+            throws IOException, ParseException {
         String nextToken = getNextEmptyOrOpener(tokenizer);
-        List coordinates = new ArrayList();
+        List<Position> coordinates = new ArrayList<>();
         if (!nextToken.equals(EMPTY)) {
             coordinates.add(getPreciseCoordinate(tokenizer));
             nextToken = getNextCloserOrComma(tokenizer);
@@ -254,10 +249,7 @@ public class WKTParser {
     /**
      * Parse a single coordinate from a <code>StreamTokenizer</code>
      *
-     * @param tokenizer
      * @return a single DirectPosition
-     * @throws IOException
-     * @throws ParseException
      */
     private DirectPosition getPreciseCoordinate(StreamTokenizer tokenizer)
             throws IOException, ParseException {
@@ -400,7 +392,6 @@ public class WKTParser {
      * Throws a formatted ParseException for the current token.
      *
      * @param expected a description of what was expected
-     * @throws ParseException
      */
     private void parseError(String expected, StreamTokenizer tokenizer) throws ParseException {
         String tokenStr = tokenString(tokenizer);
@@ -456,9 +447,9 @@ public class WKTParser {
      * @throws ParseException if an unexpected token was encountered
      */
     private Curve readLineStringText(StreamTokenizer tokenizer) throws IOException, ParseException {
-        List coordList = getCoordinates(tokenizer);
+        List<Position> coordList = getCoordinates(tokenizer);
         LineString lineString = geometryFactory.createLineString(coordList);
-        List curveSegmentList = Collections.singletonList(lineString);
+        List<CurveSegment> curveSegmentList = Collections.singletonList(lineString);
         Curve curve = primitiveFactory.createCurve(curveSegmentList);
         return curve;
     }
@@ -474,9 +465,9 @@ public class WKTParser {
      *     closed linestring, or if an unexpected token was encountered
      */
     private Curve readLinearRingText(StreamTokenizer tokenizer) throws IOException, ParseException {
-        List coordList = getCoordinates(tokenizer);
+        List<Position> coordList = getCoordinates(tokenizer);
         LineString lineString = geometryFactory.createLineString(coordList);
-        List curveSegmentList = Collections.singletonList(lineString);
+        List<CurveSegment> curveSegmentList = Collections.singletonList(lineString);
         Curve curve = primitiveFactory.createCurve(curveSegmentList);
         return curve;
         // List curveList = Collections.singletonList(curve);
@@ -499,14 +490,14 @@ public class WKTParser {
             return null;
         }
         Curve curve = readLinearRingText(tokenizer);
-        List curveList = Collections.singletonList(curve);
+        List<OrientableCurve> curveList = Collections.singletonList(curve);
         Ring shell = primitiveFactory.createRing(curveList);
         // Ring shell = readLinearRingText(tokenizer);
-        List holes = new ArrayList();
+        List<Ring> holes = new ArrayList<>();
         nextToken = getNextCloserOrComma(tokenizer);
         while (nextToken.equals(COMMA)) {
             Curve holecurve = readLinearRingText(tokenizer);
-            List holeList = Collections.singletonList(holecurve);
+            List<OrientableCurve> holeList = Collections.singletonList(holecurve);
             Ring hole = primitiveFactory.createRing(holeList);
             // Ring hole = readLinearRingText(tokenizer);
             holes.add(hole);
@@ -526,6 +517,7 @@ public class WKTParser {
      *     holes do not form closed linestrings, or if an unexpected token was encountered.
      * @throws IOException if an I/O error occurs
      */
+    @SuppressWarnings("unchecked") // can't seem to please the API
     private MultiPrimitive readMultiPolygonText(StreamTokenizer tokenizer)
             throws IOException, ParseException {
         String nextToken = getNextEmptyOrOpener(tokenizer);
@@ -557,6 +549,7 @@ public class WKTParser {
      *     holes do not form closed linestrings, or if an unexpected token was encountered.
      * @throws IOException if an I/O error occurs
      */
+    @SuppressWarnings("unchecked") // can't seem to please the API
     private MultiPrimitive readMultiPointText(StreamTokenizer tokenizer)
             throws IOException, ParseException {
         String nextToken = getNextEmptyOrOpener(tokenizer);
@@ -583,9 +576,9 @@ public class WKTParser {
      *
      * @param tokenizer tokenizer on top of a stream of text in Well-known Text format.
      * @return a <code>MultiPrimitive</code> specified by the next tokens in the stream
-     * @throws ParseException
      * @throws IOException if an I/O error occurs
      */
+    @SuppressWarnings("unchecked") // can't seem to please the API
     private MultiPrimitive readGeometryCollectionText(StreamTokenizer tokenizer)
             throws IOException, ParseException {
         String nextToken = getNextEmptyOrOpener(tokenizer);
@@ -612,9 +605,9 @@ public class WKTParser {
      *
      * @param tokenizer tokenizer on top of a stream of text in Well-known Text format.
      * @return a <code>MultiPrimitive</code> specified by the next tokens in the stream
-     * @throws ParseException
      * @throws IOException if an I/O error occurs
      */
+    @SuppressWarnings("unchecked") // can't seem to please the API
     private MultiPrimitive readMultiLineStringText(StreamTokenizer tokenizer)
             throws IOException, ParseException {
         String nextToken = getNextEmptyOrOpener(tokenizer);

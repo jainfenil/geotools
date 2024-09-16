@@ -17,8 +17,10 @@
  */
 package org.geotools.data.mongodb;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -61,9 +63,8 @@ public abstract class MongoSchemaStoreTest<S extends MongoSchemaStore> {
             store.deleteSchema(null); // no exception expected
 
             // store, retreive then test for equality
-            List<String> typeNames;
             store.storeSchema(dummy0);
-            typeNames = store.typeNames();
+            List<String> typeNames = store.typeNames();
             assertThat(typeNames, is(equalTo(Arrays.asList("dummy0"))));
             FeatureTypeDBObjectTest.compareFeatureTypes(
                     store.retrieveSchema(new NameImpl("dummy0")), dummy0, false);
@@ -126,7 +127,7 @@ public abstract class MongoSchemaStoreTest<S extends MongoSchemaStore> {
             store.deleteSchema(new NameImpl("dummy0"));
             store.deleteSchema(new NameImpl("dummy2"));
             typeNames = store.typeNames();
-            assertThat(typeNames, is(equalTo(Collections.EMPTY_LIST)));
+            assertThat(typeNames, is(equalTo(Collections.emptyList())));
             assertThat(store.retrieveSchema(new NameImpl("dummy0")), is(nullValue()));
             assertThat(store.retrieveSchema(new NameImpl("dummy2")), is(nullValue()));
 

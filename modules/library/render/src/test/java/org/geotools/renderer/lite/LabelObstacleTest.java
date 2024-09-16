@@ -16,8 +16,9 @@
  */
 package org.geotools.renderer.lite;
 
-import static java.awt.RenderingHints.*;
-import static org.junit.Assert.*;
+import static java.awt.RenderingHints.KEY_ANTIALIASING;
+import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
+import static org.junit.Assert.assertEquals;
 
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -97,29 +98,28 @@ public class LabelObstacleTest {
     static void loadData(MemoryDataStore mem, String name) throws Exception {
         WKTReader wkt = new WKTReader();
 
-        FeatureWriter w = mem.getFeatureWriter(name, Transaction.AUTO_COMMIT);
-        BufferedReader r =
-                new BufferedReader(
-                        new InputStreamReader(
-                                LabelObstacleTest.class.getResourceAsStream(
-                                        "test-data/obstacles/" + name + ".txt")));
-        String line = null;
-        while ((line = r.readLine()) != null) {
-            String[] values = line.split(";");
-            SimpleFeature f = (SimpleFeature) w.next();
-            for (int i = 0; i < f.getAttributeCount(); i++) {
-                AttributeDescriptor ad = f.getType().getDescriptor(i);
-                if (ad instanceof GeometryDescriptor) {
-                    f.setAttribute(i, wkt.read(values[i]));
-                } else {
-                    f.setAttribute(i, values[i]);
+        try (FeatureWriter w = mem.getFeatureWriter(name, Transaction.AUTO_COMMIT);
+                BufferedReader r =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        LabelObstacleTest.class.getResourceAsStream(
+                                                "test-data/obstacles/" + name + ".txt")))) {
+            String line = null;
+            while ((line = r.readLine()) != null) {
+                String[] values = line.split(";");
+                SimpleFeature f = (SimpleFeature) w.next();
+                for (int i = 0; i < f.getAttributeCount(); i++) {
+                    AttributeDescriptor ad = f.getType().getDescriptor(i);
+                    if (ad instanceof GeometryDescriptor) {
+                        f.setAttribute(i, wkt.read(values[i]));
+                    } else {
+                        f.setAttribute(i, values[i]);
+                    }
                 }
+
+                w.write();
             }
-
-            w.write();
         }
-
-        r.close();
     }
 
     Style style(String name) throws Exception {
@@ -132,7 +132,7 @@ public class LabelObstacleTest {
     }
 
     Style[] styles(String... names) throws Exception {
-        List<Style> styles = new ArrayList();
+        List<Style> styles = new ArrayList<>();
         for (String name : names) {
             styles.add(name != null ? style(name) : null);
         }
@@ -140,7 +140,7 @@ public class LabelObstacleTest {
     }
 
     FeatureSource[] sources(String... names) throws Exception {
-        List<FeatureSource> sources = new ArrayList();
+        List<FeatureSource> sources = new ArrayList<>();
         for (String name : names) {
             sources.add(mem.getFeatureSource(name));
         }
@@ -231,12 +231,7 @@ public class LabelObstacleTest {
         ImageAssert.assertEquals(file("hatch"), img, 10);
     }
 
-    /**
-     * Checks the label and the obstacle image do not overlap
-     *
-     * @param labels
-     * @param obstacle
-     */
+    /** Checks the label and the obstacle image do not overlap */
     private void checkNoIntersection(BufferedImage labels, BufferedImage obstacle) {
         ImageWorker extrema = intersectionExtrema(labels, obstacle);
         // if we have any intersection the result will be 0
@@ -247,10 +242,6 @@ public class LabelObstacleTest {
     /**
      * Computes the overlap between labels and obstacles, returning the extrema of the binary
      * overlap
-     *
-     * @param labels
-     * @param obstacles
-     * @return
      */
     ImageWorker intersectionExtrema(BufferedImage labels, BufferedImage obstacles) {
         // from 4 bands to 1 band averaging the pixel values

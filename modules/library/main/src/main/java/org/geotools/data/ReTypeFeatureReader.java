@@ -99,7 +99,7 @@ public class ReTypeFeatureReader
         builder = new SimpleFeatureBuilder(featureType);
     }
 
-    public FeatureReader getDelegate() {
+    public FeatureReader<SimpleFeatureType, SimpleFeature> getDelegate() {
         return reader;
     }
 
@@ -169,13 +169,17 @@ public class ReTypeFeatureReader
 
         String xpath;
 
-        for (int i = 0; i < types.length; i++) {
-            xpath = types[i].getLocalName();
+        for (AttributeDescriptor type : types) {
+            xpath = type.getLocalName();
             if (clone) builder.add(DataUtilities.duplicate(next.getAttribute(xpath)));
             else builder.add(next.getAttribute(xpath));
         }
 
-        return builder.buildFeature(id);
+        SimpleFeature feature = builder.buildFeature(id);
+        if (next.hasUserData()) {
+            feature.getUserData().putAll(next.getUserData());
+        }
+        return feature;
     }
 
     /** @see org.geotools.data.FeatureReader#hasNext() */

@@ -16,6 +16,7 @@
  */
 package org.geotools.data.view;
 
+import java.awt.RenderingHints;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -91,7 +92,6 @@ public class DefaultView implements SimpleFeatureSource {
      *
      * @param source a FeatureSource
      * @param query Filter used to limit results
-     * @throws SchemaException
      */
     public DefaultView(SimpleFeatureSource source, Query query) throws SchemaException {
         this.source = source;
@@ -124,10 +124,6 @@ public class DefaultView implements SimpleFeatureSource {
      * <p>This factory method is public and will be used to create all required subclasses. By
      * comparison the constructors for this class have package visibiliy. TODO: revisit this - I am
      * not sure I want write access to views (especially if they do reprojection).
-     *
-     * @param source
-     * @param query
-     * @return @throws SchemaException
      */
     public static SimpleFeatureSource create(SimpleFeatureSource source, Query query)
             throws SchemaException {
@@ -213,21 +209,20 @@ public class DefaultView implements SimpleFeatureSource {
             }
         } else {
             String[] queriedAtts = query.getPropertyNames();
-            int queriedAttCount = queriedAtts.length;
-            List allowedAtts = new LinkedList();
+            List<String> allowedAtts = new LinkedList<>();
 
-            for (int i = 0; i < queriedAttCount; i++) {
-                if (schema.getDescriptor(queriedAtts[i]) != null) {
-                    allowedAtts.add(queriedAtts[i]);
+            for (String queriedAtt : queriedAtts) {
+                if (schema.getDescriptor(queriedAtt) != null) {
+                    allowedAtts.add(queriedAtt);
                 } else {
                     LOGGER.info(
                             "queried a not allowed property: "
-                                    + queriedAtts[i]
+                                    + queriedAtt
                                     + ". Ommitting it from query");
                 }
             }
 
-            propNames = (String[]) allowedAtts.toArray(new String[allowedAtts.size()]);
+            propNames = allowedAtts.toArray(new String[allowedAtts.size()]);
         }
 
         return propNames;
@@ -272,7 +267,6 @@ public class DefaultView implements SimpleFeatureSource {
      *
      * <p>Description ...
      *
-     * @param listener
      * @see org.geotools.data.FeatureSource#addFeatureListener(org.geotools.data.FeatureListener)
      */
     public void addFeatureListener(FeatureListener listener) {
@@ -284,7 +278,6 @@ public class DefaultView implements SimpleFeatureSource {
      *
      * <p>Description ...
      *
-     * @param listener
      * @see org.geotools.data.FeatureSource#removeFeatureListener(org.geotools.data.FeatureListener)
      */
     public void removeFeatureListener(FeatureListener listener) {
@@ -296,8 +289,6 @@ public class DefaultView implements SimpleFeatureSource {
      *
      * <p>Description ...
      *
-     * @param query
-     * @return @throws IOException
      * @see org.geotools.data.FeatureSource#getFeatures(org.geotools.data.Query)
      */
     public SimpleFeatureCollection getFeatures(Query query) throws IOException {
@@ -369,9 +360,6 @@ public class DefaultView implements SimpleFeatureSource {
      * Implement getFeatures.
      *
      * <p>Description ...
-     *
-     * @param filter
-     * @return @throws IOException
      */
     public SimpleFeatureCollection getFeatures(Filter filter) throws IOException {
         return getFeatures(new Query(schema.getTypeName(), filter));
@@ -382,7 +370,6 @@ public class DefaultView implements SimpleFeatureSource {
      *
      * <p>Description ...
      *
-     * @return @throws IOException
      * @see org.geotools.data.FeatureSource#getFeatures()
      */
     public SimpleFeatureCollection getFeatures() throws IOException {
@@ -402,7 +389,7 @@ public class DefaultView implements SimpleFeatureSource {
 
     public ResourceInfo getInfo() {
         return new ResourceInfo() {
-            final Set<String> words = new HashSet<String>();
+            final Set<String> words = new HashSet<>();
 
             {
                 words.add("features");
@@ -529,7 +516,7 @@ public class DefaultView implements SimpleFeatureSource {
         }
     }
 
-    public Set getSupportedHints() {
+    public Set<RenderingHints.Key> getSupportedHints() {
         return source.getSupportedHints();
     }
 

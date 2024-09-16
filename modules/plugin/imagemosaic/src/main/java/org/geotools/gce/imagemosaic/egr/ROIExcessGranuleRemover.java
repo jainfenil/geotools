@@ -52,7 +52,7 @@ public class ROIExcessGranuleRemover {
      * Holds the granule loading results until it becomes evident actual geometric computation is
      * needed
      */
-    List<ROI> roiBuffer = new ArrayList<ROI>();
+    List<ROI> roiBuffer = new ArrayList<>();
 
     public ROIExcessGranuleRemover(
             Rectangle rasterBounds,
@@ -115,11 +115,7 @@ public class ROIExcessGranuleRemover {
         return essential;
     }
 
-    /**
-     * Returns true if the rendering area is complete
-     *
-     * @return
-     */
+    /** Returns true if the rendering area is complete */
     public boolean isRenderingAreaComplete() {
         // TODO: handle case in which the binarization is not yet generated? Like single tile
         // covering everything?

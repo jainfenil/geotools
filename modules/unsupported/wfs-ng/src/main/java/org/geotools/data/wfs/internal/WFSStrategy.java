@@ -53,7 +53,7 @@ public abstract class WFSStrategy extends Specification {
     private Map<WFSOperationType, AtomicLong> requestHandleSequences;
 
     public WFSStrategy() {
-        requestHandleSequences = new HashMap<WFSOperationType, AtomicLong>();
+        requestHandleSequences = new HashMap<>();
         for (WFSOperationType operationType : WFSOperationType.values()) {
             requestHandleSequences.put(operationType, new AtomicLong());
         }
@@ -120,7 +120,6 @@ public abstract class WFSStrategy extends Specification {
      * Splits the filter provided by the geotools query into the server supported and unsupported
      * ones.
      *
-     * @param typeName
      * @return a two-element array where the first element is the supported filter and the second
      *     the one to post-process
      * @see org.geotools.data.wfs.internal.WFSStrategy#splitFilters(org.opengis.filter.Filter)

@@ -16,6 +16,11 @@
  */
 package org.geotools.data.ogr;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,6 +54,8 @@ import org.geotools.feature.type.BasicFeatureTypes;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.util.logging.Logging;
+import org.junit.After;
+import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -76,13 +83,14 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         super(dataStoreFactoryClass);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         for (OGRDataStore store : stores) {
             store.dispose();
         }
     }
 
+    @Test
     public void testGetTypeNames() throws FileNotFoundException, IOException {
         OGRDataStore store = createDataStore(getAbsolutePath(STATE_POP), null);
         assertEquals(1, store.getTypeNames().length);
@@ -92,6 +100,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals("mixed", store.getTypeNames()[0]);
     }
 
+    @Test
     public void testSchemaPop() throws Exception {
         OGRDataStore s = createDataStore(getAbsolutePath(STATE_POP), null);
         SimpleFeatureType schema = s.getSchema(s.getTypeNames()[0]);
@@ -102,6 +111,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
                         schema.getGeometryDescriptor().getCoordinateReferenceSystem()));
     }
 
+    @Test
     public void testSchemaMix() throws Exception {
         OGRDataStore s = createDataStore(getAbsolutePath(MIXED), null);
         SimpleFeatureType schema = s.getSchema(s.getTypeNames()[0]);
@@ -116,11 +126,8 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         // .getDefaultGeometry().getCoordinateSystem()));
     }
 
-    /**
-     * Test optimized count against actual count
-     *
-     * @throws Exception
-     */
+    /** Test optimized count against actual count */
+    @Test
     public void testOptimizedEnvelope() throws Exception {
         URL url = TestData.url(STATE_POP);
         ShapefileDataStore sds = new ShapefileDataStore(url);
@@ -134,6 +141,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
     }
 
     /** Test count with query startIndex and maxFeatures */
+    @Test
     public void testCountWithOffsetLimit() throws Exception {
         OGRDataStore s = createDataStore(getAbsolutePath(STATE_POP), null);
         String typeName = s.getTypeNames()[0];
@@ -145,6 +153,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
     }
 
     /** Test count versus old DataSource */
+    @Test
     public void testOptimizedCount() throws Exception {
         URL url = TestData.url(STATE_POP);
         ShapefileDataStore sds = new ShapefileDataStore(url);
@@ -154,6 +163,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(sds.getCount(Query.ALL), s.getFeatureSource(typeName).getCount(Query.ALL));
     }
 
+    @Test
     public void testLoadAndVerify() throws Exception {
         SimpleFeatureCollection features = loadFeatures(STATE_POP, Query.ALL);
         int count = features.size();
@@ -176,12 +186,14 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
                 0.001);
     }
 
+    @Test
     public void testLoadAndCheckParentTypeIsPolygon() throws Exception {
-        FeatureCollection features = loadFeatures(STATE_POP, Query.ALL);
+        SimpleFeatureCollection features = loadFeatures(STATE_POP, Query.ALL);
         SimpleFeatureType schema = firstFeature(features).getFeatureType();
         assertEquals(schema.getSuper(), BasicFeatureTypes.POLYGON);
     }
 
+    @Test
     public void testShapefileComparison() throws Exception {
         URL url = TestData.url(STATE_POP);
         ShapefileDataStore sds = new ShapefileDataStore(url);
@@ -190,29 +202,29 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertFeatureTypeEquals(sds.getSchema(), ods.getSchema(sds.getSchema().getTypeName()));
 
         Query query = new Query(sds.getSchema().getTypeName());
-        FeatureReader sfr = sds.getFeatureReader(query, Transaction.AUTO_COMMIT);
-        FeatureReader ofr = ods.getFeatureReader(query, Transaction.AUTO_COMMIT);
-        SimpleFeature sf = null;
-        SimpleFeature of = null;
-        while (true) {
-            if (!sfr.hasNext()) {
-                assertTrue(!ofr.hasNext());
-                break;
-            }
-            sf = (SimpleFeature) sfr.next();
-            of = (SimpleFeature) ofr.next();
-            for (int i = 0; i < sds.getSchema().getAttributeCount(); i++) {
-                Object shapeAtt = sf.getAttribute(i);
-                Object ogrAtt = of.getAttribute(i);
-                assertEquals(shapeAtt, ogrAtt);
+        try (FeatureReader sfr = sds.getFeatureReader(query, Transaction.AUTO_COMMIT);
+                FeatureReader ofr = ods.getFeatureReader(query, Transaction.AUTO_COMMIT)) {
+            SimpleFeature sf = null;
+            SimpleFeature of = null;
+            while (true) {
+                if (!sfr.hasNext()) {
+                    assertFalse(ofr.hasNext());
+                    break;
+                }
+                sf = (SimpleFeature) sfr.next();
+                of = (SimpleFeature) ofr.next();
+                for (int i = 0; i < sds.getSchema().getAttributeCount(); i++) {
+                    Object shapeAtt = sf.getAttribute(i);
+                    Object ogrAtt = of.getAttribute(i);
+                    assertEquals(shapeAtt, ogrAtt);
+                }
             }
         }
-        sfr.close();
-        ofr.close();
         sds.dispose();
         ods.dispose();
     }
 
+    @Test
     public void testLoadGeometry() throws Exception {
         // load up the store and source
         OGRDataStore ods = createDataStore(getAbsolutePath(STATE_POP), null);
@@ -220,7 +232,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
 
         // query just the geometry field, check the collection returned
         Query query = new Query("statepop");
-        query.setPropertyNames(new String[] {"the_geom"});
+        query.setPropertyNames("the_geom");
         SimpleFeatureCollection fc = fs.getFeatures(query);
         assertTrue(fc.size() > 0);
         SimpleFeatureType schema = fc.getSchema();
@@ -228,9 +240,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(MultiPolygon.class, schema.getGeometryDescriptor().getType().getBinding());
 
         // get one feature, check it
-        SimpleFeatureIterator fi = fc.features();
-        SimpleFeature feature = fi.next();
-        fi.close();
+        SimpleFeature feature = DataUtilities.first(fc);
         schema = feature.getFeatureType();
         assertEquals(1, schema.getDescriptors().size());
         assertEquals(MultiPolygon.class, schema.getGeometryDescriptor().getType().getBinding());
@@ -266,6 +276,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
     /**
      * Create a test file, then continue removing the first entry until there are no features left.
      */
+    @Test
     public void testRemoveFromFrontAndClose() throws Throwable {
         OGRDataStore sds = createDataStore();
 
@@ -293,6 +304,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
     /**
      * Create a test file, then continue removing the last entry until there are no features left.
      */
+    @Test
     public void testRemoveFromBackAndClose() throws Throwable {
         OGRDataStore sds = createDataStore();
         String typeName = sds.getTypeNames()[0];
@@ -301,22 +313,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(idx, countFeatures(loadFeatures(sds, typeName)));
 
         while (idx > 0) {
-            FeatureWriter writer = null;
-            try {
-                writer = sds.getFeatureWriter(typeName, Filter.INCLUDE, Transaction.AUTO_COMMIT);
+            try (FeatureWriter writer =
+                    sds.getFeatureWriter(typeName, Filter.INCLUDE, Transaction.AUTO_COMMIT)) {
                 while (writer.hasNext()) {
                     writer.next();
                 }
                 writer.remove();
-            } finally {
-                if (writer != null) {
-                    writer.close();
-                }
             }
             assertEquals(--idx, countFeatures(loadFeatures(sds, typeName)));
         }
     }
 
+    @Test
     public void testCreateSchema() throws Exception {
         String[] fileNames = shapeFileNames("test");
         cleanFiles(fileNames);
@@ -347,6 +355,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         }
     }
 
+    @Test
     public void testCreateWriteRead() throws Exception {
         String typeName = "testw";
         String[] files = shapeFileNames(typeName);
@@ -372,43 +381,45 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
                             null);
         }
 
-        FeatureWriter writer = ds.getFeatureWriterAppend("testw", Transaction.AUTO_COMMIT);
-        for (int i = 0; i < features.length; i++) {
-            assertFalse(writer.hasNext());
-            SimpleFeature f = (SimpleFeature) writer.next();
-            f.setAttributes(features[i].getAttributes());
-            writer.write();
-        }
-        writer.close();
-
-        FeatureReader reader = ds.getFeatureReader(new Query("testw"), null);
-        for (int i = 0; i < features.length; i++) {
-            assertTrue(reader.hasNext());
-            SimpleFeature f = (SimpleFeature) reader.next();
-            for (int j = 0; j < schema.getAttributeCount(); j++) {
-                if (f.getAttribute(j) instanceof Geometry) {
-                    // this is necessary because geometry equality is
-                    // implemented as Geometry.equals(Geometry)
-                    Geometry a = (Geometry) f.getAttribute(j);
-                    Geometry b = (Geometry) features[i].getAttribute(j);
-                    assertTrue(a.equals(b));
-                } else {
-                    assertEquals(f.getAttribute(j), features[i].getAttribute(j));
-                }
+        try (FeatureWriter writer = ds.getFeatureWriterAppend("testw", Transaction.AUTO_COMMIT)) {
+            for (SimpleFeature simpleFeature : features) {
+                assertFalse(writer.hasNext());
+                SimpleFeature f = (SimpleFeature) writer.next();
+                f.setAttributes(simpleFeature.getAttributes());
+                writer.write();
             }
         }
-        assertFalse(reader.hasNext());
-        reader.close();
+
+        try (FeatureReader reader = ds.getFeatureReader(new Query("testw"), null)) {
+            for (SimpleFeature feature : features) {
+                assertTrue(reader.hasNext());
+                SimpleFeature f = (SimpleFeature) reader.next();
+                for (int j = 0; j < schema.getAttributeCount(); j++) {
+                    if (f.getAttribute(j) instanceof Geometry) {
+                        // this is necessary because geometry equality is
+                        // implemented as Geometry.equals(Geometry)
+                        Geometry a = (Geometry) f.getAttribute(j);
+                        Geometry b = (Geometry) feature.getAttribute(j);
+                        assertEquals(a, b);
+                    } else {
+                        assertEquals(f.getAttribute(j), feature.getAttribute(j));
+                    }
+                }
+            }
+            assertFalse(reader.hasNext());
+        }
     }
 
+    @Test
     public void testAttributesWritingShapefile() throws Exception {
-        FeatureCollection features = createFeatureCollection();
+        SimpleFeatureCollection features = createFeatureCollection();
         File tmpFile = getTempFile("test-shp", ".shp");
         tmpFile.delete();
         OGRDataStore s = createDataStore(tmpFile.getAbsolutePath(), "ESRI shapefile");
         writeFeatures(s, features);
     }
 
+    @Test
     public void testAttributesWritingGeoJSON() throws Exception {
         if (!ogrSupports("GeoJSON")) {
             LOGGER.warning("Skipping GeoJSON writing test as OGR was not built to support it");
@@ -427,20 +438,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributesWritingCsv() throws Exception {
         if (!ogrSupports("CSV")) {
             LOGGER.warning("Skipping CSV writing test as OGR was not built to support it");
@@ -457,20 +466,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributesWritingGmt() throws Exception {
         if (!ogrSupports("GMT")) {
             LOGGER.warning("Skipping GMT writing test as OGR was not built to support it");
@@ -496,20 +503,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributesWritingGpx() throws Exception {
         if (!ogrSupports("GPX")) {
             LOGGER.warning("Skipping GPX writing test as OGR was not built to support it");
@@ -535,20 +540,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributesWritingGML() throws Exception {
         if (!ogrSupports("GML")) {
             LOGGER.warning("Skipping GML writing test as OGR was not built to support it");
@@ -573,20 +576,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributesWritingKML() throws Exception {
         if (!ogrSupports("KML")) {
             LOGGER.warning("Skipping KML writing test as OGR was not built to support it");
@@ -611,20 +612,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributesWritingGeoRSS() throws Exception {
         if (!ogrSupports("GeoRSS")) {
             LOGGER.warning("Skipping GeoRSS writing test as OGR was not built to support it");
@@ -659,20 +658,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributeFilters() throws Exception {
         OGRDataStore s = createDataStore(getAbsolutePath(STATE_POP), null);
         FeatureSource fs = s.getFeatureSource(s.getTypeNames()[0]);
@@ -691,6 +688,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(1, fs.getFeatures(f).size());
     }
 
+    @Test
     public void testAttributesWritingSqlite() throws Exception {
         if (!ogrSupports("SQLite")) {
             LOGGER.warning("Skipping SQLLite writing test as OGR was not built to support it");
@@ -706,20 +704,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributesWritingSqliteWithSorting() throws Exception {
         if (!ogrSupports("SQLite")) {
             LOGGER.warning("Skipping SQLLite writing test as OGR was not built to support it");
@@ -733,28 +729,23 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(1, s.getTypeNames().length);
         FilterFactory ff = CommonFactoryFinder.getFilterFactory(null);
         Query query = new Query();
-        query.setSortBy(
-                new org.opengis.filter.sort.SortBy[] {
-                    ff.sort("float", org.opengis.filter.sort.SortOrder.ASCENDING)
-                });
+        query.setSortBy(ff.sort("float", org.opengis.filter.sort.SortOrder.ASCENDING));
         SimpleFeatureCollection fc = s.getFeatureSource("junk").getFeatures(query);
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
                 assertNotNull(f.getDefaultGeometry());
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
 
+    @Test
     public void testAttributesWritingSqliteFromUpperCaseAttributes() throws Exception {
         if (!ogrSupports("SQLite")) {
             LOGGER.warning("Skipping SQLite writing test as OGR was not built to support it");
@@ -770,8 +761,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(features.size(), fc.size());
         // Read
         int c = 0;
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 assertNotNull(f);
@@ -779,8 +769,6 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
                 assertNotNull(f.getAttribute("name"));
                 c++;
             }
-        } finally {
-            it.close();
         }
         assertEquals(fc.size(), c);
     }
@@ -798,14 +786,13 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
             features.add(
                     fb.buildFeature(
                             null,
-                            new Object[] {
-                                new GeometryFactory().createPoint(new Coordinate(1, -1)),
-                                "Point" + String.valueOf(i)
-                            }));
+                            new GeometryFactory().createPoint(new Coordinate(1, -1)),
+                            "Point" + String.valueOf(i)));
         }
         return features;
     }
 
+    @Test
     public void testGeometryFilters() throws Exception {
         OGRDataStore s = createDataStore(getAbsolutePath(STATE_POP), null);
         FeatureSource fs = s.getFeatureSource(s.getTypeNames()[0]);
@@ -826,6 +813,7 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
         assertEquals(6, fs.getFeatures(f).size());
     }
 
+    @Test
     public void testGeot5588() throws Exception {
         // Definition Table
         //   Type NATIVE Charset "Neutral"
@@ -918,20 +906,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
             features.add(
                     fb.buildFeature(
                             null,
-                            new Object[] {
-                                new GeometryFactory().createPoint(new Coordinate(1, -1)),
-                                Byte.valueOf((byte) i),
-                                Short.valueOf((short) i),
-                                Double.valueOf(i),
-                                Float.valueOf(i),
-                                new String(i + " "),
-                                new Date(i),
-                                Boolean.valueOf(true),
-                                Integer.valueOf(22),
-                                Long.valueOf(1234567890123456789L),
-                                new BigDecimal(new BigInteger("12345678901234567890123456789"), 2),
-                                new BigInteger("12345678901234567890123456789")
-                            }));
+                            new GeometryFactory().createPoint(new Coordinate(1, -1)),
+                            Byte.valueOf((byte) i),
+                            Short.valueOf((short) i),
+                            Double.valueOf(i),
+                            Float.valueOf(i),
+                            i + " ",
+                            new Date(i),
+                            Boolean.TRUE,
+                            Integer.valueOf(22),
+                            Long.valueOf(1234567890123456789L),
+                            new BigDecimal(new BigInteger("12345678901234567890123456789"), 2),
+                            new BigInteger("12345678901234567890123456789")));
         }
         return features;
     }
@@ -940,19 +926,18 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
             throws Exception {
         SimpleFeatureType schema = fc.getSchema();
         s.createSchema(schema);
-        FeatureWriter fw = s.getFeatureWriter(s.getTypeNames()[0], Transaction.AUTO_COMMIT);
-        FeatureIterator it = fc.features();
-        while (it.hasNext()) {
-            SimpleFeature sf = (SimpleFeature) it.next();
-            ((SimpleFeature) fw.next()).setAttributes(sf.getAttributes());
-            fw.write();
+        try (FeatureWriter fw = s.getFeatureWriter(s.getTypeNames()[0], Transaction.AUTO_COMMIT);
+                FeatureIterator it = fc.features()) {
+            while (it.hasNext()) {
+                SimpleFeature sf = (SimpleFeature) it.next();
+                ((SimpleFeature) fw.next()).setAttributes(sf.getAttributes());
+                fw.write();
+            }
         }
-        it.close();
-        fw.close();
     }
 
     private OGRDataStore createDataStore(File f) throws Exception {
-        FeatureCollection fc = createFeatureCollection();
+        SimpleFeatureCollection fc = createFeatureCollection();
         f.delete();
         OGRDataStore sds = createDataStore(f.getAbsolutePath(), "ESRI shapefile");
         writeFeatures(sds, fc);
@@ -975,8 +960,8 @@ public abstract class OGRDataStoreTest extends TestCaseSupport {
     }
 
     private void cleanFiles(String[] files) {
-        for (int i = 0; i < files.length; i++) {
-            File f = new File(files[i]);
+        for (String file : files) {
+            File f = new File(file);
             if (f.exists()) f.delete();
         }
     }

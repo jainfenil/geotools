@@ -54,7 +54,7 @@ public interface PointPlacement extends org.opengis.style.PointPlacement, LabelP
      * Returns the AnchorPoint which identifies the location inside a textlabel to use as an
      * "anchor" for positioning it relative to a point geometry.
      *
-     * @return acnchorPoint from the relative to the origional geometry
+     * @return anchorPoint from the relative to the original geometry
      */
     AnchorPoint getAnchorPoint();
 
@@ -62,7 +62,7 @@ public interface PointPlacement extends org.opengis.style.PointPlacement, LabelP
      * sets the AnchorPoint which identifies the location inside a textlabel to use as an "anchor"
      * for positioning it relative to a point geometry.
      *
-     * @param anchorPoint relative to the origional geometry
+     * @param anchorPoint relative to the original geometry
      */
     void setAnchorPoint(org.opengis.style.AnchorPoint anchorPoint);
 
@@ -91,8 +91,6 @@ public interface PointPlacement extends org.opengis.style.PointPlacement, LabelP
      * sets the rotation of the label.
      *
      * <p>Sets the rotation of the label.
-     *
-     * @param rotation
      */
     void setRotation(Expression rotation);
 

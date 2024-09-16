@@ -43,6 +43,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.measure.Quantity;
 import javax.measure.Unit;
+import javax.measure.quantity.Angle;
+import javax.measure.quantity.Length;
 import org.geotools.coverage.grid.io.imageio.geotiff.codes.GeoTiffCoordinateTransformationsCodes;
 import org.geotools.coverage.grid.io.imageio.geotiff.codes.GeoTiffGCSCodes;
 import org.geotools.coverage.grid.io.imageio.geotiff.codes.GeoTiffPCSCodes;
@@ -163,7 +165,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      *
      * @return the <code>CoordinateReferenceSystem</code> object representing the file data
      * @throws IOException if there is unexpected data in the GeoKey tags.
-     * @throws FactoryException
      * @throws NullPointerException if the <code>csAuthorityFactory</code>, <code>datumFactory
      *     </code>, <code>crsFactory</code> or <code>metadata</code> are uninitialized
      * @throws UnsupportedOperationException if the coordinate system specified by the GeoTiff file
@@ -195,9 +196,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      * types.
      *
      * @param metadata to use for building a {@link ProjectedCRS}.
-     * @return
-     * @throws IOException
-     * @throws FactoryException
      */
     private ProjectedCRS createProjectedCoordinateReferenceSystem(
             GeoTiffIIOMetadataDecoder metadata) throws Exception {
@@ -302,8 +300,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      * mentioned specification.
      *
      * @param metadata to use for building a {@link GeographicCRS}.
-     * @return
-     * @throws IOException
      */
     private GeographicCRS createGeographicCoordinateReferenceSystem(
             final GeoTiffIIOMetadataDecoder metadata) throws IOException {
@@ -390,7 +386,7 @@ public final class GeoTiffMetadata2CRSAdapter {
                     gcs =
                             new DefaultGeographicCRS(
                                     DefaultEllipsoidalCS.getName(gcs, new CitationImpl("EPSG")),
-                                    (GeodeticDatum) gcs.getDatum(),
+                                    gcs.getDatum(),
                                     DefaultEllipsoidalCS.GEODETIC_2D.usingUnit(angularUnit));
                 }
             } catch (FactoryException fe) {
@@ -409,7 +405,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      *
      * @param key we want to get the value for.
      * @param metadata containing the key we are looking for.
-     * @return
      */
     private static int getGeoKeyAsInt(final int key, final GeoTiffIIOMetadataDecoder metadata) {
 
@@ -430,7 +425,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      *     email post</a>
      * @param metadata containing the information to build the {@link MathTransform} for going from
      *     grid to world.
-     * @throws GeoTiffException
      */
     public static MathTransform getRasterToModel(final GeoTiffIIOMetadataDecoder metadata)
             throws GeoTiffException {
@@ -576,7 +570,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      * @param key we want to get the value for.
      * @param metadata containing the key we are looking for.
      * @return the value for the provided key.
-     * @throws IOException
      */
     private static double getGeoKeyAsDouble(
             final int key, final GeoTiffIIOMetadataDecoder metadata) {
@@ -600,8 +593,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      *
      * @param linearUnit is the UoM that this {@link ProjectedCRS} will use. It could be null.
      * @return a user-defined {@link ProjectedCRS}.
-     * @throws IOException
-     * @throws FactoryException
      */
     private ProjectedCRS createUserDefinedPCS(
             final GeoTiffIIOMetadataDecoder metadata, Unit<?> linearUnit) throws Exception {
@@ -766,12 +757,7 @@ public final class GeoTiffMetadata2CRSAdapter {
                 DefaultCartesianCS.PROJECTED);
     }
 
-    /**
-     * @param baseCRS
-     * @param parameters
-     * @throws InvalidParameterValueException
-     * @throws ParameterNotFoundException
-     */
+    /** */
     private void refineParameters(final GeographicCRS baseCRS, final ParameterValueGroup parameters)
             throws InvalidParameterValueException, ParameterNotFoundException {
         // set the remaining parameters.
@@ -820,7 +806,7 @@ public final class GeoTiffMetadata2CRSAdapter {
             throw new IllegalArgumentException(
                     "Error when trying to create a PCS using this linear UoM "
                             + linearUnit.toString());
-        final Map<String, String> props = new HashMap<String, String>();
+        final Map<String, String> props = new HashMap<>();
         props.put("name", Vocabulary.formatInternational(VocabularyKeys.PROJECTED).toString());
         props.put("alias", Vocabulary.formatInternational(VocabularyKeys.PROJECTED).toString());
         return new DefaultCartesianCS(
@@ -844,7 +830,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      * @param linearUnit to use for building this {@link PrimeMeridian}.
      * @return a {@link PrimeMeridian} built using the provided {@link Unit} and the provided
      *     metadata.
-     * @throws IOException
      */
     private PrimeMeridian createPrimeMeridian(
             final GeoTiffIIOMetadataDecoder metadata, Unit linearUnit) throws IOException {
@@ -875,9 +860,11 @@ public final class GeoTiffMetadata2CRSAdapter {
                         if (pmNumeric == 0) {
                             return DefaultPrimeMeridian.GREENWICH;
                         }
-                        final Map<String, String> props = new HashMap<String, String>();
+                        final Map<String, String> props = new HashMap<>();
                         props.put("name", name);
-                        pm = datumObjFactory.createPrimeMeridian(props, pmNumeric, linearUnit);
+                        @SuppressWarnings("unchecked")
+                        Unit<Angle> angleUnit = linearUnit;
+                        pm = datumObjFactory.createPrimeMeridian(props, pmNumeric, angleUnit);
                     } catch (NumberFormatException nfe) {
                         final IOException io =
                                 new GeoTiffException(
@@ -907,8 +894,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      *
      * @param unit to use for building this {@link GeodeticDatum}.
      * @return a {@link GeodeticDatum}.
-     * @throws IOException
-     * @throws GeoTiffException
      */
     private GeodeticDatum createGeodeticDatum(
             final Unit<?> unit, final GeoTiffIIOMetadataDecoder metadata) throws IOException {
@@ -980,7 +965,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      *
      * @param unit to build this {@link Ellipsoid}..
      * @return an {@link Ellipsoid}.
-     * @throws GeoTiffException
      */
     private Ellipsoid createEllipsoid(final Unit unit, final GeoTiffIIOMetadataDecoder metadata)
             throws GeoTiffException {
@@ -1035,8 +1019,10 @@ public final class GeoTiffMetadata2CRSAdapter {
                 inverseFlattening = semiMajorAxis / (semiMajorAxis - semiMinorAxis);
             }
             // look for the Ellipsoid first then build the datum
+            @SuppressWarnings("unchecked")
+            Unit<Length> lengthUnit = unit;
             return DefaultEllipsoid.createFlattenedSphere(
-                    name, semiMajorAxis, inverseFlattening, unit);
+                    name, semiMajorAxis, inverseFlattening, lengthUnit);
         }
 
         try {
@@ -1064,10 +1050,7 @@ public final class GeoTiffMetadata2CRSAdapter {
      * </ul>
      *
      * @param metadata to use for building this {@link GeographicCRS}.
-     * @param linearUnit
-     * @param angularUnit
      * @return a {@link GeographicCRS}.
-     * @throws IOException
      */
     private GeographicCRS createUserDefinedGCS(
             final GeoTiffIIOMetadataDecoder metadata, Unit<?> linearUnit, Unit<?> angularUnit)
@@ -1093,7 +1076,7 @@ public final class GeoTiffMetadata2CRSAdapter {
 
         // coordinate reference system
         // property map is reused
-        final Map<String, String> props = new HashMap<String, String>();
+        final Map<String, String> props = new HashMap<>();
         // make the user defined GCS from all the components...
         props.put("name", name);
         return new DefaultGeographicCRS(
@@ -1109,8 +1092,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      * @param name indicates the name for the projection.
      * @param metadata to use for building this {@link ParameterValueGroup}.
      * @return a {@link ParameterValueGroup} that can be used to trigger this projection.
-     * @throws IOException
-     * @throws FactoryException
      */
     private ParameterValueGroup createUserDefinedProjectionParameter(
             String name, final GeoTiffIIOMetadataDecoder metadata)
@@ -1149,10 +1130,7 @@ public final class GeoTiffMetadata2CRSAdapter {
      * to be less strict but I will not do this, since I believe it is may lead us just on a very
      * dangerous path.
      *
-     * @param name
      * @param metadata to use fo building this {@link ParameterValueGroup}.
-     * @return
-     * @throws GeoTiffException
      */
     private ParameterValueGroup setParametersForProjection(
             String name, final String coordTransCode, final GeoTiffIIOMetadataDecoder metadata)
@@ -1562,10 +1540,6 @@ public final class GeoTiffMetadata2CRSAdapter {
      * ProjLinearUnitsGeoKey</code> and the <code>ProjLinearUnitSizeGeoKey</code>. The unit may
      * either be specified as a standard EPSG recognized unit, or may be user defined.
      *
-     * @param key
-     * @param userDefinedKey
-     * @param base
-     * @param def
      * @return <code>Unit</code> object representative of the tags in the file.
      * @throws IOException if the<code>ProjLinearUnitsGeoKey</code> is not specified or if unit is
      *     user defined and <code>ProjLinearUnitSizeGeoKey</code> is either not defined or does not
@@ -1620,7 +1594,10 @@ public final class GeoTiffMetadata2CRSAdapter {
         } else {
             try {
                 // using epsg code for this unit
-                return (Unit<Q>) this.allAuthoritiesFactory.createUnit("EPSG:" + unitCode);
+                @SuppressWarnings("unchecked")
+                Unit<Q> result =
+                        (Unit<Q>) this.allAuthoritiesFactory.createUnit("EPSG:" + unitCode);
+                return result;
             } catch (FactoryException fe) {
                 final IOException io = new GeoTiffException(metadata, fe.getLocalizedMessage(), fe);
                 throw io;

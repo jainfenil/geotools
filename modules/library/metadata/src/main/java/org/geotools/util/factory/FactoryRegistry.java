@@ -21,7 +21,19 @@ import static org.geotools.util.Utilities.streamIfSubtype;
 
 import java.awt.RenderingHints;
 import java.lang.ref.Reference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -34,6 +46,7 @@ import org.geotools.metadata.i18n.Loggings;
 import org.geotools.util.Classes;
 import org.geotools.util.Utilities;
 import org.geotools.util.logging.Logging;
+import org.opengis.filter.Filter;
 
 /**
  * A registry for factories, organized by categories (usually by <strong>interface</strong>). For
@@ -116,7 +129,8 @@ public class FactoryRegistry {
      * need to be scanned for plugins. After a category has been first used, it is removed from this
      * set so we don't scan for plugins again.
      */
-    private final Set<Class<?>> needScanForPlugins = new HashSet<>();
+    private final Set<Class<?>> needScanForPlugins =
+            Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * Categories under scanning. This is used by {@link #scanForPlugins(Collection,Class)} as a
@@ -153,7 +167,7 @@ public class FactoryRegistry {
      * @param categories The categories.
      * @since 2.4
      */
-    public FactoryRegistry(final Class<?>[] categories) {
+    public FactoryRegistry(final Class<?>... categories) {
         this(Arrays.asList(categories));
     }
 
@@ -235,7 +249,7 @@ public class FactoryRegistry {
      * @return Factories ready to use for the specified category, filter and hints.
      * @since 19
      */
-    public synchronized <T> Stream<T> getFactories(
+    public <T> Stream<T> getFactories(
             final Class<T> category, final Predicate<? super T> filter, final Hints hints) {
         /*
          * The implementation of this method is very similar to the 'getUnfilteredFactories'
@@ -453,25 +467,27 @@ public class FactoryRegistry {
             final Hints.Key key,
             final String message,
             final Class<?> type) {
-        final StringBuilder buffer = new StringBuilder(status);
-        buffer.append(Utilities.spaces(Math.max(1, 7 - status.length())))
-                .append('(')
-                .append(Classes.getShortName(category));
-        if (key != null) {
-            buffer.append(", ").append(key);
+        if (LOGGER.isLoggable(DEBUG_LEVEL)) {
+            final StringBuilder buffer = new StringBuilder(status);
+            buffer.append(Utilities.spaces(Math.max(1, 7 - status.length())))
+                    .append('(')
+                    .append(Classes.getShortName(category));
+            if (key != null) {
+                buffer.append(", ").append(key);
+            }
+            buffer.append(')');
+            if (message != null) {
+                buffer.append(": ").append(message);
+            }
+            if (type != null) {
+                buffer.append(' ').append(Classes.getShortName(type)).append('.');
+            }
+            final LogRecord record = new LogRecord(DEBUG_LEVEL, buffer.toString());
+            record.setSourceClassName(FactoryRegistry.class.getName());
+            record.setSourceMethodName("getFactory");
+            record.setLoggerName(LOGGER.getName());
+            LOGGER.log(record);
         }
-        buffer.append(')');
-        if (message != null) {
-            buffer.append(": ").append(message);
-        }
-        if (type != null) {
-            buffer.append(' ').append(Classes.getShortName(type)).append('.');
-        }
-        final LogRecord record = new LogRecord(DEBUG_LEVEL, buffer.toString());
-        record.setSourceClassName(FactoryRegistry.class.getName());
-        record.setSourceMethodName("getFactory");
-        record.setLoggerName(LOGGER.getName());
-        LOGGER.log(record);
     }
 
     /**
@@ -535,7 +551,6 @@ public class FactoryRegistry {
      * Returns the factories available in the cache, or {@code null} if none. To be overridden by
      * {@link FactoryCreator} only.
      *
-     * @param category
      * @return List of references to cached factories, or {@code null} if none.
      */
     <T> List<Reference<T>> getCachedFactories(final Class<T> category) {
@@ -883,7 +898,7 @@ public class FactoryRegistry {
      * Scans the given category for plugins only if needed. After this method has been invoked once
      * for a given category, it will no longer scan for that category.
      */
-    private void scanForPluginsIfNeeded(final Class<?> category) {
+    private synchronized void scanForPluginsIfNeeded(final Class<?> category) {
         if (needScanForPlugins.remove(category)) {
             scanForPlugins(getClassLoaders(), category);
         }
@@ -894,8 +909,6 @@ public class FactoryRegistry {
      *
      * <p>Used to facilitate integration with other plug-in systems, such as OSGi or Spring, that
      * block CLASSPATH visibility of {@link ServiceLoader} implementation registration.
-     *
-     * @param factories
      */
     public void registerFactories(final Iterator<?> factories) {
         ensureArgumentNonNull("factories", factories);
@@ -907,8 +920,6 @@ public class FactoryRegistry {
      *
      * <p>Used to facilitate integration with other plug-in systems, such as OSGi or Spring, that
      * block CLASSPATH visibility of {@link ServiceLoader} implementation registration.
-     *
-     * @param factories
      */
     public void registerFactories(final Iterable<?> factories) {
         ensureArgumentNonNull("factories", factories);
@@ -920,8 +931,6 @@ public class FactoryRegistry {
      *
      * <p>Used to facilitate integration with other plug-in systems, such as OSGi or Spring, that
      * block CLASSPATH visibility of {@link ServiceLoader} implementation registration.
-     *
-     * @param factory
      */
     public void registerFactory(final Object factory) {
         registry.registerInstance(factory);
@@ -932,10 +941,6 @@ public class FactoryRegistry {
      *
      * <p>Used to facilitate integration with other plug-in systems, such as OSGi or Spring, that
      * block CLASSPATH visibility of {@link ServiceLoader} implementation registration.
-     *
-     * @param factory
-     * @param category
-     * @return
      */
     public <T> boolean registerFactory(final T factory, final Class<T> category) {
         if (!category.isAssignableFrom(factory.getClass())) {
@@ -1175,11 +1180,7 @@ public class FactoryRegistry {
         registry.deregisterInstances();
     }
 
-    /**
-     * Clear registered factories for a provided category.
-     *
-     * @param category
-     */
+    /** Clear registered factories for a provided category. */
     public void deregisterAll(Class<?> category) {
         registry.deregisterInstances(category);
     }
@@ -1189,8 +1190,6 @@ public class FactoryRegistry {
      *
      * <p>Used to facilitate integration with other plug-in systems, such as OSGi or Spring, that
      * block CLASSPATH visibility of {@link ServiceLoader} implementation registration.
-     *
-     * @param factories
      */
     public void deregisterFactories(final Iterator<?> factories) {
         ensureArgumentNonNull("factories", factories);
@@ -1202,8 +1201,6 @@ public class FactoryRegistry {
      *
      * <p>Used to facilitate integration with other plug-in systems, such as OSGi or Spring, that
      * block CLASSPATH visibility of {@link ServiceLoader} implementation registration.
-     *
-     * @param factories
      */
     public void deregisterFactories(final Iterable<?> factories) {
         ensureArgumentNonNull("factories", factories);
@@ -1215,8 +1212,6 @@ public class FactoryRegistry {
      *
      * <p>Used to facilitate integration with other plug-in systems, such as OSGi or Spring, that
      * block CLASSPATH visibility of {@link ServiceLoader} implementation registration.
-     *
-     * @param factory
      */
     public void deregisterFactory(final Object factory) {
         registry.deregisterInstance(factory);
@@ -1227,10 +1222,6 @@ public class FactoryRegistry {
      *
      * <p>Used to facilitate integration with other plug-in systems, such as OSGi or Spring, that
      * block CLASSPATH visibility of {@link ServiceLoader} implementation registration.
-     *
-     * @param factory
-     * @param category
-     * @return
      */
     public <T> boolean deregisterFactory(final T factory, final Class<T> category) {
         ensureArgumentNonNull("factory", factory);
@@ -1245,9 +1236,6 @@ public class FactoryRegistry {
      * Define pairwise ordering giving priority to the <code>firstFactory</code> over the <code>
      * secondFactory</code>.
      *
-     * @param category
-     * @param firstFactory
-     * @param secondFactory
      * @return if this call establishes a new order
      */
     public <T> boolean setOrdering(
@@ -1360,8 +1348,6 @@ public class FactoryRegistry {
      * before the second.
      *
      * @param category The category to clear instance order for.
-     * @param firstFactory
-     * @param secondFactory
      * @return {@code true} if that ordering was previously defined
      */
     public <T> boolean unsetOrdering(

@@ -22,23 +22,35 @@ import java.io.InputStream;
 import java.net.URL;
 import javax.xml.namespace.QName;
 import org.geotools.data.wfs.internal.GetParser;
+import org.geotools.xsd.Configuration;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 public class XmlSimpleFeatureParserTest extends AbstractGetFeatureParserTest {
 
     @Override
+    @SuppressWarnings("PMD.CloseResource") // wrapped and returned
     protected GetParser<SimpleFeature> getParser(
             final QName featureName,
             final URL schemaLocation,
             final SimpleFeatureType featureType,
             final URL getFeaturesRequest,
-            String axisOrder)
+            String axisOrder,
+            Configuration wfsConfiguration)
             throws IOException {
 
         InputStream inputStream = new BufferedInputStream(getFeaturesRequest.openStream());
         GetParser<SimpleFeature> parser =
                 new XmlSimpleFeatureParser(inputStream, featureType, featureName, axisOrder);
         return parser;
+    }
+
+    @Override
+    @Test
+    @Ignore
+    public void testParseWfs200Gml32() throws Exception {
+        // parser is not supporting wfs 2.0.0/gml 3.2 so this impl is empty
     }
 }

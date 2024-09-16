@@ -104,7 +104,7 @@ public class CommandLine {
      *
      * @param args The command-line arguments.
      */
-    protected CommandLine(final String[] args) {
+    protected CommandLine(final String... args) {
         this(args, 0);
     }
 
@@ -265,8 +265,8 @@ public class CommandLine {
      * list.
      */
     protected void help() {
-        final Map<String, String> mandatory = new TreeMap<String, String>();
-        final Map<String, String> optional = new TreeMap<String, String>();
+        final Map<String, String> mandatory = new TreeMap<>();
+        final Map<String, String> optional = new TreeMap<>();
         optional.put("help", "Print this summary.");
         optional.put(
                 "locale=S",
@@ -284,6 +284,7 @@ public class CommandLine {
     }
 
     /** Prints the specified options to the standard output stream. */
+    @SuppressWarnings("PMD.CloseResource")
     private void print(final Map<String, String> options) {
         final TableWriter table = new TableWriter(out, "  ");
         for (final Map.Entry<String, String> entry : options.entrySet()) {

@@ -49,11 +49,7 @@ public final class JP2KTest extends GDALTestCase {
     /** file name of a valid JP2K sample data to be used for tests. */
     private static final String fileName = "sample.jp2";
 
-    /**
-     * Creates a new instance of JP2KTest
-     *
-     * @param name
-     */
+    /** Creates a new instance of JP2KTest */
     public JP2KTest() {
         super("JP2K", new JP2KFormatFactory());
     }
@@ -84,12 +80,11 @@ public final class JP2KTest extends GDALTestCase {
 
         final BaseGDALGridCoverage2DReader reader = new JP2KReader(file);
         final ParameterValue gg =
-                (ParameterValue)
-                        ((AbstractGridFormat) reader.getFormat()).READ_GRIDGEOMETRY2D.createValue();
+                ((AbstractGridFormat) reader.getFormat()).READ_GRIDGEOMETRY2D.createValue();
         final GeneralEnvelope oldEnvelope = reader.getOriginalEnvelope();
         gg.setValue(new GridGeometry2D(reader.getOriginalGridRange(), oldEnvelope));
 
-        final GridCoverage2D gc = (GridCoverage2D) reader.read(new GeneralParameterValue[] {gg});
+        final GridCoverage2D gc = reader.read(new GeneralParameterValue[] {gg});
         forceDataLoading(gc);
 
         if (TestData.isInteractiveTest()) {

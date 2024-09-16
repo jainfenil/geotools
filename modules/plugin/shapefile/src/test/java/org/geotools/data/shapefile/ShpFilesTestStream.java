@@ -18,7 +18,10 @@ package org.geotools.data.shapefile;
 
 import static org.geotools.data.shapefile.files.ShpFileType.PRJ;
 import static org.geotools.data.shapefile.files.ShpFileType.SHP;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -60,11 +63,8 @@ public class ShpFilesTestStream implements org.geotools.data.shapefile.files.Fil
     private void writeDataToFiles() throws IOException {
         Set<Entry<ShpFileType, File>> entries = map.entrySet();
         for (Entry<ShpFileType, File> entry : entries) {
-            FileWriter out = new FileWriter(entry.getValue());
-            try {
+            try (FileWriter out = new FileWriter(entry.getValue())) {
                 out.write(entry.getKey().name());
-            } finally {
-                out.close();
             }
         }
     }
@@ -141,18 +141,15 @@ public class ShpFilesTestStream implements org.geotools.data.shapefile.files.Fil
         ShpFileType[] types = ShpFileType.values();
         for (ShpFileType shpFileType : types) {
             String read = "";
-            InputStream in = files.getInputStream(shpFileType, this);
-            InputStreamReader reader = new InputStreamReader(in);
-            assertEquals(1, files.numberOfLocks());
-            try {
+            try (InputStream in = files.getInputStream(shpFileType, this);
+                    InputStreamReader reader = new InputStreamReader(in)) {
+                assertEquals(1, files.numberOfLocks());
                 int current = reader.read();
                 while (current != -1) {
                     read += (char) current;
                     current = reader.read();
                 }
             } finally {
-                reader.close();
-                in.close();
                 assertEquals(0, files.numberOfLocks());
             }
             assertEquals(shpFileType.name(), read);
@@ -165,12 +162,10 @@ public class ShpFilesTestStream implements org.geotools.data.shapefile.files.Fil
         ShpFileType[] types = ShpFileType.values();
         for (ShpFileType shpFileType : types) {
 
-            OutputStream out = files.getOutputStream(shpFileType, this);
-            assertEquals(1, files.numberOfLocks());
-            try {
+            try (OutputStream out = files.getOutputStream(shpFileType, this)) {
+                assertEquals(1, files.numberOfLocks());
                 out.write((byte) 2);
             } finally {
-                out.close();
                 assertEquals(0, files.numberOfLocks());
             }
         }
@@ -187,21 +182,21 @@ public class ShpFilesTestStream implements org.geotools.data.shapefile.files.Fil
     }
 
     @Test
+    @SuppressWarnings("PMD.UnusedVariable") // really want to just open and close
     public void testGetReadChannelURL() throws IOException {
         URL url = TestData.url("shapes/statepop.shp");
         ShpFiles files = new ShpFiles(url);
 
         assertFalse(files.isLocal());
 
-        ReadableByteChannel read = files.getReadChannel(SHP, this);
-
-        assertEquals(1, files.numberOfLocks());
-
-        read.close();
+        try (ReadableByteChannel read = files.getReadChannel(SHP, this)) {
+            assertEquals(1, files.numberOfLocks());
+        }
 
         assertEquals(0, files.numberOfLocks());
     }
 
+    @SuppressWarnings("PMD.CloseResource") // manual handling to try double close
     private void doRead(ShpFileType shpFileType) throws IOException {
         ReadableByteChannel in = files.getReadChannel(shpFileType, this);
         assertEquals(1, files.numberOfLocks());
@@ -225,6 +220,7 @@ public class ShpFilesTestStream implements org.geotools.data.shapefile.files.Fil
         assertEquals(shpFileType.name(), read);
     }
 
+    @SuppressWarnings("PMD.CloseResource") // manual handling to try double close
     private void doWrite(ShpFileType shpFileType) throws IOException {
         WritableByteChannel out = files.getWriteChannel(shpFileType, this);
         assertEquals(1, files.numberOfLocks());

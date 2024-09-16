@@ -136,9 +136,7 @@ public interface ComplexBinding extends Binding {
      * of the property, and not a list, iterator, or array containing all of the instances.
      *
      * @param object the object being encoded.
-     * @param element
      * @return A list of the properties for the object.
      */
-    List /*Object[QName,Object]*/ getProperties(Object object, XSDElementDeclaration element)
-            throws Exception;
+    List<Object[]> getProperties(Object object, XSDElementDeclaration element) throws Exception;
 }

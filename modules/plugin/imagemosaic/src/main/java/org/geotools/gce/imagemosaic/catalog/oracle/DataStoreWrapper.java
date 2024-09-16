@@ -20,7 +20,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,29 +82,17 @@ public abstract class DataStoreWrapper implements DataStore {
     protected final DataStore datastore;
 
     /** Mapping between typeNames and FeatureTypeMapper */
-    protected final Map<Name, FeatureTypeMapper> mapping =
-            new ConcurrentHashMap<Name, FeatureTypeMapper>();
+    protected final Map<Name, FeatureTypeMapper> mapping = new ConcurrentHashMap<>();
 
     /** Quick access typeNames list */
-    private List<String> typeNames = new ArrayList<String>();
+    private List<String> typeNames = new ArrayList<>();
 
-    /**
-     * Base constructor
-     *
-     * @param datastore
-     * @param auxFolderPath
-     */
+    /** Base constructor */
     public DataStoreWrapper(DataStore datastore, String auxFolderPath) {
         this(datastore, auxFolderPath, HIDDEN_FOLDER);
     }
 
-    /**
-     * Base constructor with custom hidden folder
-     *
-     * @param datastore
-     * @param auxFolderPath
-     * @param subFolderName
-     */
+    /** Base constructor with custom hidden folder */
     public DataStoreWrapper(DataStore datastore, String auxFolderPath, String subFolderName) {
         this.datastore = datastore;
         initMapping(auxFolderPath + File.separatorChar + subFolderName);
@@ -152,9 +139,6 @@ public abstract class DataStoreWrapper implements DataStore {
 
     /**
      * Load information from property files and initialize the related {@link FeatureTypeMapper}s
-     *
-     * @param file
-     * @throws Exception
      */
     private void loadMappers(final File file) throws Exception {
         // TODO we should do a lazy load initialization
@@ -174,21 +158,12 @@ public abstract class DataStoreWrapper implements DataStore {
         }
     }
 
-    /**
-     * Utility method which load mapping properties from a propertiesFile.
-     *
-     * @param propertiesFile
-     * @return
-     */
+    /** Utility method which load mapping properties from a propertiesFile. */
     private static Properties loadProperties(final String propertiesFile) {
         Properties properties = new Properties();
         File propertiesFileP = new File(propertiesFile);
         try (InputStream inStream = new BufferedInputStream(new FileInputStream(propertiesFileP))) {
             properties.load(inStream);
-        } catch (FileNotFoundException e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to store the mapping " + e.getLocalizedMessage());
-            }
         } catch (IOException e) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Unable to store the mapping " + e.getLocalizedMessage());
@@ -241,22 +216,13 @@ public abstract class DataStoreWrapper implements DataStore {
         }
     }
 
-    /**
-     * Store the properties on disk
-     *
-     * @param properties
-     * @param typeName
-     */
+    /** Store the properties on disk */
     protected void storeProperties(Properties properties, String typeName) {
         final String propertiesPath =
                 auxiliaryFolder.getAbsolutePath() + File.separatorChar + typeName + ".properties";
         try (OutputStream outStream =
                 new BufferedOutputStream(new FileOutputStream(new File(propertiesPath)))) {
             properties.store(outStream, null);
-        } catch (FileNotFoundException e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to store the mapping " + e.getLocalizedMessage());
-            }
         } catch (IOException e) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Unable to store the mapping " + e.getLocalizedMessage());
@@ -271,7 +237,7 @@ public abstract class DataStoreWrapper implements DataStore {
 
     @Override
     public List<Name> getNames() throws IOException {
-        return new ArrayList<Name>(mapping.keySet());
+        return new ArrayList<>(mapping.keySet());
     }
 
     @Override
@@ -321,9 +287,7 @@ public abstract class DataStoreWrapper implements DataStore {
 
     @Override
     public String[] getTypeNames() throws IOException {
-        return typeNames != null
-                ? (String[]) typeNames.toArray(new String[typeNames.size()])
-                : null;
+        return typeNames != null ? typeNames.toArray(new String[typeNames.size()]) : null;
     }
 
     @Override
@@ -381,12 +345,7 @@ public abstract class DataStoreWrapper implements DataStore {
         return datastore.getLockingManager();
     }
 
-    /**
-     * Return the mapper for the specified typeName
-     *
-     * @param typeName
-     * @return
-     */
+    /** Return the mapper for the specified typeName */
     private FeatureTypeMapper getMapper(Name typeName) {
         FeatureTypeMapper mapper = null;
         Utilities.ensureNonNull("typeName", typeName);
@@ -396,11 +355,7 @@ public abstract class DataStoreWrapper implements DataStore {
         return mapper;
     }
 
-    /**
-     * Store the {@link FeatureTypeMapper} instance
-     *
-     * @param mapper
-     */
+    /** Store the {@link FeatureTypeMapper} instance */
     protected void storeMapper(FeatureTypeMapper mapper) {
         final Properties properties = new Properties();
         final String typeName = mapper.getName().toString();
@@ -429,15 +384,11 @@ public abstract class DataStoreWrapper implements DataStore {
     /**
      * Return a specific {@link FeatureTypeMapper} by parsing mapping properties contained within
      * the specified {@link Properties} object
-     *
-     * @param featureType
-     * @return
-     * @throws Exception
      */
     protected FeatureTypeMapper getFeatureTypeMapper(final Properties props) throws Exception {
-        SimpleFeatureType indexSchema;
         // Creating schema
-        indexSchema = DataUtilities.createType(props.getProperty(NAME), props.getProperty(SCHEMA));
+        SimpleFeatureType indexSchema =
+                DataUtilities.createType(props.getProperty(NAME), props.getProperty(SCHEMA));
         CoordinateReferenceSystem crs =
                 CRS.parseWKT(props.getProperty(COORDINATE_REFERENCE_SYSTEM));
         indexSchema =
@@ -446,13 +397,7 @@ public abstract class DataStoreWrapper implements DataStore {
         return getFeatureTypeMapper(indexSchema);
     }
 
-    /**
-     * Return a specific {@link FeatureTypeMapper} instance on top of an input featureType
-     *
-     * @param featureType
-     * @return
-     * @throws Exception
-     */
+    /** Return a specific {@link FeatureTypeMapper} instance on top of an input featureType */
     protected abstract FeatureTypeMapper getFeatureTypeMapper(final SimpleFeatureType featureType)
             throws Exception;
 }

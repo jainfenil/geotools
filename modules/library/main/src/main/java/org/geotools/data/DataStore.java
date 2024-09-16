@@ -26,7 +26,7 @@ import org.opengis.filter.Filter;
 /**
  * This represents a physical source of feature data, such as a shapefiles or database, where the
  * features will be instances of {@code SimpleFeature}. It is derived from the {@code DataAccess}
- * interface (which works at the more general {@code Feature} level.
+ * interface (which works at the more general {@code Feature} level).
  *
  * @see DataAccess
  * @see org.opengis.feature.Feature
@@ -52,7 +52,6 @@ public interface DataStore extends DataAccess<SimpleFeatureType, SimpleFeature> 
      * <p>This functionality is similar to an "drop table" statement in SQL. Implementation is
      * optional; it may not be supported by all servers or files.
      *
-     * @param typeName
      * @throws IOException if the operation failed
      * @throws UnsupportedOperation if functionality is not available
      */
@@ -148,7 +147,7 @@ public interface DataStore extends DataAccess<SimpleFeatureType, SimpleFeature> 
      *
      * @param typeName the type name for features that will be accessible
      * @param filter defines additional constraints on the features that will be accessible
-     * @param transaction the transation that the returned writer operates against
+     * @param transaction the transaction that the returned writer operates against
      * @return an instance of {@code FeatureWriter}
      * @throws IOException if data access errors occur
      * @see #getFeatureWriterAppend(String, Transaction)
@@ -163,7 +162,7 @@ public interface DataStore extends DataAccess<SimpleFeatureType, SimpleFeature> 
      * <p>The returned writer does <b>not</b> allow features to be added.
      *
      * @param typeName the type name for features that will be accessible
-     * @param transaction the transation that the returned writer operates against
+     * @param transaction the transaction that the returned writer operates against
      * @return an instance of {@code FeatureWriter}
      * @throws IOException if data access errors occur
      * @see #getFeatureWriterAppend(String, Transaction)

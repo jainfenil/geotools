@@ -71,7 +71,6 @@ public class CQLTest {
      * Between predicate sample
      *
      * @see ECQLBetweenPredicateTest
-     * @throws CQLException
      */
     @Test
     public void betweenPredicate() throws CQLException {
@@ -85,14 +84,11 @@ public class CQLTest {
      * Equals predicate sample
      *
      * @see ECQLComparisonPredicateTest
-     * @throws Exception
      */
     @Test
     public void comparisonPredicate() throws Exception {
 
-        Filter filter;
-
-        filter = CQL.toFilter("POP_RANK > 6");
+        Filter filter = CQL.toFilter("POP_RANK > 6");
 
         Assert.assertTrue(filter instanceof PropertyIsGreaterThan);
     }
@@ -101,14 +97,11 @@ public class CQLTest {
      * GeoOperation predicate sample
      *
      * @see ECQLGeoOperationTest
-     * @throws CQLException
      */
     @Test
     public void geoOperationPredicate() throws CQLException {
 
-        Filter filter;
-
-        filter = CQL.toFilter("DISJOINT(the_geom, POINT(1 2))");
+        Filter filter = CQL.toFilter("DISJOINT(the_geom, POINT(1 2))");
 
         Assert.assertTrue("Disjoint was expected", filter instanceof Disjoint);
     }
@@ -130,10 +123,9 @@ public class CQLTest {
 
     @Test
     public void dwithinGeometry() throws Exception {
-        Filter resultFilter;
 
         // DWITHIN
-        resultFilter = CQL.toFilter("DWITHIN(the_geom, POINT(1 2), 10, kilometers)");
+        Filter resultFilter = CQL.toFilter("DWITHIN(the_geom, POINT(1 2), 10, kilometers)");
 
         Assert.assertTrue(resultFilter instanceof DistanceBufferOperator);
     }
@@ -142,7 +134,6 @@ public class CQLTest {
      * Temporal predicate sample
      *
      * @see ECQLTemporalPredicateTest
-     * @throws Exception
      */
     @Test
     public void temporalPredicate() throws Exception {
@@ -155,16 +146,13 @@ public class CQLTest {
     /**
      * And / Or / Not predicate
      *
-     * @throws Exception
      * @see ECQLBooleanValueExpressionTest
      */
     @Test
     public void booleanPredicate() throws Exception {
 
-        Filter filter;
-
         // and sample
-        filter = CQL.toFilter("QUANTITY < 10 AND QUANTITY < 2 ");
+        Filter filter = CQL.toFilter("QUANTITY < 10 AND QUANTITY < 2 ");
 
         Assert.assertTrue(filter instanceof And);
 
@@ -183,7 +171,6 @@ public class CQLTest {
      * Like predicate sample
      *
      * @see ECQLLikePredicateTest
-     * @throws Exception
      */
     @Test
     public void likePredicate() throws Exception {
@@ -197,7 +184,6 @@ public class CQLTest {
      * Null predicate sample
      *
      * @see ECQLNullPredicateTest
-     * @throws Exception
      */
     @Test
     public void isNullPredicate() throws Exception {
@@ -211,7 +197,6 @@ public class CQLTest {
      * Exist property predicate sample
      *
      * @see ECQLExistenceTest
-     * @throws Exception
      */
     @Test
     public void existProperty() throws Exception {
@@ -240,7 +225,7 @@ public class CQLTest {
 
         List<Filter> list = CQL.toFilterList("QUANTITY=1; YEAR<1963");
 
-        Assert.assertTrue(list.size() == 2);
+        assertEquals(2, list.size());
 
         Assert.assertTrue(list.get(0) instanceof PropertyIsEqualTo);
 
@@ -253,7 +238,7 @@ public class CQLTest {
         String expectedCQL = "QUANTITY = 1; YEAR < 1963";
         List<Filter> list = CQL.toFilterList(expectedCQL);
 
-        Assert.assertTrue(list.size() == 2);
+        assertEquals(2, list.size());
 
         String cqlResult = CQL.toCQL(list);
 
@@ -280,11 +265,7 @@ public class CQLTest {
         Assert.assertEquals(expectedCQL, cqlResult);
     }
 
-    /**
-     * Verify the parser uses the provided FilterFactory implementation
-     *
-     * @throws ParseException
-     */
+    /** Verify the parser uses the provided FilterFactory implementation */
     @Test
     public void toFilterUsesProvidedFilterFactory() throws Exception {
         final boolean[] called = {false};
@@ -301,11 +282,7 @@ public class CQLTest {
         CQL.toFilter("attName > 20", ff);
         Assert.assertTrue("Provided FilterFactory was not called", called[0]);
     }
-    /**
-     * Verify the parser uses the provided FilterFactory implementation
-     *
-     * @throws ParseException
-     */
+    /** Verify the parser uses the provided FilterFactory implementation */
     @Test
     public void toExpressionUsesProvidedFilterFactory() throws Exception {
         final boolean[] called = {false};

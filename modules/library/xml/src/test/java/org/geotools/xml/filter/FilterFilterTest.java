@@ -17,7 +17,9 @@
 package org.geotools.xml.filter;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -286,8 +288,6 @@ public class FilterFilterTest {
     /**
      * As for GEOT-821, this test ensures that the filter parser makes proper use of the
      * characters(...) method in ContentHandler to not truncate the content of attribute names
-     *
-     * @throws Exception
      */
     @Test
     public void testLargeFilter() throws Exception {
@@ -318,7 +318,7 @@ public class FilterFilterTest {
 
         InputSource requestSource = new InputSource(reader);
 
-        //       instantiante parsers and content handlers
+        //       Instantiate parsers and content handlers
         MyHandler contentHandler = new MyHandler();
         FilterFilter filterParser = new FilterFilter(contentHandler, null);
         GMLFilterGeometry geometryFilter = new GMLFilterGeometry(filterParser);
@@ -338,15 +338,13 @@ public class FilterFilterTest {
         adapter.parse(requestSource);
 
         assertEquals(1, contentHandler.filters.size());
-        Filter f = (Filter) contentHandler.filters.get(0);
+        Filter f = contentHandler.filters.get(0);
         assertTrue(f instanceof BinaryLogicOperator);
         assertThat(f, instanceOf(Or.class));
 
         int i = 0;
-        for (Iterator<org.opengis.filter.Filter> filters =
-                        ((BinaryLogicOperator) f).getChildren().iterator();
-                filters.hasNext();
-                i++) {
+        Iterator<Filter> filters = ((BinaryLogicOperator) f).getChildren().iterator();
+        while (filters.hasNext()) {
             BinaryComparisonOperator subFilter = (BinaryComparisonOperator) filters.next();
             StringBuffer attName = new StringBuffer();
             for (int repCount = 0; repCount <= i; repCount++) {
@@ -355,13 +353,14 @@ public class FilterFilterTest {
             String parsedName = ((PropertyName) subFilter.getExpression1()).getPropertyName();
             assertEquals("at index " + i, attName.toString(), parsedName);
             assertEquals("literal-" + i, ((Literal) subFilter.getExpression2()).getValue());
+            i++;
         }
         assertEquals(filterCount, i);
     }
 
     static class MyHandler extends XMLFilterImpl implements FilterHandler {
 
-        public List<org.opengis.filter.Filter> filters = new ArrayList<org.opengis.filter.Filter>();
+        public List<org.opengis.filter.Filter> filters = new ArrayList<>();
 
         public void filter(org.opengis.filter.Filter filter) {
             filters.add(filter);

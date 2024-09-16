@@ -110,8 +110,7 @@ public class BufferedCoordinateOperationFactory extends AbstractCoordinateOperat
      * different for the same ({@code sourceCRS}, {@code targetCRS}) pair dependending of hint
      * values like {@link Hints#LENIENT_DATUM_SHIFT}.
      */
-    private final Map<CRSPair, CoordinateOperation> pool =
-            new SoftValueHashMap<CRSPair, CoordinateOperation>();
+    private final Map<CRSPair, CoordinateOperation> pool = new SoftValueHashMap<>();
 
     /** Creates a buffered factory wrapping the {@linkplain AuthorityBackedFactory default one}. */
     public BufferedCoordinateOperationFactory() {
@@ -227,8 +226,7 @@ public class BufferedCoordinateOperationFactory extends AbstractCoordinateOperat
         ensureNonNull("sourceCRS", sourceCRS);
         ensureNonNull("targetCRS", targetCRS);
         final CRSPair key = new CRSPair(sourceCRS, targetCRS);
-        CoordinateOperation op;
-        op = pool.get(key);
+        CoordinateOperation op = pool.get(key);
         if (op == null) {
             op = getBackingFactory().createOperation(sourceCRS, targetCRS);
             pool.put(key, op);

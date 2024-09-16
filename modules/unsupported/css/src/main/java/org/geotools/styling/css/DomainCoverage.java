@@ -54,7 +54,7 @@ class DomainCoverage {
 
     /** The full range of scales possible. Once this is covered, the whole domain is */
     static final NumberRange<Double> FULL_SCALE_RANGE =
-            new NumberRange<Double>(Double.class, 0d, Double.POSITIVE_INFINITY);
+            new NumberRange<>(Double.class, 0d, Double.POSITIVE_INFINITY);
 
     static final Logger LOGGER = Logging.getLogger(DomainCoverage.class);
 
@@ -75,7 +75,7 @@ class DomainCoverage {
 
         public SLDSelector(NumberRange<?> scaleRange, Filter filter) {
             this.scaleRange =
-                    new NumberRange(
+                    new NumberRange<>(
                             Double.class,
                             scaleRange.getMinimum(),
                             scaleRange.isMinIncluded(),
@@ -87,9 +87,6 @@ class DomainCoverage {
         /**
          * Returns a list of scale dependent filters that represent the difference (the uncovered
          * area) between this {@link SLDSelector} and then specified rule
-         *
-         * @param rule
-         * @return
          */
         public List<SLDSelector> difference(SLDSelector other) {
             List<SLDSelector> result = new ArrayList<>();
@@ -222,11 +219,7 @@ class DomainCoverage {
      */
     int complexityThreshold = 0;
 
-    /**
-     * Create a new domain coverage for the given feature type
-     *
-     * @param targetFeatureType
-     */
+    /** Create a new domain coverage for the given feature type */
     public DomainCoverage(
             FeatureType targetFeatureType, UnboundSimplifyingFilterVisitor simplifier) {
         this.elements = new ArrayList<>();
@@ -237,9 +230,6 @@ class DomainCoverage {
     /**
      * Adds a rule to the domain, and returns a list of rules representing bits of the domain that
      * were still not covered by the previous rules
-     *
-     * @param rule
-     * @return
      */
     public List<CssRule> addRule(CssRule rule) {
         Selector selector = rule.getSelector();
@@ -328,7 +318,7 @@ class DomainCoverage {
             } else if (prev.scaleRange.getMaximum() == ss.scaleRange.getMinimum()
                     && prev.filter.equals(ss.filter)) {
                 NumberRange combinedRange =
-                        new NumberRange(
+                        new NumberRange<>(
                                 Double.class,
                                 prev.scaleRange.getMinimum(),
                                 prev.scaleRange.isMinIncluded(),
@@ -366,13 +356,7 @@ class DomainCoverage {
         return result;
     }
 
-    /**
-     * Turns the specified selector into a list of "standardized" SLDSelector
-     *
-     * @param selector
-     * @param targetFeatureType
-     * @return
-     */
+    /** Turns the specified selector into a list of "standardized" SLDSelector */
     List<SLDSelector> toSLDSelectors(Selector selector, FeatureType targetFeatureType) {
         List<SLDSelector> result = new ArrayList<>();
         if (selector instanceof Or) {
@@ -396,10 +380,6 @@ class DomainCoverage {
     /**
      * Flattens a single SLD selector into a list of {@link SLDSelector}, adding them into the
      * scaleDependentFilters list
-     *
-     * @param selector
-     * @param targetFeatureType
-     * @param scaleDependentFilters
      */
     private void toIndependentSLDSelectors(
             Selector selector,
@@ -426,16 +406,13 @@ class DomainCoverage {
             }
         }
         if (!merged) {
-            scaleDependentFilters.add(new SLDSelector(new NumberRange<Double>(range), filter));
+            scaleDependentFilters.add(new SLDSelector(new NumberRange<>(range), filter));
         }
     }
 
     /**
      * Simplifies a filter via the simplifying filter visitor, taking into account the target
      * feature type
-     *
-     * @param filter
-     * @return
      */
     Filter simplify(Filter filter) {
         return (Filter) filter.accept(simplifier, null);

@@ -23,7 +23,6 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -72,8 +71,7 @@ import org.xml.sax.EntityResolver;
  */
 public class Hints extends RenderingHints {
     /** A set of system-wide hints to use by default. */
-    private static volatile Map<RenderingHints.Key, Object> GLOBAL =
-            new ConcurrentHashMap<RenderingHints.Key, Object>();
+    private static volatile Map<RenderingHints.Key, Object> GLOBAL = new ConcurrentHashMap<>();
 
     /** {@code true} if {@link #scanSystemProperties} needs to be invoked. */
     private static AtomicBoolean needScan = new AtomicBoolean(true);
@@ -681,6 +679,13 @@ public class Hints extends RenderingHints {
      */
     public static final ClassKey VIRTUAL_TABLE_PARAMETERS = new ClassKey("java.util.Map");
 
+    /**
+     * Used along with vector tile geometries, includes the clip mask to be used when rendering the
+     * geometry (geometries in vector tiles can span across tiles, in that case, they have a gutter
+     * that should be removed when rendering them)
+     */
+    public static final ClassKey GEOMETRY_CLIP = new ClassKey("org.locationtech.jts.geom.Geometry");
+
     ////////////////////////////////////////////////////////////////////////
     ////////                                                        ////////
     ////////                     Grid Coverages                     ////////
@@ -987,6 +992,33 @@ public class Hints extends RenderingHints {
     /** A flag to enabled/disable EWKT geometry encoding in ECQL */
     public static final Key ENCODE_EWKT = new Key(Boolean.class);
 
+    /** Which Http client factory should be used */
+    public static final ClassKey HTTP_CLIENT_FACTORY =
+            new ClassKey("org.geotools.http.HTTPClientFactory");
+
+    /** Which Http client should be created. */
+    public static final ClassKey HTTP_CLIENT = new ClassKey("org.geotools.http.HTTPClient");
+
+    /** Should we log each http request FALSE/TRUE/charset */
+    public static final Key HTTP_LOGGING = new Key(String.class);
+
+    /**
+     * Controls date time formatting output for GML 2.
+     *
+     * <p>To set on the command line:
+     *
+     * <blockquote>
+     *
+     * <pre>
+     * -D{@value GeoTools#DATE_TIME_FORMAT_HANDLING}=<var>true</var>
+     * </pre>
+     *
+     * </blockquote>
+     *
+     * @since 21.0
+     */
+    public static final Key DATE_TIME_FORMAT_HANDLING = new Key(Boolean.class);
+
     /**
      * Constructs an initially empty set of hints.
      *
@@ -1051,7 +1083,7 @@ public class Hints extends RenderingHints {
      * @param pairs An array of Key/Value pairs.
      * @throws IllegalArgumentException if a value is illegal.
      */
-    private void fromPairs(final Object[] pairs) throws IllegalArgumentException {
+    private void fromPairs(final Object... pairs) throws IllegalArgumentException {
         if ((pairs.length & 1) != 0) {
             throw new IllegalArgumentException(
                     Errors.format(ErrorKeys.ODD_ARRAY_LENGTH_$1, pairs.length));
@@ -1103,12 +1135,11 @@ public class Hints extends RenderingHints {
          */
         @SuppressWarnings("unchecked")
         Map<RenderingHints.Key, Object> filtered = (Map<RenderingHints.Key, Object>) hints;
-        for (final Iterator<?> it = hints.keySet().iterator(); it.hasNext(); ) {
-            final Object key = it.next();
+        for (final Object key : hints.keySet()) {
             if (!(key instanceof RenderingHints.Key)) {
                 if (filtered == hints) {
                     // Copies the map only if needed.
-                    filtered = new HashMap<RenderingHints.Key, Object>(filtered);
+                    filtered = new HashMap<>(filtered);
                 }
                 filtered.remove(key);
             }
@@ -1153,8 +1184,7 @@ public class Hints extends RenderingHints {
      */
     private static boolean ensureSystemDefaultLoaded() {
         if (needScan.get()) {
-            Map<RenderingHints.Key, Object> newGlobal =
-                    new ConcurrentHashMap<RenderingHints.Key, Object>(GLOBAL);
+            Map<RenderingHints.Key, Object> newGlobal = new ConcurrentHashMap<>(GLOBAL);
             boolean modified = GeoTools.scanForSystemHints(newGlobal);
             GLOBAL = newGlobal;
             needScan.set(false);
@@ -1196,12 +1226,9 @@ public class Hints extends RenderingHints {
     /**
      * Turns the rendering hints provided into a map with {@link RenderingHints.Key} keys, ignoring
      * every other entry that might have keys of different nature
-     *
-     * @param hints
-     * @return
      */
     private static Map<java.awt.RenderingHints.Key, Object> toMap(RenderingHints hints) {
-        Map<RenderingHints.Key, Object> result = new HashMap<RenderingHints.Key, Object>();
+        Map<RenderingHints.Key, Object> result = new HashMap<>();
         for (Map.Entry<Object, Object> entry : hints.entrySet()) {
             if (entry.getKey() instanceof RenderingHints.Key) {
                 result.put((java.awt.RenderingHints.Key) entry.getKey(), entry.getValue());
@@ -1219,10 +1246,8 @@ public class Hints extends RenderingHints {
      * @since 2.4
      */
     public static Object getSystemDefault(final RenderingHints.Key key) {
-        final boolean changed;
-        final Object value;
-        changed = ensureSystemDefaultLoaded();
-        value = GLOBAL.get(key);
+        final boolean changed = ensureSystemDefaultLoaded();
+        final Object value = GLOBAL.get(key);
         if (changed) {
             GeoTools.fireConfigurationChanged();
         }
@@ -1243,10 +1268,8 @@ public class Hints extends RenderingHints {
      * @since 2.4
      */
     public static Object putSystemDefault(final RenderingHints.Key key, final Object value) {
-        final boolean changed;
-        final Object old;
-        changed = ensureSystemDefaultLoaded();
-        old = GLOBAL.put(key, value);
+        final boolean changed = ensureSystemDefaultLoaded();
+        final Object old = GLOBAL.put(key, value);
         if (changed || !Utilities.equals(value, old)) {
             GeoTools.fireConfigurationChanged();
         }
@@ -1263,10 +1286,8 @@ public class Hints extends RenderingHints {
      * @since 2.4
      */
     public static Object removeSystemDefault(final RenderingHints.Key key) {
-        final boolean changed;
-        final Object old;
-        changed = ensureSystemDefaultLoaded();
-        old = GLOBAL.remove(key);
+        final boolean changed = ensureSystemDefaultLoaded();
+        final Object old = GLOBAL.remove(key);
         if (changed || old != null) {
             GeoTools.fireConfigurationChanged();
         }
@@ -1286,10 +1307,9 @@ public class Hints extends RenderingHints {
         final StringBuilder buffer = new StringBuilder("Hints:"); // TODO: localize
         buffer.append(lineSeparator).append(AbstractFactory.toString(this));
         Map<?, ?> extra = null;
-        final boolean changed;
-        changed = ensureSystemDefaultLoaded();
+        final boolean changed = ensureSystemDefaultLoaded();
         if (!GLOBAL.isEmpty()) {
-            extra = new HashMap<Object, Object>(GLOBAL);
+            extra = new HashMap<>(GLOBAL);
         }
         if (changed) {
             GeoTools.fireConfigurationChanged();
@@ -1324,12 +1344,9 @@ public class Hints extends RenderingHints {
                         try {
                             type = Class.forName("javax.media.jai.JAI");
                             break;
-                        } catch (ClassNotFoundException e) {
+                        } catch (ClassNotFoundException | NoClassDefFoundError e) {
                             continue;
-                        } catch (NoClassDefFoundError e) {
-                            // May occurs because of indirect JAI dependencies.
-                            continue;
-                        }
+                        } // May occurs because of indirect JAI dependencies.
                     }
                 default:
                     {
@@ -1349,8 +1366,7 @@ public class Hints extends RenderingHints {
      */
     private static String nameOf(final Class<?> type, final RenderingHints.Key key) {
         final Field[] fields = type.getFields();
-        for (int i = 0; i < fields.length; i++) {
-            final Field f = fields[i];
+        for (final Field f : fields) {
             if (Modifier.isStatic(f.getModifiers())) {
                 final Object v;
                 try {
@@ -1536,8 +1552,8 @@ public class Hints extends RenderingHints {
              */
             if (value instanceof Class<?>[]) {
                 final Class<?>[] types = (Class<?>[]) value;
-                for (int i = 0; i < types.length; i++) {
-                    if (!isCompatibleValue(types[i])) {
+                for (Class<?> type : types) {
+                    if (!isCompatibleValue(type)) {
                         return false;
                     }
                 }
@@ -1770,7 +1786,7 @@ public class Hints extends RenderingHints {
          */
         public OptionKey(final String... alternatives) {
             super(String.class);
-            final Set<String> options = new TreeSet<String>(Arrays.asList(alternatives));
+            final Set<String> options = new TreeSet<>(Arrays.asList(alternatives));
             this.wildcard = options.remove("*");
             this.options = Collections.unmodifiableSet(options);
         }
@@ -1832,14 +1848,9 @@ public class Hints extends RenderingHints {
      * @author Sampo Savolainen
      */
     public static final class ConfigurationMetadataKey extends Key {
-        private static Map<String, ConfigurationMetadataKey> map =
-                new HashMap<String, Hints.ConfigurationMetadataKey>();
+        private static Map<String, ConfigurationMetadataKey> map = new HashMap<>();
 
-        /**
-         * The constructor is private to avoid multiple instances sharing the same key.
-         *
-         * @param key
-         */
+        /** The constructor is private to avoid multiple instances sharing the same key. */
         private ConfigurationMetadataKey(String key) {
             super(key);
         }

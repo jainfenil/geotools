@@ -16,6 +16,8 @@
  */
 package org.geotools.imageio;
 
+import it.geosolutions.imageio.core.InitializingReader;
+import java.awt.RenderingHints;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,14 +34,17 @@ import org.geotools.coverage.io.catalog.CoverageSlicesCatalog.WrappedCoverageSli
 import org.geotools.coverage.io.catalog.DataStoreConfiguration;
 import org.geotools.data.Query;
 import org.geotools.data.Repository;
+import org.geotools.gce.imagemosaic.Utils;
 import org.geotools.util.SuppressFBWarnings;
+import org.geotools.util.factory.Hints;
 import org.opengis.feature.type.Name;
 
 /**
  * @author Daniele Romagnoli, GeoSolutions SAS
  * @author Simone Giannecchini, GeoSolutions SAS
  */
-public abstract class GeoSpatialImageReader extends ImageReader implements FileSetManager {
+public abstract class GeoSpatialImageReader extends ImageReader
+        implements FileSetManager, InitializingReader {
 
     /** The source file */
     protected File file;
@@ -119,10 +124,7 @@ public abstract class GeoSpatialImageReader extends ImageReader implements FileS
     /** The number of coverages made available by this provider. */
     public abstract int getCoveragesNumber();
 
-    /**
-     * @param name
-     * @return
-     */
+    /** */
     public abstract CoverageSourceDescriptor getCoverageDescriptor(Name name);
 
     protected void setCatalog(CoverageSlicesCatalog catalog) {
@@ -138,12 +140,10 @@ public abstract class GeoSpatialImageReader extends ImageReader implements FileS
      *
      * @param filterQuery the filter query (temporal, vertical, name selection) to restrict the
      *     requested imageIndexes
-     * @return
-     * @throws IOException
      */
     public List<Integer> getImageIndex(Query filterQuery) throws IOException {
         List<CoverageSlice> descs = slicesCatalog.getGranules(filterQuery);
-        List<Integer> indexes = new ArrayList<Integer>();
+        List<Integer> indexes = new ArrayList<>();
         for (CoverageSlice desc : descs) {
             Integer index =
                     (Integer) desc.getOriginator().getAttribute(CoverageSlice.Attributes.INDEX);
@@ -172,21 +172,12 @@ public abstract class GeoSpatialImageReader extends ImageReader implements FileS
         this.repository = repository;
     }
 
-    /**
-     * Returns the underlying slicesCatalog.
-     *
-     * @return
-     */
+    /** Returns the underlying slicesCatalog. */
     public CoverageSlicesCatalog getCatalog() {
         return slicesCatalog;
     }
 
-    /**
-     * Initialize a slicesCatalog on top of the provided {@link DataStoreConfiguration} instance
-     *
-     * @param datastoreConfig
-     * @throws IOException
-     */
+    /** Initialize a slicesCatalog on top of the provided {@link DataStoreConfiguration} instance */
     protected void initCatalog(DataStoreConfiguration datastoreConfig) throws IOException {
         slicesCatalog =
                 datastoreConfig.isShared()
@@ -199,5 +190,43 @@ public abstract class GeoSpatialImageReader extends ImageReader implements FileS
     protected void finalize() throws Throwable {
         dispose();
         super.finalize();
+    }
+
+    @Override
+    public boolean init(RenderingHints hints) {
+        if (hints != null
+                && (hints.containsKey(Utils.AUXILIARY_FILES_PATH)
+                        || hints.containsKey(Utils.AUXILIARY_DATASTORE_PATH))) {
+            if (hints.containsKey(Utils.AUXILIARY_FILES_PATH)) {
+                String path = getPath(hints, Utils.AUXILIARY_FILES_PATH);
+                if (path != null) {
+                    setAuxiliaryFilesPath(path);
+                }
+            }
+            if (hints.containsKey(Utils.AUXILIARY_DATASTORE_PATH)) {
+                String path = getPath(hints, Utils.AUXILIARY_DATASTORE_PATH);
+                if (path != null) {
+                    setAuxiliaryDatastorePath(path);
+                }
+            }
+            Repository repository = (Repository) hints.get(Hints.REPOSITORY);
+            if (repository != null) {
+                setRepository(repository);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private String getPath(RenderingHints hints, Hints.Key key) {
+        String filePath = (String) hints.get(key);
+        if (filePath != null && hints.containsKey(Utils.PARENT_DIR)) {
+            String parentDir = (String) hints.get(Utils.PARENT_DIR);
+            // check if the file is not already absolute (old configuration file)
+            if (!new File(filePath).isAbsolute()) {
+                filePath = parentDir + File.separatorChar + filePath;
+            }
+        }
+        return filePath;
     }
 }

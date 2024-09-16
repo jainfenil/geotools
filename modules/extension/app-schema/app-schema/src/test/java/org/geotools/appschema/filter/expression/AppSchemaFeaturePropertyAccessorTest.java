@@ -16,6 +16,7 @@
  */
 package org.geotools.appschema.filter.expression;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -65,7 +66,6 @@ public class AppSchemaFeaturePropertyAccessorTest extends AppSchemaTestSupport {
      * Load schema
      *
      * @param location schema location path that can be found through getClass().getResource()
-     * @return
      */
     private SchemaIndex loadSchema(final String location) throws IOException {
         EmfComplexFeatureReader reader = EmfComplexFeatureReader.newInstance();
@@ -74,11 +74,7 @@ public class AppSchemaFeaturePropertyAccessorTest extends AppSchemaTestSupport {
         return reader.parse(new URL(location));
     }
 
-    /**
-     * Tests getting descriptor from GeoSciML type, supporting polymorphism
-     *
-     * @throws Exception
-     */
+    /** Tests getting descriptor from GeoSciML type, supporting polymorphism */
     @Test
     public void testPolymorphism() throws Exception {
         SchemaIndex schemaIndex = loadSchema("http://schemas.opengis.net/GeoSciML/Gsml.xsd");
@@ -113,7 +109,7 @@ public class AppSchemaFeaturePropertyAccessorTest extends AppSchemaTestSupport {
 
             o = ex.evaluate(mf);
             assertNotNull(o);
-            assertTrue(o.equals(Types.typeName(XLINKNS, "href")));
+            assertEquals(o, Types.typeName(XLINKNS, "href"));
 
             ex =
                     new AttributeExpressionImpl(

@@ -19,7 +19,6 @@ package org.geotools.filter.text.ecql;
 import java.util.HashMap;
 import java.util.Map;
 import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.util.factory.Hints;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
 import org.opengis.filter.Not;
@@ -39,8 +38,7 @@ import org.opengis.filter.expression.Subtract;
  * @since 2.6
  */
 final class FilterECQLSample {
-    protected static final FilterFactory FACTORY =
-            CommonFactoryFinder.getFilterFactory((Hints) null);
+    protected static final FilterFactory FACTORY = CommonFactoryFinder.getFilterFactory(null);
 
     // ECQL Samples
     public static final String ABS_FUNCTION_LESS_PROPERTY = "abs(10) < aProperty";
@@ -94,16 +92,15 @@ final class FilterECQLSample {
     public static final String EXPRESSIONS_WITH_PROPERTIES = "(x+4) > (y - 5)";
 
     /** Maintains the ECQL predicates (input) and the expected filters (output) */
-    public static Map<String, Object> SAMPLES = new HashMap<String, Object>();
+    public static Map<String, Object> SAMPLES = new HashMap<>();
 
     static {
-        Filter filter;
 
         // (1+3)
         Add simpleAddExpression = FACTORY.add(FACTORY.literal(1), FACTORY.literal(3));
 
         // sample "(1+3) > prop1"
-        filter = FACTORY.greater(simpleAddExpression, FACTORY.property("aProperty"));
+        Filter filter = FACTORY.greater(simpleAddExpression, FACTORY.property("aProperty"));
 
         SAMPLES.put(EXPRESION_GREATER_PROPERTY, filter);
 
@@ -284,10 +281,7 @@ final class FilterECQLSample {
         SAMPLES.put(FUNCTION_IS_NOT_NULL, notIsNullFilter);
     }
 
-    /**
-     * @param predcateRequested
-     * @return the filter expected for the predicate required
-     */
+    /** @return the filter expected for the predicate required */
     public static Filter getSample(final String predcateRequested) {
         Filter sample = (Filter) SAMPLES.get(predcateRequested);
         assert (sample != null) : "There is not a sample for " + predcateRequested;

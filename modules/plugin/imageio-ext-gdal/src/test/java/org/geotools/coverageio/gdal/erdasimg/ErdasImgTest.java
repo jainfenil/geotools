@@ -55,11 +55,7 @@ public final class ErdasImgTest extends GDALTestCase {
     /** file name of a valid Erdas Imagine sample data to be used for tests. */
     private static final String fileName = "sample.img";
 
-    /**
-     * Creates a new instance of {@code IDRISIImgTest}
-     *
-     * @param name
-     */
+    /** Creates a new instance of {@code IDRISIImgTest} */
     public ErdasImgTest() {
         super("ErdasImagine", new ErdasImgFormatFactory());
     }
@@ -119,7 +115,7 @@ public final class ErdasImgTest extends GDALTestCase {
         // read once
         //
         // /////////////////////////////////////////////////////////////////////
-        GridCoverage2D gc = (GridCoverage2D) reader.read(null);
+        GridCoverage2D gc = reader.read(null);
         forceDataLoading(gc);
 
         // /////////////////////////////////////////////////////////////////////
@@ -128,8 +124,6 @@ public final class ErdasImgTest extends GDALTestCase {
         //
         // /////////////////////////////////////////////////////////////////////
         final double cropFactor = 2.0;
-        final int oldW = gc.getRenderedImage().getWidth();
-        final int oldH = gc.getRenderedImage().getHeight();
         final Rectangle range = ((GridEnvelope2D) reader.getOriginalGridRange());
         final GeneralEnvelope oldEnvelope = reader.getOriginalEnvelope();
         final GeneralEnvelope cropEnvelope =
@@ -147,8 +141,7 @@ public final class ErdasImgTest extends GDALTestCase {
         cropEnvelope.setCoordinateReferenceSystem(reader.getCoordinateReferenceSystem());
 
         final ParameterValue gg =
-                (ParameterValue)
-                        ((AbstractGridFormat) reader.getFormat()).READ_GRIDGEOMETRY2D.createValue();
+                ((AbstractGridFormat) reader.getFormat()).READ_GRIDGEOMETRY2D.createValue();
         gg.setValue(
                 new GridGeometry2D(
                         new GridEnvelope2D(
@@ -158,7 +151,7 @@ public final class ErdasImgTest extends GDALTestCase {
                                         (int) (range.width / 2.0 / cropFactor),
                                         (int) (range.height / 2.0 / cropFactor))),
                         cropEnvelope));
-        gc = (GridCoverage2D) reader.read(new GeneralParameterValue[] {gg});
+        gc = reader.read(new GeneralParameterValue[] {gg});
         forceDataLoading(gc);
     }
 }

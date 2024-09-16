@@ -16,8 +16,8 @@
  */
 package org.geotools.data.postgis;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertThat;
 import static org.opengis.filter.MultiValuedFilter.MatchAction;
 
 import java.io.IOException;
@@ -30,7 +30,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FeatureStore;
 import org.geotools.data.collection.ListFeatureCollection;
@@ -52,7 +51,6 @@ import org.opengis.filter.identity.FeatureId;
 
 public class PostGISArrayOnlineTest extends JDBCTestSupport {
 
-    private static final Logger LOGGER = Logger.getLogger(PostGISArrayOnlineTest.class.getName());
     Timestamp expectedDate;
 
     @Override

@@ -33,7 +33,6 @@ import org.geotools.util.Converters;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
-import org.opengis.filter.sort.SortBy;
 import org.opengis.filter.sort.SortOrder;
 import org.opengis.filter.temporal.After;
 import org.opengis.filter.temporal.Before;
@@ -46,6 +45,7 @@ import org.opengis.filter.temporal.TEquals;
 import org.opengis.temporal.Instant;
 import org.opengis.temporal.Period;
 
+@SuppressWarnings("PMD.JUnit4TestShouldUseTestAnnotation") // not yet a JUnit4 test
 public abstract class JDBCTemporalFilterOnlineTest extends JDBCTestSupport {
 
     /* dates(d:Date,dt:Datetime,t:Time)
@@ -65,7 +65,7 @@ public abstract class JDBCTemporalFilterOnlineTest extends JDBCTestSupport {
         FilterFactory ff = dataStore.getFilterFactory();
 
         Query query = new Query(aname("dates"), filter);
-        query.setSortBy(new SortBy[] {ff.sort(aname("dt"), SortOrder.ASCENDING)});
+        query.setSortBy(ff.sort(aname("dt"), SortOrder.ASCENDING));
         assertDatesMatch(query, dates);
     }
 
@@ -187,7 +187,7 @@ public abstract class JDBCTemporalFilterOnlineTest extends JDBCTestSupport {
         After after = ff.after(ff.property(aname("dt")), ff.property("other." + aname("dt")));
         Query q = new Query(tname("dates"));
         q.getJoins().add(new Join(tname("dates"), after).alias("other"));
-        q.setSortBy(new SortBy[] {ff.sort(aname("dt"), SortOrder.ASCENDING)});
+        q.setSortBy(ff.sort(aname("dt"), SortOrder.ASCENDING));
 
         assertDatesMatch(q, "2009-06-28 15:12:41", "2009-09-29 17:54:23", "2009-09-29 17:54:23");
     }

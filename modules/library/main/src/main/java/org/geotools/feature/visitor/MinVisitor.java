@@ -18,6 +18,7 @@ package org.geotools.feature.visitor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.IllegalFilterException;
@@ -67,6 +68,11 @@ public class MinVisitor implements FeatureCalc, FeatureAttributeVisitor {
         return Arrays.asList(expr);
     }
 
+    @Override
+    public Optional<List<Class>> getResultType(List<Class> inputTypes) {
+        return CalcUtil.reflectInputTypes(1, inputTypes);
+    }
+
     /**
      * Visitor function, which looks at each feature and finds the minimum.
      *
@@ -76,6 +82,7 @@ public class MinVisitor implements FeatureCalc, FeatureAttributeVisitor {
         visit((org.opengis.feature.Feature) feature);
     }
 
+    @SuppressWarnings("unchecked")
     public void visit(org.opengis.feature.Feature feature) {
         Object attribValue = expr.evaluate(feature);
 
@@ -127,8 +134,6 @@ public class MinVisitor implements FeatureCalc, FeatureAttributeVisitor {
      * will tell the visitor the answer rather than visiting all features.
      *
      * <p>For 'min', the value stored is of type 'Comparable'.
-     *
-     * @param result
      */
     public void setValue(Object result) {
         visited = true;
@@ -143,7 +148,7 @@ public class MinVisitor implements FeatureCalc, FeatureAttributeVisitor {
         }
 
         public Object getValue() {
-            Comparable min = (Comparable) minValue;
+            Comparable min = minValue;
 
             return min;
         }
@@ -157,6 +162,7 @@ public class MinVisitor implements FeatureCalc, FeatureAttributeVisitor {
             return false;
         }
 
+        @SuppressWarnings("unchecked")
         public CalcResult merge(CalcResult resultsToAdd) {
             if (!isCompatible(resultsToAdd)) {
                 throw new IllegalArgumentException("Parameter is not a compatible type");
@@ -173,7 +179,7 @@ public class MinVisitor implements FeatureCalc, FeatureAttributeVisitor {
 
                 if (newMin.getClass()
                         != toAdd.getClass()) { // 2 different data types, therefore convert
-                    Class bestClass = CalcUtil.bestClass(new Object[] {toAdd, newMin});
+                    Class bestClass = CalcUtil.bestClass(toAdd, newMin);
                     if (bestClass != toAdd.getClass())
                         toAdd = (Comparable) CalcUtil.convert(toAdd, bestClass);
                     if (bestClass != newMin.getClass())

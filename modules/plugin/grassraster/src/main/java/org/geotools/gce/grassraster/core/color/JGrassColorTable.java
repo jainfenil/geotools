@@ -78,7 +78,7 @@ public class JGrassColorTable {
     private int alpha = 255;
 
     /** The list of colorrules to be used. */
-    private List<String> rules = new ArrayList<String>();
+    private List<String> rules = new ArrayList<>();
 
     /**
      * Creates a new instance of ColorTable
@@ -96,39 +96,38 @@ public class JGrassColorTable {
             }
             return;
         } else {
-            BufferedReader rdr =
-                    new BufferedReader(new InputStreamReader(new FileInputStream(colrFile)));
-            String line = rdr.readLine();
-            if (line == null) {
-                rdr.close();
-                if (colrFile.delete()) {
-                    LOGGER.info("removed empty color file"); // $NON-NLS-1$
+            try (BufferedReader rdr =
+                    new BufferedReader(new InputStreamReader(new FileInputStream(colrFile)))) {
+                String line = rdr.readLine();
+                if (line == null) {
+                    if (colrFile.delete()) {
+                        LOGGER.info("removed empty color file"); // $NON-NLS-1$
+                    }
+                    rules = createDefaultColorTable(dataRange, alpha);
+                    return;
                 }
-                rules = createDefaultColorTable(dataRange, alpha);
-                return;
-            }
-            line = line.trim();
-            if (line.charAt(0) == '%') {
-                String[] stringValues = line.split("\\s+"); // $NON-NLS-1$
-                if (stringValues.length == 4) {
-                    try {
-                        alpha = Integer.parseInt(stringValues[3]);
-                    } catch (NumberFormatException e) {
+                line = line.trim();
+                if (line.charAt(0) == '%') {
+                    String[] stringValues = line.split("\\s+"); // $NON-NLS-1$
+                    if (stringValues.length == 4) {
+                        try {
+                            alpha = Integer.parseInt(stringValues[3]);
+                        } catch (NumberFormatException e) {
+                            alpha = 255;
+                        }
+                    } else {
                         alpha = 255;
                     }
+                    /* Read all the color rules */
+                    while ((line = rdr.readLine()) != null) {
+                        rules.add(line + " " + alpha); // $NON-NLS-1$
+                    }
                 } else {
-                    alpha = 255;
-                }
-                /* Read all the color rules */
-                while ((line = rdr.readLine()) != null) {
-                    rules.add(line + " " + alpha); // $NON-NLS-1$
-                }
-            } else {
-                while ((line = rdr.readLine()) != null) {
-                    rules.add(line + " " + alpha); // $NON-NLS-1$
+                    while ((line = rdr.readLine()) != null) {
+                        rules.add(line + " " + alpha); // $NON-NLS-1$
+                    }
                 }
             }
-            rdr.close();
         }
     }
 
@@ -140,7 +139,7 @@ public class JGrassColorTable {
      */
     @SuppressWarnings("nls")
     public static List<String> createDefaultColorTable(double[] dataRange, int alpha) {
-        List<String> rules = new ArrayList<String>();
+        List<String> rules = new ArrayList<>();
         // calculate the color increment
         float rinc = (float) (dataRange[1] - dataRange[0]) / 5;
         for (int i = 0; i < 5; i++) {

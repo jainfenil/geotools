@@ -16,7 +16,6 @@
  */
 package org.geotools.swing.wms;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,18 +27,12 @@ public class WMSChooser {
         return showChooseWMS(defaultServers());
     }
 
-    /**
-     * Prompt for a URL to a Web Map Server, providing a list of recommended options.
-     *
-     * @param args
-     * @return
-     * @throws MalformedURLException
-     */
+    /** Prompt for a URL to a Web Map Server, providing a list of recommended options. */
     public static URL showChooseWMS(List<String> servers) {
         if (servers == null) {
             servers = defaultServers();
         }
-        JComboBox combo = new JComboBox(servers.toArray());
+        JComboBox<String> combo = new JComboBox<>(servers.toArray(new String[servers.size()]));
         combo.setEditable(true);
 
         Object message[] = new Object[] {"Choose a WMS Server", combo};
@@ -64,7 +57,7 @@ public class WMSChooser {
     }
 
     private static List<String> defaultServers() {
-        List<String> servers = new ArrayList<String>();
+        List<String> servers = new ArrayList<>();
         servers.add(
                 "http://wms.jpl.nasa.gov/wms.cgi?Service=WMS&Version=1.1.1&Request=GetCapabilities");
         servers.add("http://localhost:8080/geoserver/wms?service=WMS&request=GetCapabilities");

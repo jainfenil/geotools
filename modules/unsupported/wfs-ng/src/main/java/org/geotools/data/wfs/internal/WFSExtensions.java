@@ -52,8 +52,6 @@ public class WFSExtensions {
      *
      * @param request the WFS request that originated the given response
      * @param response the handle to the WFS response contents
-     * @return
-     * @throws IOException
      */
     // public static Object process(WFSResponse response) throws IOException {
     //
@@ -66,17 +64,11 @@ public class WFSExtensions {
     // return result;
     // }
 
-    /**
-     * @param originatingRequest
-     * @param contentType
-     * @return
-     * @throws FactoryNotFoundException
-     */
+    /** */
     public static WFSResponseFactory findResponseFactory(
             final WFSRequest originatingRequest, final String contentType) {
 
-        Iterator<WFSResponseFactory> serviceProviders;
-        serviceProviders = getServiceProviders();
+        Iterator<WFSResponseFactory> serviceProviders = getServiceProviders();
 
         WFSResponseFactory factory;
         while (serviceProviders.hasNext()) {
@@ -99,7 +91,7 @@ public class WFSExtensions {
 
         Iterator<WFSResponseFactory> serviceProviders = getServiceProviders();
 
-        List<WFSResponseFactory> matches = new ArrayList<WFSResponseFactory>(5);
+        List<WFSResponseFactory> matches = new ArrayList<>(5);
 
         while (serviceProviders.hasNext()) {
             WFSResponseFactory factory = serviceProviders.next();
@@ -131,9 +123,9 @@ public class WFSExtensions {
                         /*
                          * Now that we're on the correct classloader lets perform the lookup
                          */
-                        Iterator<WFSResponseFactory> providers;
 
-                        providers = ServiceLoader.load(WFSResponseFactory.class).iterator();
+                        Iterator<WFSResponseFactory> providers =
+                                ServiceLoader.load(WFSResponseFactory.class).iterator();
                         Set<WFSResponseFactory> tmp = new HashSet<>();
                         while (providers.hasNext()) {
                             WFSResponseFactory provider = providers.next();

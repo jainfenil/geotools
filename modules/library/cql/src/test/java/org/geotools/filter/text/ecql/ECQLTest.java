@@ -19,7 +19,7 @@ package org.geotools.filter.text.ecql;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.List;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.FilterFactoryImpl;
@@ -28,7 +28,6 @@ import org.geotools.filter.function.FilterFunction_relatePattern;
 import org.geotools.filter.function.PropertyExistsFunction;
 import org.geotools.filter.text.cql2.CQL;
 import org.geotools.filter.text.cql2.CQLException;
-import org.geotools.util.factory.Hints;
 import org.junit.Assert;
 import org.junit.Test;
 import org.opengis.filter.And;
@@ -88,7 +87,6 @@ public final class ECQLTest {
      * Between predicate sample
      *
      * @see ECQLBetweenPredicateTest
-     * @throws CQLException
      */
     @Test
     public void betweenPredicate() throws CQLException {
@@ -99,7 +97,6 @@ public final class ECQLTest {
      * Equals predicate sample
      *
      * @see ECQLComparisonPredicateTest
-     * @throws Exception
      */
     @Test
     public void comparisonPredicate() throws Exception {
@@ -125,7 +122,6 @@ public final class ECQLTest {
      * GeoOperation predicate sample
      *
      * @see ECQLGeoOperationTest
-     * @throws CQLException
      */
     @Test
     public void geoOperationPredicate() throws CQLException {
@@ -151,7 +147,6 @@ public final class ECQLTest {
      * Temporal predicate sample
      *
      * @see ECQLTemporalPredicateTest
-     * @throws Exception
      */
     @Test
     public void temporalPredicate() throws Exception {
@@ -164,14 +159,10 @@ public final class ECQLTest {
     /**
      * And / Or / Not predicate
      *
-     * @throws Exception
      * @see ECQLBooleanValueExpressionTest
      */
     @Test
     public void booleanPredicate() throws Exception {
-
-        Filter filter;
-
         // and sample
         assertFilter("ATTR1 < 10 AND ATTR2 < 2", And.class);
 
@@ -192,7 +183,6 @@ public final class ECQLTest {
      * Id predicate sample
      *
      * @see ECQLIDPredicateTest
-     * @throws Exception
      */
     @Test
     public void idPredicate() throws Exception {
@@ -228,7 +218,6 @@ public final class ECQLTest {
     /**
      * in predicate sample
      *
-     * @throws CQLException
      * @see ECQLINPredicateTest
      */
     @Test
@@ -254,7 +243,6 @@ public final class ECQLTest {
      * Like predicate sample
      *
      * @see ECQLLikePredicateTest
-     * @throws Exception
      */
     @Test
     public void likePredicate() throws Exception {
@@ -273,7 +261,6 @@ public final class ECQLTest {
      * Null predicate sample
      *
      * @see ECQLNullPredicateTest
-     * @throws Exception
      */
     @Test
     public void isNullPredicate() throws Exception {
@@ -284,7 +271,6 @@ public final class ECQLTest {
      * Exist property predicate sample
      *
      * @see ECQLExistenceTest
-     * @throws Exception
      */
     @Test
     public void existProperty() throws Exception {
@@ -303,7 +289,7 @@ public final class ECQLTest {
 
         List<Filter> list = ECQL.toFilterList("A=1; B<4");
 
-        Assert.assertTrue(list.size() == 2);
+        assertEquals(2, list.size());
 
         Assert.assertTrue(list.get(0) instanceof PropertyIsEqualTo);
 
@@ -336,7 +322,7 @@ public final class ECQLTest {
     public void functionExpressionToCQL() throws Exception {
 
         Expression[] absArgs = new Expression[1];
-        FilterFactory ff = CommonFactoryFinder.getFilterFactory((Hints) null);
+        FilterFactory ff = CommonFactoryFinder.getFilterFactory(null);
         absArgs[0] = ff.literal(10);
         Function abs = ff.function("abs", absArgs);
 
@@ -345,11 +331,7 @@ public final class ECQLTest {
         Assert.assertEquals("abs(10)", resultECQL);
     }
 
-    /**
-     * Verify the parser uses the provided FilterFactory implementation
-     *
-     * @throws Exception
-     */
+    /** Verify the parser uses the provided FilterFactory implementation */
     @Test
     public void toFilterUsesProvidedFilterFactory() throws Exception {
         final boolean[] called = {false};
@@ -373,7 +355,7 @@ public final class ECQLTest {
         String expectedECQL = "QUANTITY = 1; YEAR < 1963";
         List<Filter> list = ECQL.toFilterList(expectedECQL);
 
-        Assert.assertTrue(list.size() == 2);
+        assertEquals(2, list.size());
 
         String cqlResult = ECQL.toCQL(list);
 
@@ -387,7 +369,7 @@ public final class ECQLTest {
                 "INTERSECTS(the_geom, SRID=4326;POINT (1 2)); INTERSECTS(abcd, SRID=4962;POINT (0 0))";
         List<Filter> list = ECQL.toFilterList(expectedECQL);
 
-        Assert.assertTrue(list.size() == 2);
+        assertEquals(2, list.size());
 
         String cqlResult = ECQL.toCQL(list);
 
@@ -410,17 +392,13 @@ public final class ECQLTest {
         String expectedCQL = "QUANTITY = 1; YEAR < 1963";
         List<Filter> list = CQL.toFilterList(expectedCQL);
 
-        Assert.assertTrue(list.size() == 2);
+        assertEquals(2, list.size());
 
         String cqlResult = CQL.toCQL(list);
 
         Assert.assertEquals(expectedCQL, cqlResult);
     }
-    /**
-     * Verify the parser uses the provided FilterFactory implementation
-     *
-     * @throws Exception
-     */
+    /** Verify the parser uses the provided FilterFactory implementation */
     @Test
     public void toExpressionUsesProvidedFilterFactory() throws Exception {
         final boolean[] called = {false};

@@ -71,7 +71,7 @@ public class ShpFiles {
      * The urls for each type of file that is associated with the shapefile. The key is the type of
      * file
      */
-    private final Map<ShpFileType, URL> urls = new ConcurrentHashMap<ShpFileType, URL>();
+    private final Map<ShpFileType, URL> urls = new ConcurrentHashMap<>();
 
     /** A read/write lock, so that we can have concurrent readers */
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -80,8 +80,7 @@ public class ShpFiles {
      * The set of locker sources per thread. Used as a debugging aid and to upgrade/downgrade the
      * locks
      */
-    private final Map<Thread, Collection<ShpFilesLocker>> lockers =
-            new ConcurrentHashMap<Thread, Collection<ShpFilesLocker>>();
+    private final Map<Thread, Collection<ShpFilesLocker>> lockers = new ConcurrentHashMap<>();
 
     /** A cache for read only memory mapped buffers */
     private final MemoryMapCache mapCache = new MemoryMapCache();
@@ -161,7 +160,7 @@ public class ShpFiles {
         // IE Shp, SHP, Shp, ShP etc...
         if (isLocal()) {
             Set<Entry<ShpFileType, URL>> entries = urls.entrySet();
-            Map<ShpFileType, URL> toUpdate = new HashMap<ShpFileType, URL>();
+            Map<ShpFileType, URL> toUpdate = new HashMap<>();
             for (Entry<ShpFileType, URL> entry : entries) {
                 if (!exists(entry.getKey())) {
                     url = findExistingFile(entry.getKey(), entry.getValue());
@@ -255,7 +254,7 @@ public class ShpFiles {
      * @return the URLs (in string form) of all the files for the shapefile datastore.
      */
     public Map<ShpFileType, String> getFileNames() {
-        Map<ShpFileType, String> result = new HashMap<ShpFileType, String>();
+        Map<ShpFileType, String> result = new HashMap<>();
         Set<Entry<ShpFileType, URL>> entries = urls.entrySet();
 
         for (Entry<ShpFileType, URL> entry : entries) {
@@ -354,17 +353,17 @@ public class ShpFiles {
     public Result<URL, State> tryAcquireRead(ShpFileType type, FileReader requestor) {
         URL url = urls.get(type);
         if (url == null) {
-            return new Result<URL, State>(null, State.NOT_EXIST);
+            return new Result<>(null, State.NOT_EXIST);
         }
 
         boolean locked = readWriteLock.readLock().tryLock();
         if (!locked) {
-            return new Result<URL, State>(null, State.LOCKED);
+            return new Result<>(null, State.LOCKED);
         }
 
         getCurrentThreadLockers().add(new ShpFilesLocker(url, requestor));
 
-        return new Result<URL, State>(url, State.GOOD);
+        return new Result<>(url, State.GOOD);
     }
 
     /**
@@ -396,7 +395,7 @@ public class ShpFiles {
             throw new NullPointerException("requestor cannot be null");
         }
 
-        Collection threadLockers = getCurrentThreadLockers();
+        Collection<ShpFilesLocker> threadLockers = getCurrentThreadLockers();
         boolean removed = threadLockers.remove(new ShpFilesLocker(url, requestor));
         if (!removed) {
             throw new IllegalArgumentException(
@@ -404,7 +403,7 @@ public class ShpFiles {
                             + requestor
                             + " to have locked the url but it does not hold the lock for the URL");
         }
-        if (threadLockers.size() == 0) lockers.remove(Thread.currentThread());
+        if (threadLockers.isEmpty()) lockers.remove(Thread.currentThread());
         readWriteLock.readLock().unlock();
     }
 
@@ -478,7 +477,7 @@ public class ShpFiles {
 
         URL url = urls.get(type);
         if (url == null) {
-            return new Result<URL, State>(null, State.NOT_EXIST);
+            return new Result<>(null, State.NOT_EXIST);
         }
 
         Collection<ShpFilesLocker> threadLockers = getCurrentThreadLockers();
@@ -489,12 +488,12 @@ public class ShpFiles {
             locked = readWriteLock.writeLock().tryLock();
             if (locked == false) {
                 regainReadLocks(threadLockers);
-                return new Result<URL, State>(null, State.LOCKED);
+                return new Result<>(null, State.LOCKED);
             }
         }
 
         threadLockers.add(new ShpFilesLocker(url, requestor));
-        return new Result<URL, State>(url, State.GOOD);
+        return new Result<>(url, State.GOOD);
     }
 
     /**
@@ -534,7 +533,7 @@ public class ShpFiles {
                             + " to have locked the url but it does not hold the lock for the URL");
         }
 
-        if (threadLockers.size() == 0) {
+        if (threadLockers.isEmpty()) {
             lockers.remove(Thread.currentThread());
         } else {
             // get back read locks before giving up the write one
@@ -543,25 +542,17 @@ public class ShpFiles {
         readWriteLock.writeLock().unlock();
     }
 
-    /**
-     * Returns the list of lockers attached to a given thread, or creates it if missing
-     *
-     * @return
-     */
+    /** Returns the list of lockers attached to a given thread, or creates it if missing */
     private Collection<ShpFilesLocker> getCurrentThreadLockers() {
         Collection<ShpFilesLocker> threadLockers = lockers.get(Thread.currentThread());
         if (threadLockers == null) {
-            threadLockers = new ArrayList<ShpFilesLocker>();
+            threadLockers = new ArrayList<>();
             lockers.put(Thread.currentThread(), threadLockers);
         }
         return threadLockers;
     }
 
-    /**
-     * Gives up all read locks in preparation for lock upgade
-     *
-     * @param threadLockers
-     */
+    /** Gives up all read locks in preparation for lock upgade */
     private void relinquishReadLocks(Collection<ShpFilesLocker> threadLockers) {
         for (ShpFilesLocker shpFilesLocker : threadLockers) {
             if (shpFilesLocker.reader != null && !shpFilesLocker.upgraded) {
@@ -571,11 +562,7 @@ public class ShpFiles {
         }
     }
 
-    /**
-     * Re-takes the read locks in preparation for lock downgrade
-     *
-     * @param threadLockers
-     */
+    /** Re-takes the read locks in preparation for lock downgrade */
     private void regainReadLocks(Collection<ShpFilesLocker> threadLockers) {
         for (ShpFilesLocker shpFilesLocker : threadLockers) {
             if (shpFilesLocker.reader != null && shpFilesLocker.upgraded) {
@@ -594,11 +581,7 @@ public class ShpFiles {
         return urls.get(ShpFileType.SHP).toExternalForm().toLowerCase().startsWith("file:");
     }
 
-    /**
-     * Returns true if the files are writable
-     *
-     * @return
-     */
+    /** Returns true if the files are writable */
     public boolean isWritable() {
         if (!isLocal()) {
             return false;
@@ -687,13 +670,13 @@ public class ShpFiles {
      * @return an output stream
      * @throws IOException if a problem occurred opening the stream.
      */
+    @SuppressWarnings("PMD.CloseResource") // resource is returned
     public OutputStream getOutputStream(ShpFileType type, final FileWriter requestor)
             throws IOException {
         final URL url = acquireWrite(type, requestor);
-
+        OutputStream out = null;
         try {
 
-            OutputStream out;
             if (isLocal()) {
                 File file = URLs.urlToFile(url);
                 out = new FileOutputStream(file);
@@ -724,6 +707,9 @@ public class ShpFiles {
             return output;
         } catch (Throwable e) {
             unlockWrite(url, requestor);
+            if (out != null) {
+                out.close();
+            }
             if (e instanceof IOException) {
                 throw (IOException) e;
             } else if (e instanceof RuntimeException) {
@@ -746,18 +732,18 @@ public class ShpFiles {
      * @param type the type of file to open the channel to.
      * @param requestor the object requesting the channel
      */
+    @SuppressWarnings("PMD.CloseResource") // cannot close RAF/IS locally, the channel refers to it
     public ReadableByteChannel getReadChannel(ShpFileType type, FileReader requestor)
             throws IOException {
         URL url = acquireRead(type, requestor);
         ReadableByteChannel channel = null;
         try {
             if (isLocal()) {
-
                 File file = URLs.urlToFile(url);
 
+                @SuppressWarnings("resource")
                 RandomAccessFile raf = new RandomAccessFile(file, "r");
                 channel = new FileChannelDecorator(raf.getChannel(), this, url, requestor);
-
             } else {
                 InputStream in = url.openConnection().getInputStream();
                 channel =
@@ -792,6 +778,7 @@ public class ShpFiles {
      * @return a WritableByteChannel for the provided file type
      * @throws IOException if there is an error opening the stream
      */
+    @SuppressWarnings("PMD.CloseResource") // closeable resource are returned
     public WritableByteChannel getWriteChannel(ShpFileType type, FileWriter requestor)
             throws IOException {
 
@@ -803,6 +790,7 @@ public class ShpFiles {
 
                 File file = URLs.urlToFile(url);
 
+                @SuppressWarnings("resource")
                 RandomAccessFile raf = new RandomAccessFile(file, "rw");
                 channel = new FileChannelDecorator(raf.getChannel(), this, url, requestor);
 
@@ -865,14 +853,6 @@ public class ShpFiles {
     /**
      * Internal method that the file channel decorators will call to allow reuse of the memory
      * mapped buffers
-     *
-     * @param wrapped
-     * @param url
-     * @param mode
-     * @param position
-     * @param size
-     * @return
-     * @throws IOException
      */
     MappedByteBuffer map(FileChannel wrapped, URL url, MapMode mode, long position, long size)
             throws IOException {
@@ -886,8 +866,6 @@ public class ShpFiles {
     /**
      * Returns the status of the memory map cache. When enabled the memory mapped portions of the
      * files are cached and shared (giving each thread a clone of it)
-     *
-     * @param memoryMapCacheEnabled
      */
     public boolean isMemoryMapCacheEnabled() {
         return memoryMapCacheEnabled;
@@ -896,8 +874,6 @@ public class ShpFiles {
     /**
      * Enables the memory map cache. When enabled the memory mapped portions of the files are cached
      * and shared (giving each thread a clone of it)
-     *
-     * @param memoryMapCacheEnabled
      */
     public void setMemoryMapCacheEnabled(boolean memoryMapCacheEnabled) {
         this.memoryMapCacheEnabled = memoryMapCacheEnabled;

@@ -16,7 +16,8 @@
  */
 package org.geotools.image.palette;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import it.geosolutions.jaiext.colorindexer.ColorIndexer;
 import it.geosolutions.jaiext.colorindexer.Quantizer;
@@ -183,10 +184,6 @@ public class QuantizerTest {
      * Checks two images are visually equal given a certain maximum color distance. For a better
      * tool you might want to check out {@link ImageAssert}, but that works only with RGB images,
      * this one is color model independent
-     *
-     * @param image1
-     * @param image2
-     * @param maxColorDistance
      */
     private void assertImagesSimilar(
             RenderedImage image1, RenderedImage image2, int maxColorDistance) {

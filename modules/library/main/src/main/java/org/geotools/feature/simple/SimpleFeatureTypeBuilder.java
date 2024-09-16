@@ -341,8 +341,7 @@ public class SimpleFeatureTypeBuilder {
      * @see {@link #addBinding(AttributeType)}.
      */
     public void addBindings(Schema schema) {
-        for (Iterator<AttributeType> itr = schema.values().iterator(); itr.hasNext(); ) {
-            AttributeType type = itr.next();
+        for (AttributeType type : schema.values()) {
             addBinding(type);
         }
     }
@@ -403,11 +402,33 @@ public class SimpleFeatureTypeBuilder {
      *
      * <p>This method is the same as adding a restriction based on length( value ) < length This
      * value is reset after a call to {@link #add(String, Class)}
-     *
-     * @return length Used to limit the length of the next attribute created
      */
     public SimpleFeatureTypeBuilder length(int length) {
         attributeBuilder.setLength(length);
+        return this;
+    }
+
+    /**
+     * Sets a restriction on the possible field values of the next attribute added to the feature
+     * type.
+     *
+     * <p>This method is the same as adding a restriction based on value in (option1, option2, ...}.
+     * This restriction is reset after a call to {@link #add(String, Class)}
+     */
+    public SimpleFeatureTypeBuilder options(Object... options) {
+        attributeBuilder.setOptions(Arrays.asList(options));
+        return this;
+    }
+
+    /**
+     * Sets a restriction on the possible field values of the next attribute added to the feature
+     * type.
+     *
+     * <p>This method is the same as adding a restriction based on value in (option1, option2, ...}.
+     * This restriction is reset after a call to {@link #add(String, Class)}
+     */
+    public SimpleFeatureTypeBuilder options(List<?> options) {
+        attributeBuilder.setOptions(options);
         return this;
     }
 
@@ -645,7 +666,7 @@ public class SimpleFeatureTypeBuilder {
      *
      * <p>Use of this method is discouraged. Consider using {@link #add(String, Class)}.
      */
-    public void addAll(AttributeDescriptor[] descriptors) {
+    public void addAll(AttributeDescriptor... descriptors) {
         if (descriptors != null) {
             for (AttributeDescriptor ad : descriptors) {
                 add(ad);
@@ -721,8 +742,7 @@ public class SimpleFeatureTypeBuilder {
     }
 
     public AttributeDescriptor get(String attributeName) {
-        for (Iterator<AttributeDescriptor> iterator = attributes.iterator(); iterator.hasNext(); ) {
-            AttributeDescriptor descriptor = iterator.next();
+        for (AttributeDescriptor descriptor : attributes) {
             if (descriptor.getLocalName().equals(attributeName)) {
                 return descriptor;
             }
@@ -730,21 +750,11 @@ public class SimpleFeatureTypeBuilder {
         return null;
     }
 
-    /**
-     * Replace the descriptor at the provided index.
-     *
-     * @param index
-     * @param descriptor
-     */
+    /** Replace the descriptor at the provided index. */
     public void set(int index, AttributeDescriptor descriptor) {
         attributes().set(index, descriptor);
     }
-    /**
-     * Replace the descriptor at the provided index.
-     *
-     * @param index
-     * @param descriptor
-     */
+    /** Replace the descriptor at the provided index. */
     public void set(AttributeDescriptor descriptor) {
         int index = indexOf(descriptor.getLocalName());
         if (index == -1) {
@@ -754,12 +764,7 @@ public class SimpleFeatureTypeBuilder {
         }
         set(index, descriptor);
     }
-    /**
-     * Replace the descriptor at the provided index.
-     *
-     * @param index
-     * @param descriptor
-     */
+    /** Replace the descriptor at the provided index. */
     public void set(String attributeName, AttributeDescriptor descriptor) {
         int index = indexOf(attributeName);
         if (index == -1) {
@@ -772,8 +777,7 @@ public class SimpleFeatureTypeBuilder {
     /** Index of attrbute by name */
     private int indexOf(String attributeName) {
         int i = 0;
-        for (Iterator<AttributeDescriptor> iterator = attributes.iterator(); iterator.hasNext(); ) {
-            AttributeDescriptor d = iterator.next();
+        for (AttributeDescriptor d : attributes) {
             if (d.getLocalName().equals(attributeName)) {
                 return i;
             }
@@ -781,12 +785,7 @@ public class SimpleFeatureTypeBuilder {
         }
         return -1;
     }
-    /**
-     * Replace the descriptor at the provided index.
-     *
-     * @param index
-     * @param descriptor
-     */
+    /** Replace the descriptor at the provided index. */
     public void set(String attributeName, AttributeTypeBuilder attributeBuilder) {
         AttributeDescriptor descriptor = attributeBuilder.buildDescriptor(attributeName);
         set(attributeName, descriptor);
@@ -808,7 +807,7 @@ public class SimpleFeatureTypeBuilder {
      *
      * @param attributes the new list of attributes, or null to reset the list
      */
-    public void setAttributes(AttributeDescriptor[] attributes) {
+    public void setAttributes(AttributeDescriptor... attributes) {
         List<AttributeDescriptor> atts = attributes();
         atts.clear();
         if (attributes != null) atts.addAll(Arrays.asList(attributes));
@@ -912,7 +911,7 @@ public class SimpleFeatureTypeBuilder {
         if (origional == null) {
             return newList();
         }
-        if (origional == Collections.EMPTY_LIST) {
+        if (origional == Collections.emptyList()) {
             return newList();
         }
         try {
@@ -982,7 +981,7 @@ public class SimpleFeatureTypeBuilder {
      * @param types name of types to include in result
      * @return SimpleFeatureType containing just the types indicated by name
      */
-    public static SimpleFeatureType retype(SimpleFeatureType original, String[] types) {
+    public static SimpleFeatureType retype(SimpleFeatureType original, String... types) {
         return retype(original, Arrays.asList(types));
     }
 
@@ -996,8 +995,8 @@ public class SimpleFeatureTypeBuilder {
         b.attributes().clear();
 
         // add attributes in order
-        for (int i = 0; i < types.size(); i++) {
-            b.add(original.getDescriptor(types.get(i)));
+        for (String type : types) {
+            b.add(original.getDescriptor(type));
         }
 
         // handle default geometry
@@ -1044,14 +1043,7 @@ public class SimpleFeatureTypeBuilder {
         return b.buildFeatureType();
     }
 
-    /**
-     * Configure expected
-     *
-     * @param origional
-     * @param query
-     * @return
-     */
-    public static SimpleFeatureType retype(SimpleFeatureType origional, Query query) {
+    public static SimpleFeatureType retype(SimpleFeatureType original, Query query) {
         CoordinateReferenceSystem crs = null;
         if (query.getCoordinateSystem() != null) {
             crs = query.getCoordinateSystem();
@@ -1059,17 +1051,17 @@ public class SimpleFeatureTypeBuilder {
         if (query.getCoordinateSystemReproject() != null) {
             crs = query.getCoordinateSystemReproject();
         }
-        return retype(origional, query.getPropertyNames(), crs);
+        return retype(original, query.getPropertyNames(), crs);
     }
 
     private static SimpleFeatureType retype(
-            SimpleFeatureType origional, String[] propertyNames, CoordinateReferenceSystem crs) {
+            SimpleFeatureType original, String[] propertyNames, CoordinateReferenceSystem crs) {
         // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * Copys a feature type.
+     * Copies a feature type.
      *
      * <p>This method does a deep copy in that all individual attributes are copied as well.
      */

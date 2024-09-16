@@ -92,17 +92,13 @@ public class ArcServerWFSOnlineTest extends OnlineTestSupport {
     public void testArcMapWFSFilter_V2_post() throws IOException, NoSuchElementException {
         arcMapTest("2.0.0", false);
     }
-    /**
-     * @param expected
-     * @param version
-     * @throws IOException
-     */
+    /** */
     private void arcMapTest(String version, boolean get) throws IOException {
 
         String getCapabilities =
                 "http://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer/WFSServer?request=GetCapabilities&service=WFS&version="
                         + version;
-        Map<String, Object> connectionParameters = new HashMap<String, Object>();
+        Map<String, Object> connectionParameters = new HashMap<>();
         connectionParameters.put(WFSDataStoreFactory.URL.key, getCapabilities);
         connectionParameters.put(WFSDataStoreFactory.LENIENT.key, Boolean.TRUE);
         // connectionParameters.put(WFSDataStoreFactory.WFS_STRATEGY.key, "arcgis");

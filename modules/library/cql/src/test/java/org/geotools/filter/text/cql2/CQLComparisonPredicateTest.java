@@ -69,12 +69,10 @@ public class CQLComparisonPredicateTest {
      */
     @Test
     public void comparisonOperators() throws Exception {
-        Filter expected;
-        Filter actual;
         // attr1 < 5
-        expected = FilterCQLSample.getSample(FilterCQLSample.LESS_FILTER_SAMPLE);
+        Filter expected = FilterCQLSample.getSample(FilterCQLSample.LESS_FILTER_SAMPLE);
 
-        actual = CompilerUtil.parseFilter(this.language, FilterCQLSample.LESS_FILTER_SAMPLE);
+        Filter actual = CompilerUtil.parseFilter(this.language, FilterCQLSample.LESS_FILTER_SAMPLE);
 
         Assert.assertNotNull("expects filter not null", actual);
 
@@ -112,7 +110,6 @@ public class CQLComparisonPredicateTest {
      * Equals predicate sample
      *
      * @see ECQLComparisonPredicateTest
-     * @throws Exception
      */
     @Test
     public void deprecatedPredicate() throws Exception {
@@ -129,8 +126,6 @@ public class CQLComparisonPredicateTest {
      * <pre>
      * Sample: gmd:aa:bb.gmd:cc.gmd:dd
      * </pre>
-     *
-     * @throws Exception
      */
     @Test
     public void attributeName() throws Exception {
@@ -162,34 +157,25 @@ public class CQLComparisonPredicateTest {
      */
     @Test
     public void propertyComparisonSimpleExpressions() throws Exception {
-        Filter expected;
-        Filter actual;
 
-        expected = FilterCQLSample.getSample(FilterCQLSample.FILTER_SIMPLE_EXPR);
-        actual = CompilerUtil.parseFilter(this.language, FilterCQLSample.FILTER_SIMPLE_EXPR);
+        Filter expected = FilterCQLSample.getSample(FilterCQLSample.FILTER_SIMPLE_EXPR);
+        Filter actual = CompilerUtil.parseFilter(this.language, FilterCQLSample.FILTER_SIMPLE_EXPR);
 
         Assert.assertNotNull("expects filter not null", actual);
 
         Assert.assertEquals("not equal compare filter error", expected, actual);
     }
 
-    /**
-     * Comparison with boolean values
-     *
-     * @throws Exception
-     */
+    /** Comparison with boolean values */
     @Test
     public void booleanLiteral() throws Exception {
 
-        Filter filter;
-        PropertyIsEqualTo eqFilter;
-
         // test true value
-        filter = CompilerUtil.parseFilter(this.language, "attr = true");
+        Filter filter = CompilerUtil.parseFilter(this.language, "attr = true");
         Assert.assertNotNull(filter);
         Assert.assertTrue(filter instanceof PropertyIsEqualTo);
 
-        eqFilter = (PropertyIsEqualTo) filter;
+        PropertyIsEqualTo eqFilter = (PropertyIsEqualTo) filter;
         Assert.assertEquals("attr", ((PropertyName) eqFilter.getExpression1()).getPropertyName());
         Assert.assertEquals(Boolean.TRUE, ((Literal) eqFilter.getExpression2()).getValue());
 
@@ -206,16 +192,13 @@ public class CQLComparisonPredicateTest {
     @Test
     public void longLiteral() throws Exception {
 
-        Filter filter;
-        PropertyIsEqualTo eqFilter;
-
         // test true value
         final String expectedValue = Long.toString(Long.MAX_VALUE);
-        filter = CompilerUtil.parseFilter(this.language, "attr = " + expectedValue);
+        Filter filter = CompilerUtil.parseFilter(this.language, "attr = " + expectedValue);
         Assert.assertNotNull(filter);
         Assert.assertTrue(filter instanceof PropertyIsEqualTo);
 
-        eqFilter = (PropertyIsEqualTo) filter;
+        PropertyIsEqualTo eqFilter = (PropertyIsEqualTo) filter;
         Assert.assertEquals("attr", ((PropertyName) eqFilter.getExpression1()).getPropertyName());
         Assert.assertEquals(
                 Long.parseLong(expectedValue), ((Literal) eqFilter.getExpression2()).getValue());
@@ -254,12 +237,7 @@ public class CQLComparisonPredicateTest {
         Assert.assertTrue(f3 instanceof And);
     }
 
-    /**
-     * General test for cql expressions
-     *
-     * @param cqlSample
-     * @throws Exception
-     */
+    /** General test for cql expressions */
     private void testEqualsExpressions(final String cqlSample) throws Exception {
         Filter expected = FilterCQLSample.getSample(cqlSample);
         Filter actual = CompilerUtil.parseFilter(language, cqlSample);

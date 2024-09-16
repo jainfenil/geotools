@@ -29,7 +29,7 @@ import org.geotools.ows.wms.Layer;
 public abstract class AbstractGetFeatureInfoRequest extends AbstractWMSRequest
         implements GetFeatureInfoRequest {
     /** A set of type Layer, each of which is to be queried in the request */
-    private Set queryLayers;
+    private Set<Layer> queryLayers;
 
     /**
      * Constructs a GetFeatureInfoRequest. It will set the REQUEST and VERSION parameters,
@@ -41,15 +41,12 @@ public abstract class AbstractGetFeatureInfoRequest extends AbstractWMSRequest
     public AbstractGetFeatureInfoRequest(URL onlineResource, GetMapRequest request) {
         super(onlineResource, getMapProperties(request));
 
-        queryLayers = new TreeSet();
+        queryLayers = new TreeSet<>();
     }
 
     /**
      * GetMap request fills in the LAYERS and STYLES properties only when getFinalURL() is called,
      * so we force it to fill them in before copying the properties
-     *
-     * @param request
-     * @return
      */
     static Properties getMapProperties(GetMapRequest request) {
         request.getFinalURL();
@@ -58,7 +55,7 @@ public abstract class AbstractGetFeatureInfoRequest extends AbstractWMSRequest
 
     /** @see org.geotools.data.wms.request.Request#getFinalURL() */
     public URL getFinalURL() {
-        Iterator iter = queryLayers.iterator();
+        Iterator<Layer> iter = queryLayers.iterator();
         String initialQueryLayerString =
                 properties.getProperty(QUERY_LAYERS) == null
                         ? ""
@@ -69,7 +66,7 @@ public abstract class AbstractGetFeatureInfoRequest extends AbstractWMSRequest
                         : properties.getProperty(QUERY_LAYERS); // $NON-NLS-1$
 
         while (iter.hasNext()) {
-            Layer layer = (Layer) iter.next();
+            Layer layer = iter.next();
             try {
                 // spaces are converted to plus signs, but must be %20 for url calls [GEOT-4317]
                 queryLayerString =
@@ -99,7 +96,7 @@ public abstract class AbstractGetFeatureInfoRequest extends AbstractWMSRequest
     }
 
     /** @see GetFeatureInfoRequest#setQueryLayers(java.util.Set) */
-    public void setQueryLayers(Set layers) {
+    public void setQueryLayers(Set<Layer> layers) {
         queryLayers = layers;
     }
 

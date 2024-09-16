@@ -17,16 +17,20 @@
  */
 package org.geotools.gce.image;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.logging.Logger;
-import junit.textui.TestRunner;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.test.TestData;
 import org.geotools.util.logging.Logging;
+import org.junit.Before;
+import org.junit.Test;
 import org.opengis.coverage.grid.Format;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.parameter.ParameterValueGroup;
@@ -46,27 +50,16 @@ public class WorldImageWriterTest extends WorldImageBaseTestCase {
 
     private Logger logger = Logging.getLogger(WorldImageWriterTest.class);
 
-    public WorldImageWriterTest(String name) {
-        super(name);
-    }
-
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         File testData = TestData.file(this, ".");
         new File(testData, "write").mkdir();
     }
     /**
      * This method simply read all the respecting a predefined pattern inside the testData directory
      * and then it tries to read, write and re-read them back. All the possible errors are caught.
-     *
-     * @throws MalformedURLException
-     * @throws IOException
-     * @throws IllegalArgumentException
-     * @throws FactoryException
-     * @throws TransformException
-     * @throws ParseException
-     * @throws ParseException
      */
+    @Test
     public void testWrite()
             throws MalformedURLException, IOException, IllegalArgumentException, FactoryException,
                     TransformException, ParseException {
@@ -81,13 +74,13 @@ public class WorldImageWriterTest extends WorldImageBaseTestCase {
                 buff.append(" Testing ability to write ").append(filePath);
                 // url
                 final URL url = TestData.getResource(this, filePath);
-                assertTrue(url != null);
+                assertNotNull(url);
                 output = this.write(url, format);
                 buff.append(" as url ").append(filePath).append(output.getName());
 
                 // getting file
                 final File file = TestData.file(this, filePath);
-                assertTrue(file != null);
+                assertNotNull(file);
                 // starting write test
                 output = this.write(file, format);
                 buff.append(" and file ").append(filePath).append(output.getName() + "\n");
@@ -102,11 +95,6 @@ public class WorldImageWriterTest extends WorldImageBaseTestCase {
      * order to display it.
      *
      * @param source Object The object on disk representing the coverage to test.
-     * @throws IOException
-     * @throws IllegalArgumentException
-     * @throws FactoryException
-     * @throws TransformException
-     * @throws ParseException
      */
     private File write(Object source, String format)
             throws IOException, IllegalArgumentException, FactoryException, TransformException,
@@ -115,7 +103,7 @@ public class WorldImageWriterTest extends WorldImageBaseTestCase {
         WorldImageReader wiReader = new WorldImageReader(source);
 
         // reading the original coverage
-        GridCoverage2D coverage = (GridCoverage2D) wiReader.read(null);
+        GridCoverage2D coverage = wiReader.read(null);
 
         assertNotNull(coverage);
         assertNotNull(coverage.getRenderedImage());
@@ -145,7 +133,7 @@ public class WorldImageWriterTest extends WorldImageBaseTestCase {
         // reading again
         assertTrue(tempFile.exists());
         wiReader = new WorldImageReader(tempFile);
-        coverage = (GridCoverage2D) wiReader.read(null);
+        coverage = wiReader.read(null);
 
         // displaying the coverage
         if (TestData.isInteractiveTest()) coverage.show();
@@ -154,15 +142,5 @@ public class WorldImageWriterTest extends WorldImageBaseTestCase {
         coverage.dispose(true);
 
         return tempFile;
-    }
-
-    /**
-     * TestRunner for testing inside a java application. It gives us the ability to keep windows
-     * open to inspect what happened.
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-        TestRunner.run(WorldImageWriterTest.class);
     }
 }

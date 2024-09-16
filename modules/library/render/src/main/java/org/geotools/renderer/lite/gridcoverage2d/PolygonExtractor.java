@@ -34,19 +34,11 @@ class PolygonExtractor {
     /** The extractor is thread safe, use this constant to avoid creating it over and over */
     public static final PolygonExtractor INSTANCE = new PolygonExtractor();
 
-    /**
-     * Returns all polygons found in the
-     *
-     * @param handler
-     * @param geometry
-     * @return
-     * @throws TransformException
-     * @throws FactoryException
-     */
+    /** Returns all polygons found in the */
     public List<Polygon> getPolygons(Geometry preProcessed)
             throws TransformException, FactoryException {
         // the pre-processing might have cut or split the geometry
-        final List<Polygon> polygons = new ArrayList<Polygon>();
+        final List<Polygon> polygons = new ArrayList<>();
         if (preProcessed instanceof Polygon) {
             polygons.add((Polygon) preProcessed);
         } else {

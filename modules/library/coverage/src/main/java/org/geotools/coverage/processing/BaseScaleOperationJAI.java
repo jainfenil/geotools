@@ -26,7 +26,6 @@ import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptor;
 import javax.media.jai.PlanarImage;
-import org.geotools.coverage.GridSampleDimension;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
@@ -67,7 +66,6 @@ public abstract class BaseScaleOperationJAI extends OperationJAI {
      * Constructor for {@link BaseScaleOperationJAI}.
      *
      * @param operation name of the {@link JAI} operation we wrap.
-     * @throws OperationNotFoundException
      */
     public BaseScaleOperationJAI(String operation) throws OperationNotFoundException {
         super(operation);
@@ -86,7 +84,6 @@ public abstract class BaseScaleOperationJAI extends OperationJAI {
      * Constructor for {@link BaseScaleOperationJAI}.
      *
      * @param operation {@link OperationDescriptor} of the {@link JAI} operation we wrap.
-     * @param descriptor
      */
     public BaseScaleOperationJAI(
             OperationDescriptor operation, ParameterDescriptorGroup descriptor) {
@@ -251,12 +248,11 @@ public abstract class BaseScaleOperationJAI extends OperationJAI {
                                 name, // The grid coverage name
                                 image, // The underlying data
                                 gg2D,
-                                (GridSampleDimension[])
-                                        (asPhotographicStrategy
-                                                ? null
-                                                : sourceCoverage
-                                                        .getSampleDimensions()
-                                                        .clone()), // The sample dimensions
+                                asPhotographicStrategy
+                                        ? null
+                                        : sourceCoverage
+                                                .getSampleDimensions()
+                                                .clone(), // The sample dimensions
                                 sources, // The source grid coverage.
                                 properties); // Properties
 

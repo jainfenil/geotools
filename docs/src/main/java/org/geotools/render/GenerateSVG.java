@@ -59,13 +59,12 @@ public class GenerateSVG {
         if (canvasSize == null) {
             canvasSize = new Dimension(300, 300); // default of 300x300
         }
-        Document document = null;
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
 
         // Create an instance of org.w3c.dom.Document
-        document = db.getDOMImplementation().createDocument(null, "svg", null);
+        Document document = db.getDOMImplementation().createDocument(null, "svg", null);
 
         // Set up the map
         SVGGeneratorContext ctx1 = SVGGeneratorContext.createDefault(document);
@@ -85,12 +84,8 @@ public class GenerateSVG {
         LOGGER.finest("rendering map");
         renderer.paint(g2d, outputArea, dataArea);
         LOGGER.finest("writing to file");
-        OutputStreamWriter osw = null;
-        try {
-            osw = new OutputStreamWriter(out, "UTF-8");
+        try (OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8")) {
             g2d.stream(osw);
-        } finally {
-            if (osw != null) osw.close();
         }
     }
     // exportSVG end

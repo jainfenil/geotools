@@ -48,11 +48,7 @@ public class BinaryOpTest extends GridProcessingTestBase {
         processor = CoverageProcessor.getInstance(null);
     }
 
-    /**
-     * Tests the "Add" operation.
-     *
-     * @throws IOException
-     */
+    /** Tests the "Add" operation. */
     @Test
     public void testAdd() throws IOException {
         final GridCoverage2D shortCoverage = EXAMPLES.get(5);
@@ -60,17 +56,13 @@ public class BinaryOpTest extends GridProcessingTestBase {
         final GridCoverage2D result = doOp("Add", shortCoverage, floatCoverage);
         final RenderedImage image = result.getRenderedImage();
         ImageWorker w = new ImageWorker(image);
-        double[] min = (double[]) w.getMinimums();
-        double[] max = (double[]) w.getMaximums();
+        double[] min = w.getMinimums();
+        double[] max = w.getMaximums();
         assertEquals(min[0], 1.0, DELTA);
         assertEquals(max[0], 66401.0, DELTA);
     }
 
-    /**
-     * Tests the "Multiply" operation.
-     *
-     * @throws IOException
-     */
+    /** Tests the "Multiply" operation. */
     @Test
     public void testMultiply() throws IOException {
         final GridCoverage2D shortCoverage = EXAMPLES.get(5);
@@ -88,7 +80,6 @@ public class BinaryOpTest extends GridProcessingTestBase {
      *
      * @param coverage0 The coverage to scale.
      * @param interp The interpolation to use.
-     * @throws IOException
      */
     private GridCoverage2D doOp(
             final String operationName,

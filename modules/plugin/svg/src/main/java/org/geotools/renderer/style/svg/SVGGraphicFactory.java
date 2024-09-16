@@ -16,7 +16,9 @@
  */
 package org.geotools.renderer.style.svg;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.RenderingHints.Key;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
@@ -33,7 +35,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.swing.*;
+import javax.swing.Icon;
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.geotools.renderer.style.ExternalGraphicFactory;
@@ -64,7 +66,7 @@ public class SVGGraphicFactory implements Factory, ExternalGraphicFactory, Graph
     RenderableSVGCache glyphCache;
 
     /** The possible mime types for SVG */
-    static final Set<String> formats = new HashSet<String>();
+    static final Set<String> formats = new HashSet<>();
 
     static final CanonicalSet<String> CANONICAL_PATHS = CanonicalSet.newInstance(String.class);
 
@@ -101,7 +103,6 @@ public class SVGGraphicFactory implements Factory, ExternalGraphicFactory, Graph
 
     protected RenderableSVG toRenderableSVG(String svgfile, URL svgUrl)
             throws SAXException, IOException {
-        RenderableSVG svg;
         String parser = XMLResourceDescriptor.getXMLParserClassName();
         SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
         String svgUri = svgfile;
@@ -117,16 +118,11 @@ public class SVGGraphicFactory implements Factory, ExternalGraphicFactory, Graph
         if (!parameters.isEmpty() || hasParameters(doc.getDocumentElement())) {
             replaceParameters(doc.getDocumentElement(), parameters);
         }
-        svg = new RenderableSVG(doc);
+        RenderableSVG svg = new RenderableSVG(doc);
         return svg;
     }
 
-    /**
-     * Splits the query string in
-     *
-     * @param url
-     * @return
-     */
+    /** Splits the query string in */
     Map<String, String> getParametersFromUrl(String url) {
         // url.getQuery won't work on file addresses
         int idx = url.indexOf("?");

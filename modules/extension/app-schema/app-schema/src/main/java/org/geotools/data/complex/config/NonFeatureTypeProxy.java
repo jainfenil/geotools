@@ -130,16 +130,12 @@ public class NonFeatureTypeProxy extends ComplexTypeProxy implements FeatureType
         return descriptors;
     }
 
-    /**
-     * Return only the schema descriptors
-     *
-     * @return
-     */
+    /** Return only the schema descriptors */
     public Collection<PropertyDescriptor> getTypeDescriptors() {
         if (subject instanceof ComplexType) {
             return ((ComplexType) subject).getDescriptors();
         } else {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 

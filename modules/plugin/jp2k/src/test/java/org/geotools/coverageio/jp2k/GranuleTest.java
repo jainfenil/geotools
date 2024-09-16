@@ -17,6 +17,9 @@
  */
 package org.geotools.coverageio.jp2k;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.File;
@@ -38,11 +41,7 @@ public final class GranuleTest extends BaseJP2K {
 
     private static final Logger LOGGER =
             org.geotools.util.logging.Logging.getLogger(GranuleTest.class);
-    /**
-     * Creates a new instance of GranuleTest
-     *
-     * @param name
-     */
+    /** Creates a new instance of GranuleTest */
     public GranuleTest() {}
 
     @Test

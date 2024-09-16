@@ -51,10 +51,7 @@ public class SubFeatureCollection extends BaseSimpleFeatureCollection {
     public SubFeatureCollection(SimpleFeatureCollection collection) {
         this(collection, Filter.INCLUDE);
     }
-    /**
-     * @param collection Collection or AbstractFeatureCollection
-     * @param subfilter
-     */
+    /** @param collection Collection or AbstractFeatureCollection */
     public SubFeatureCollection(SimpleFeatureCollection collection, Filter subfilter) {
         super(collection.getSchema());
 
@@ -86,14 +83,11 @@ public class SubFeatureCollection extends BaseSimpleFeatureCollection {
 
     public int size() {
         int count = 0;
-        SimpleFeatureIterator i = features();
-        try {
+        try (SimpleFeatureIterator i = features()) {
             while (i.hasNext()) {
                 i.next();
                 count++;
             }
-        } finally {
-            i.close();
         }
         return count;
     }

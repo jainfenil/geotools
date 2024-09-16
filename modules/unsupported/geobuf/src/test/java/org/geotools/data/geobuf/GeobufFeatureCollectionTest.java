@@ -18,7 +18,11 @@ package org.geotools.data.geobuf;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.memory.MemoryDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -66,38 +70,35 @@ public class GeobufFeatureCollectionTest {
                             2
                         },
                         "location.2");
-        SimpleFeatureCollection collection =
-                DataUtilities.collection(new SimpleFeature[] {feature1, feature2});
+        SimpleFeatureCollection collection = DataUtilities.collection(feature1, feature2);
         featureStore.addFeatures(collection);
 
         GeobufFeatureCollection geobufFeatureCollection = new GeobufFeatureCollection();
-        OutputStream out = new FileOutputStream(file);
-        geobufFeatureCollection.encode(collection, out);
-        out.close();
-        InputStream inputStream = new FileInputStream(file);
-        SimpleFeatureCollection decodedFeatureCollection =
-                geobufFeatureCollection.decode(inputStream);
-        inputStream.close();
-
-        assertEquals(2, decodedFeatureCollection.size());
-        SimpleFeatureIterator it = decodedFeatureCollection.features();
-        try {
-            int c = 0;
-            while (it.hasNext()) {
-                SimpleFeature f = it.next();
-                if (c == 0) {
-                    assertEquals("POINT (-8.349609 14.349548)", f.getDefaultGeometry().toString());
-                    assertEquals(1, f.getAttribute("id"));
-                    assertEquals("ABC", f.getAttribute("name"));
-                } else if (c == 1) {
-                    assertEquals("POINT (-18.349609 24.349548)", f.getDefaultGeometry().toString());
-                    assertEquals(2, f.getAttribute("id"));
-                    assertEquals("DEF", f.getAttribute("name"));
+        try (OutputStream out = new FileOutputStream(file)) {
+            geobufFeatureCollection.encode(collection, out);
+        }
+        try (InputStream inputStream = new FileInputStream(file)) {
+            SimpleFeatureCollection decodedFeatureCollection =
+                    geobufFeatureCollection.decode(inputStream);
+            assertEquals(2, decodedFeatureCollection.size());
+            try (SimpleFeatureIterator it = decodedFeatureCollection.features()) {
+                int c = 0;
+                while (it.hasNext()) {
+                    SimpleFeature f = it.next();
+                    if (c == 0) {
+                        assertEquals(
+                                "POINT (-8.349609 14.349548)", f.getDefaultGeometry().toString());
+                        assertEquals(1, f.getAttribute("id"));
+                        assertEquals("ABC", f.getAttribute("name"));
+                    } else if (c == 1) {
+                        assertEquals(
+                                "POINT (-18.349609 24.349548)", f.getDefaultGeometry().toString());
+                        assertEquals(2, f.getAttribute("id"));
+                        assertEquals("DEF", f.getAttribute("name"));
+                    }
+                    c++;
                 }
-                c++;
             }
-        } finally {
-            it.close();
         }
     }
 }

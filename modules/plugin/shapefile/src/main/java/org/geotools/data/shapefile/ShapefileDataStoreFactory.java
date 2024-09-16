@@ -19,7 +19,6 @@ package org.geotools.data.shapefile;
 import java.awt.RenderingHints.Key;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -195,10 +194,10 @@ public class ShapefileDataStoreFactory implements FileDataStoreFactorySpi {
     }
 
     public Map<Key, ?> getImplementationHints() {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
 
-    public DataStore createDataStore(Map<String, Serializable> params) throws IOException {
+    public DataStore createDataStore(Map<String, ?> params) throws IOException {
         URL url = lookup(URLP, params, URL.class);
         Boolean isMemoryMapped = lookup(MEMORY_MAPPED, params, Boolean.class);
         Boolean cacheMemoryMaps = lookup(CACHE_MEMORY_MAPS, params, Boolean.class);
@@ -240,7 +239,7 @@ public class ShapefileDataStoreFactory implements FileDataStoreFactorySpi {
         }
     }
 
-    public DataStore createNewDataStore(Map<String, Serializable> params) throws IOException {
+    public DataStore createNewDataStore(Map<String, ?> params) throws IOException {
         return createDataStore(params);
     }
 
@@ -249,24 +248,17 @@ public class ShapefileDataStoreFactory implements FileDataStoreFactorySpi {
      * null otherwise
      *
      * @param <T>
-     * @param param
-     * @param params
-     * @param target
-     * @return
-     * @throws IOException
      */
-    <T> T lookup(Param param, Map<String, Serializable> params, Class<T> target)
-            throws IOException {
-        T result = (T) param.lookUp(params);
+    <T> T lookup(Param param, Map<String, ?> params, Class<T> target) throws IOException {
+        T result = target.cast(param.lookUp(params));
         if (result == null) {
-            return (T) param.getDefaultValue();
-        } else {
-            return result;
+            result = target.cast(param.getDefaultValue());
         }
+        return result;
     }
 
     @Override
-    public boolean canProcess(Map params) {
+    public boolean canProcess(Map<String, ?> params) {
         if (!DataUtilities.canProcess(params, getParametersInfo())) {
             return false; // fail basic param check
         }
@@ -287,9 +279,7 @@ public class ShapefileDataStoreFactory implements FileDataStoreFactorySpi {
 
                     String[] vpfTables = {"LAT", "LHT", "DHT", "lat", "lht", "dht"};
 
-                    for (int itab = 0; itab < vpfTables.length; itab++) {
-
-                        String tabFilename = vpfTables[itab];
+                    for (String tabFilename : vpfTables) {
 
                         String pathTab = dirPath.concat(File.separator).concat(tabFilename);
 
@@ -321,9 +311,10 @@ public class ShapefileDataStoreFactory implements FileDataStoreFactorySpi {
 
         ShapefileDataStoreFactory shpFactory;
 
-        Map originalParams;
+        Map<String, ?> originalParams;
 
-        public ShpFileStoreFactory(ShapefileDataStoreFactory factory, Map originalParams) {
+        public ShpFileStoreFactory(
+                ShapefileDataStoreFactory factory, Map<String, ?> originalParams) {
             this.shpFactory = factory;
             this.originalParams = originalParams;
         }
@@ -331,8 +322,7 @@ public class ShapefileDataStoreFactory implements FileDataStoreFactorySpi {
         public DataStore getDataStore(File file) throws IOException {
             final URL url = URLs.fileToUrl(file);
             if (shpFactory.canProcess(url)) {
-                Map<String, Serializable> params =
-                        new HashMap<String, Serializable>(originalParams);
+                Map<String, Object> params = new HashMap<>(originalParams);
                 params.put(URLP.key, url);
                 return shpFactory.createDataStore(params);
             } else {
@@ -348,7 +338,7 @@ public class ShapefileDataStoreFactory implements FileDataStoreFactorySpi {
 
     @Override
     public FileDataStore createDataStore(URL url) throws IOException {
-        Map<String, Serializable> params = new HashMap<String, Serializable>();
+        Map<String, Object> params = new HashMap<>();
         params.put(URLP.key, url);
 
         boolean isLocal = url.getProtocol().equalsIgnoreCase("file");

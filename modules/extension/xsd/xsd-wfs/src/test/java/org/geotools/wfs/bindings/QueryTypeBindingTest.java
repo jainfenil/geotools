@@ -16,6 +16,11 @@
  */
 package org.geotools.wfs.bindings;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collections;
@@ -29,6 +34,7 @@ import org.geotools.test.TestData;
 import org.geotools.wfs.WFS;
 import org.geotools.wfs.WFSTestSupport;
 import org.geotools.xsd.Binding;
+import org.junit.Test;
 import org.opengis.filter.FilterFactory;
 import org.opengis.filter.Id;
 import org.opengis.filter.expression.Expression;
@@ -38,19 +44,12 @@ import org.opengis.filter.sort.SortOrder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-/**
- * Unit test suite for {@link QueryTypeBinding}
- *
- * @author Justin Deoliveira
- * @author Gabriel Roldan
- * @version $Id$
- * @since 2.5.x
- */
 public class QueryTypeBindingTest extends WFSTestSupport {
     public QueryTypeBindingTest() {
         super(WFS.QueryType, QueryType.class, Binding.OVERRIDE);
     }
 
+    @Test
     public void testParse() throws Exception {
         final URL resource = TestData.getResource(this, "QueryTypeBindingTest.xml");
         buildDocument(resource);
@@ -78,8 +77,7 @@ public class QueryTypeBindingTest extends WFSTestSupport {
         assertEquals("property1", query.getPropertyName().get(0));
         assertEquals("property2", query.getPropertyName().get(1));
 
-        XlinkPropertyNameType xlink;
-        xlink = (XlinkPropertyNameType) query.getXlinkPropertyName().get(0);
+        XlinkPropertyNameType xlink = (XlinkPropertyNameType) query.getXlinkPropertyName().get(0);
         assertEquals("gt:propertyA/gt:propertyB", xlink.getValue());
         assertEquals("*", xlink.getTraverseXlinkDepth());
         assertEquals(BigInteger.valueOf(10), xlink.getTraverseXlinkExpiry());
@@ -89,8 +87,7 @@ public class QueryTypeBindingTest extends WFSTestSupport {
         assertEquals("1", xlink.getTraverseXlinkDepth());
         assertNull(xlink.getTraverseXlinkExpiry());
 
-        Function function;
-        function = (Function) query.getFunction().get(0);
+        Function function = (Function) query.getFunction().get(0);
         assertNotNull(function);
         assertEquals("max", function.getName());
 
@@ -104,6 +101,7 @@ public class QueryTypeBindingTest extends WFSTestSupport {
     }
 
     @SuppressWarnings("unchecked")
+    @Test
     public void testEncode() throws Exception {
         final QueryType query = buildTestQuery();
 
@@ -135,8 +133,6 @@ public class QueryTypeBindingTest extends WFSTestSupport {
      * Builds a {@link QueryType} instance equivalent to the test query in the file <code>
      * test-data/QueryTypeBinding.xml</code> in the <code>org.geotools.wfs.bindings</code> package
      * of the test resources.
-     *
-     * @return
      */
     @SuppressWarnings("unchecked")
     private QueryType buildTestQuery() {

@@ -20,7 +20,11 @@
  */
 package org.geotools.referencing.operation.projection;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.floor;
+import static java.lang.Math.toDegrees;
+import static java.lang.Math.toRadians;
 
 import java.awt.geom.Point2D;
 import org.geotools.metadata.iso.citation.Citations;
@@ -342,7 +346,7 @@ public class Robinson extends MapProjection {
     //        }
     //    }
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         // System.out.println(PI / 2d);
     }
 }

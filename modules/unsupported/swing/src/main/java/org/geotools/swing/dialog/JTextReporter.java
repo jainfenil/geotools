@@ -17,7 +17,7 @@
 
 package org.geotools.swing.dialog;
 
-import java.awt.*;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -42,7 +42,13 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.BadLocationException;
 import net.miginfocom.swing.MigLayout;
@@ -179,8 +185,8 @@ public class JTextReporter {
          * @param dialog the dialog to connect to
          */
         private Connection(TextDialog dialog) {
-            dialogRef = new WeakReference<TextDialog>(dialog);
-            listeners = new ArrayList<TextReporterListener>();
+            dialogRef = new WeakReference<>(dialog);
+            listeners = new ArrayList<>();
             updateLock = new ReentrantReadWriteLock();
             active = new AtomicBoolean(true);
         }
@@ -474,7 +480,6 @@ public class JTextReporter {
      *
      * @param title dialog title (may be {@code null} or empty
      * @param initialText text to display initially (may be {@code null} or empty
-     * @param flags
      * @return a {@linkplain Connection} via which the text displayed by the dialog can be updated
      */
     public static Connection showDialog(String title, String initialText, int flags) {

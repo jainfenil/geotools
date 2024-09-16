@@ -59,8 +59,6 @@ public class ParsingTest {
      *   <li>http://schemas.opengis.net/wps/1.0.0/examples/40_wpsDescribeProcess_response.xml <br>
      *       referenceProcessDescriptions.xml
      * </ul>
-     *
-     * @throws IOException
      */
     @Test
     public void testDescribeProcessParsing() throws Exception {
@@ -105,8 +103,7 @@ public class ParsingTest {
         try {
             Configuration config = new WPSConfiguration();
 
-            URL url;
-            url = TestData.url(this, "deegree3Capabilities.xml");
+            URL url = TestData.url(this, "deegree3Capabilities.xml");
 
             Parser parser = new Parser(config);
             in = new BufferedReader(new InputStreamReader(url.openStream()));
@@ -133,8 +130,7 @@ public class ParsingTest {
         try {
             Configuration config = new WPSConfiguration();
 
-            URL url;
-            url = TestData.url(this, "geoserverCapabilities.xml");
+            URL url = TestData.url(this, "geoserverCapabilities.xml");
 
             Parser parser = new Parser(config);
             in = new BufferedReader(new InputStreamReader(url.openStream()));
@@ -161,8 +157,7 @@ public class ParsingTest {
         try {
             Configuration config = new WPSConfiguration();
 
-            URL url;
-            url = TestData.url(this, "deegree3ProcessDescriptions.xml");
+            URL url = TestData.url(this, "deegree3ProcessDescriptions.xml");
 
             Parser parser = new Parser(config);
             in = new BufferedReader(new InputStreamReader(url.openStream()));
@@ -183,23 +178,25 @@ public class ParsingTest {
         }
 
         File file = TestData.file(this, "LiteralDataTypeTestFile.xml");
-        BufferedReader in = new BufferedReader(new FileReader(file));
-        Configuration config = new WPSConfiguration();
-        Parser parser = new Parser(config);
+        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+            Configuration config = new WPSConfiguration();
+            Parser parser = new Parser(config);
 
-        Object object = parser.parse(in);
+            Object object = parser.parse(in);
 
-        // try casting the response
-        ExecuteResponseType exeResponse = null;
-        if (object instanceof ExecuteResponseType) {
-            exeResponse = (ExecuteResponseType) object;
+            // try casting the response
+            ExecuteResponseType exeResponse = null;
+            if (object instanceof ExecuteResponseType) {
+                exeResponse = (ExecuteResponseType) object;
+            }
+
+            // try to get the output datatype
+            OutputDataType odt =
+                    (OutputDataType) exeResponse.getProcessOutputs().getOutput().get(0);
+            String dataType = odt.getData().getLiteralData().getDataType();
+
+            assertNotNull(dataType);
         }
-
-        // try to get the output datatype
-        OutputDataType odt = (OutputDataType) exeResponse.getProcessOutputs().getOutput().get(0);
-        String dataType = odt.getData().getLiteralData().getDataType();
-
-        assertNotNull(dataType);
     }
 
     @Test

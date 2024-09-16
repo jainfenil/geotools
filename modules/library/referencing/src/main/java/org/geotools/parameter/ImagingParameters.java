@@ -159,8 +159,7 @@ public class ImagingParameters extends AbstractParameter implements ParameterVal
         }
         final Range range = listDescriptor.getParamValueRange(name);
         if (range != null) {
-            Comparable c;
-            c = descriptor.getMinimumValue();
+            Comparable c = descriptor.getMinimumValue();
             if (c != null && !range.contains(c)) {
                 return false;
             }
@@ -170,10 +169,10 @@ public class ImagingParameters extends AbstractParameter implements ParameterVal
             }
         }
         if (enumerated != null) {
-            for (int i = 0; i < enumerated.length; i++) {
-                if (name.equalsIgnoreCase(enumerated[i])) {
-                    final EnumeratedParameter[] restrictions;
-                    restrictions = listDescriptor.getEnumeratedParameterValues(name);
+            for (String s : enumerated) {
+                if (name.equalsIgnoreCase(s)) {
+                    final EnumeratedParameter[] restrictions =
+                            listDescriptor.getEnumeratedParameterValues(name);
                     final Set<?> valids = descriptor.getValidValues();
                     if (valids == null || !Arrays.asList(restrictions).containsAll(valids)) {
                         return false;
@@ -283,9 +282,8 @@ public class ImagingParameters extends AbstractParameter implements ParameterVal
         ensureNonNull("name", name);
         name = name.trim();
         final List<GeneralParameterValue> values = values();
-        final int size = values.size();
-        for (int i = 0; i < size; i++) {
-            final ParameterValue value = (ParameterValue) values.get(i);
+        for (GeneralParameterValue generalParameterValue : values) {
+            final ParameterValue value = (ParameterValue) generalParameterValue;
             if (AbstractIdentifiedObject.nameMatches(value.getDescriptor(), name)) {
                 return value;
             }

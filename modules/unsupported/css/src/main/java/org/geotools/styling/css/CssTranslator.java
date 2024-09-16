@@ -59,6 +59,7 @@ import org.geotools.brewer.styling.builder.SymbolizerBuilder;
 import org.geotools.brewer.styling.builder.TextSymbolizerBuilder;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.NameImpl;
+import org.geotools.filter.text.cql2.CQL;
 import org.geotools.filter.visitor.SimplifyingFilterVisitor;
 import org.geotools.styling.ColorMap;
 import org.geotools.styling.FeatureTypeStyle;
@@ -88,7 +89,6 @@ import org.geotools.util.Range;
 import org.geotools.util.logging.Logging;
 import org.geotools.xml.styling.SLDTransformer;
 import org.opengis.feature.type.FeatureType;
-import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Expression;
@@ -172,6 +172,9 @@ public class CssTranslator {
     /** The transformation */
     static final String TRANSFORM = "transform";
 
+    /** The style background */
+    static final String BACKGROUND = "background";
+
     @SuppressWarnings("serial")
     static final Map<String, String> POLYGON_VENDOR_OPTIONS =
             new HashMap<String, String>() {
@@ -214,6 +217,7 @@ public class CssTranslator {
                     put("label-polygon-align", TextSymbolizer.POLYGONALIGN_KEY);
                     put("shield-resize", "graphic-resize");
                     put("shield-margin", "graphic-margin");
+                    put("shield-placement", TextSymbolizer.GRAPHIC_PLACEMENT_KEY);
                 }
             };
 
@@ -272,21 +276,12 @@ public class CssTranslator {
         return maxCombinations;
     }
 
-    /**
-     * Maximum number of rule combinations before bailing out of the power set generation
-     *
-     * @param maxCombinations
-     */
+    /** Maximum number of rule combinations before bailing out of the power set generation */
     public void setMaxCombinations(int maxCombinations) {
         this.maxCombinations = maxCombinations;
     }
 
-    /**
-     * Translates a CSS stylesheet into an equivalent GeoTools {@link Style} object
-     *
-     * @param stylesheet
-     * @return
-     */
+    /** Translates a CSS stylesheet into an equivalent GeoTools {@link Style} object */
     public Style translate(Stylesheet stylesheet) {
         // get the directives influencing translation
         int maxCombinations = getMaxCombinations(stylesheet);
@@ -355,11 +350,13 @@ public class CssTranslator {
             int autoThreshold) {
         // split rules by index and typename, then build the power set for each group and
         // generate the rules and symbolizers
-        Map<Integer, List<CssRule>> zIndexRules = organizeByZIndex(allRules);
+        Map<Integer, List<CssRule>> zIndexRules =
+                organizeByZIndex(allRules, CssRule.ZIndexMode.NoZIndexAll);
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Split the rules into " + zIndexRules + "  sets after z-index separation");
         }
         int translatedRuleCount = 0;
+        boolean backgroundFound = false;
         for (Map.Entry<Integer, List<CssRule>> zEntry : zIndexRules.entrySet()) {
             final Integer zIndex = zEntry.getKey();
             List<CssRule> rules = zEntry.getValue();
@@ -432,8 +429,7 @@ public class CssTranslator {
                         FeatureTypeStyle.VALUE_EVALUATION_MODE_FIRST);
 
                 if (featureTypeName != null) {
-                    ftsBuilder.setFeatureTypeNames(
-                            Arrays.asList((Name) new NameImpl(featureTypeName)));
+                    ftsBuilder.setFeatureTypeNames(Arrays.asList(new NameImpl(featureTypeName)));
                 }
                 Collections.sort(combinedRules, CssRuleComparator.DESCENDING);
                 int rulesCount = combinedRules.size();
@@ -562,6 +558,10 @@ public class CssTranslator {
                                 transform = values.get(0).toExpression();
                             }
                         }
+
+                        if (!backgroundFound) {
+                            backgroundFound = buildBackground(styleBuilder, derived);
+                        }
                     }
 
                     if (composite != null) {
@@ -629,12 +629,14 @@ public class CssTranslator {
             return 0;
         }
 
-        Map<Integer, List<CssRule>> zIndexRules = organizeByZIndex(finalRules);
+        Map<Integer, List<CssRule>> zIndexRules =
+                organizeByZIndex(finalRules, CssRule.ZIndexMode.NoZIndexZero);
 
         for (Map.Entry<Integer, List<CssRule>> zEntry : zIndexRules.entrySet()) {
             List<CssRule> rules = zEntry.getValue();
             Map<String, List<CssRule>> typenameRules = organizeByTypeName(rules);
             // build the SLD
+            boolean backgroundFound = false;
             for (Map.Entry<String, List<CssRule>> entry : typenameRules.entrySet()) {
                 String featureTypeName = entry.getKey();
                 List<CssRule> localRules = entry.getValue();
@@ -644,8 +646,7 @@ public class CssTranslator {
 
                 FeatureTypeStyleBuilder ftsBuilder = styleBuilder.featureTypeStyle();
                 if (featureTypeName != null) {
-                    ftsBuilder.setFeatureTypeNames(
-                            Arrays.asList((Name) new NameImpl(featureTypeName)));
+                    ftsBuilder.setFeatureTypeNames(Arrays.asList(new NameImpl(featureTypeName)));
                 }
 
                 String composite = null;
@@ -664,6 +665,7 @@ public class CssTranslator {
                     List<CssRule> derivedRules =
                             removeNested(cssRule, targetFeatureType, cachedSimplifier);
                     for (CssRule derived : derivedRules) {
+
                         buildSldRule(derived, ftsBuilder, targetFeatureType, cachedSimplifier);
                         translatedRuleCount++;
 
@@ -706,6 +708,11 @@ public class CssTranslator {
                                 sortByGroup = values.get(0).toLiteral();
                             }
                         }
+
+                        // check if we have a background, use the first found
+                        if (!backgroundFound) {
+                            backgroundFound = buildBackground(styleBuilder, derived);
+                        }
                     }
                 }
                 if (composite != null) {
@@ -726,12 +733,17 @@ public class CssTranslator {
         return translatedRuleCount;
     }
 
-    /**
-     * Flat modes assumes the master rules applies to whatever was not caught by the child rules
-     *
-     * @param cssRule
-     * @return
-     */
+    private boolean buildBackground(StyleBuilder styleBuilder, CssRule rule) {
+        List<Value> values = rule.getPropertyValues(PseudoClass.ROOT, BACKGROUND).get(BACKGROUND);
+        if (values != null && !values.isEmpty()) {
+            FillBuilder fb = styleBuilder.background();
+            buildFill(rule, fb, rule.getPropertyValues(PseudoClass.ROOT), 0, BACKGROUND);
+            return true;
+        }
+        return false;
+    }
+
+    /** Flat modes assumes the master rules applies to whatever was not caught by the child rules */
     private List<CssRule> removeNested(
             CssRule cssRule, FeatureType featureType, UnboundSimplifyingFilterVisitor simplifier) {
         List<CssRule> nested = cssRule.getNestedRules();
@@ -805,9 +817,6 @@ public class CssTranslator {
      * SLD rules can have two or more selectors in OR using different scale ranges, however the SLD
      * model does not allow for that. Flatten them into N different rules, with the same properties,
      * but different selectors
-     *
-     * @param rules
-     * @return
      */
     private List<CssRule> flattenScaleRanges(List<CssRule> rules) {
         List<CssRule> result = new ArrayList<>();
@@ -828,7 +837,7 @@ public class CssTranslator {
                 if (others.size() == 1) {
                     final CssRule r = deriveWithSelector(rule, others.get(0));
                     result.add(r);
-                } else if (others.size() > 0) {
+                } else if (!others.isEmpty()) {
                     final CssRule r = deriveWithSelector(rule, new Or(others));
                     result.add(r);
                 }
@@ -859,12 +868,7 @@ public class CssTranslator {
         return guesser.getFeatureType();
     }
 
-    /**
-     * Splits the rules into different sets by feature type name
-     *
-     * @param rules
-     * @return
-     */
+    /** Splits the rules into different sets by feature type name */
     private Map<String, List<CssRule>> organizeByTypeName(List<CssRule> rules) {
         TypeNameExtractor extractor = new TypeNameExtractor();
         for (CssRule rule : rules) {
@@ -917,13 +921,9 @@ public class CssTranslator {
         return result;
     }
 
-    /**
-     * Organizes them rules by ascending z-index
-     *
-     * @param rules
-     * @return
-     */
-    private Map<Integer, List<CssRule>> organizeByZIndex(List<CssRule> rules) {
+    /** Organizes them rules by ascending z-index */
+    private Map<Integer, List<CssRule>> organizeByZIndex(
+            List<CssRule> rules, CssRule.ZIndexMode zIndexMode) {
         TreeSet<Integer> indexes = getZIndexesForRules(rules);
         Map<Integer, List<CssRule>> result = new TreeMap<>();
         if (indexes.size() == 1) {
@@ -935,7 +935,7 @@ public class CssTranslator {
             for (Integer index : indexes) {
                 List<CssRule> rulesByIndex = new ArrayList<>();
                 for (CssRule rule : rules) {
-                    CssRule subRule = rule.getSubRuleByZIndex(index);
+                    CssRule subRule = rule.getSubRuleByZIndex(index, zIndexMode);
                     if (subRule != null) {
                         if (subRule.hasSymbolizerProperty()) {
                             symbolizerPropertyCount++;
@@ -971,10 +971,6 @@ public class CssTranslator {
     /**
      * Turns an SLD compatible {@link CssRule} into a {@link Rule}, appending it to the {@link
      * FeatureTypeStyleBuilder}
-     *
-     * @param cssRule
-     * @param fts
-     * @param targetFeatureType
      */
     void buildSldRule(
             CssRule cssRule,
@@ -997,8 +993,7 @@ public class CssTranslator {
         }
 
         // ok, build the rule
-        RuleBuilder ruleBuilder;
-        ruleBuilder = fts.rule();
+        RuleBuilder ruleBuilder = fts.rule();
         ruleBuilder.filter(filter);
         String title = getCombinedTag(cssRule.getComment(), TITLE_PATTERN, ", ");
         if (title != null) {
@@ -1078,10 +1073,6 @@ public class CssTranslator {
 
     /**
      * Builds a polygon symbolizer into the current rule, if a <code>fill</code> property is found
-     *
-     * @param cssRule
-     * @param ruleBuilder
-     * @param includeStrokeInPolygonSymbolizer
      */
     private void addPolygonSymbolizer(
             CssRule cssRule, RuleBuilder ruleBuilder, boolean includeStrokeInPolygonSymbolizer) {
@@ -1114,7 +1105,7 @@ public class CssTranslator {
                 pb.geometry(fillGeometry);
             }
             FillBuilder fb = pb.fill();
-            buildFill(cssRule, fb, values, i);
+            buildFill(cssRule, fb, values, i, "fill");
             if (includeStrokeInPolygonSymbolizer) {
                 StrokeBuilder sb = pb.stroke();
                 buildStroke(cssRule, sb, values, i);
@@ -1123,12 +1114,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Builds a point symbolizer into the current rule, if a <code>mark</code> property is found
-     *
-     * @param cssRule
-     * @param ruleBuilder
-     */
+    /** Builds a point symbolizer into the current rule, if a <code>mark</code> property is found */
     private void addPointSymbolizer(CssRule cssRule, RuleBuilder ruleBuilder) {
         Map<String, List<Value>> values = cssRule.getPropertyValues(PseudoClass.ROOT, "mark");
         if (values == null || values.isEmpty()) {
@@ -1155,12 +1141,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Builds a text symbolizer into the current rule, if a <code>label</code> property is found
-     *
-     * @param cssRule
-     * @param ruleBuilder
-     */
+    /** Builds a text symbolizer into the current rule, if a <code>label</code> property is found */
     private void addTextSymbolizer(CssRule cssRule, RuleBuilder ruleBuilder) {
         Map<String, List<Value>> values =
                 cssRule.getPropertyValues(PseudoClass.ROOT, "label", "font", "shield", "halo");
@@ -1262,6 +1243,7 @@ public class CssTranslator {
                                 "font-family",
                                 "font-style",
                                 "font-weight",
+                                "font-size",
                                 "font-family");
                 for (int j = 0; j < maxSize; j++) {
                     FontBuilder fb = tb.newFont();
@@ -1318,9 +1300,6 @@ public class CssTranslator {
     /**
      * Builds a raster symbolizer into the current rule, if a <code>raster-channels</code> property
      * is found
-     *
-     * @param cssRule
-     * @param ruleBuilder
      */
     private void addRasterSymbolizer(CssRule cssRule, RuleBuilder ruleBuilder) {
         Map<String, List<Value>> values =
@@ -1420,18 +1399,24 @@ public class CssTranslator {
                             throw new IllegalArgumentException(
                                     "Invalid color map content, it must be a color-map-entry function"
                                             + entry);
-                        } else if (f.parameters.size() < 2 || f.parameters.size() > 3) {
+                        } else if (f.parameters.size() < 2 || f.parameters.size() > 4) {
                             throw new IllegalArgumentException(
                                     "Invalid color map content, it must be a color-map-entry function "
                                             + "with either 2 parameters (color and value) or 3 parameters "
-                                            + "(color, value and opacity)"
+                                            + "(color, value and opacity) or 4 parameters (color, value, opacity and label) "
                                             + entry);
                         }
                         ColorMapEntryBuilder eb = cmb.entry();
-                        eb.color(f.parameters.get(0).toExpression());
-                        eb.quantity(f.parameters.get(1).toExpression());
-                        if (f.parameters.size() == 3) {
-                            eb.opacity(f.parameters.get(2).toExpression());
+                        eb.colorAsLiteral(
+                                wrapColorMapAttribute(f.parameters.get(0).toExpression()));
+                        eb.quantityAsLiteral(
+                                wrapColorMapAttribute(f.parameters.get(1).toExpression()));
+                        if (f.parameters.size() > 2) {
+                            eb.opacityAsLiteral(
+                                    wrapColorMapAttribute(f.parameters.get(2).toExpression()));
+                        }
+                        if (f.parameters.size() == 4) {
+                            eb.label(f.parameters.get(3).toLiteral());
                         }
                     }
                     String type = getLiteral(values, "raster-color-map-type", i, null);
@@ -1453,15 +1438,18 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Applies contrast enhancement for the i-th band
-     *
-     * @param ceb
-     * @param constrastEnhancements
-     * @param constrastParameters
-     * @param gammas
-     * @param i
-     */
+    private String wrapColorMapAttribute(Expression expression) {
+        if (expression instanceof org.opengis.filter.expression.Literal) {
+            // return expression as simple String
+            return expression.toString();
+        } else {
+            // This allows to support CQL Expressions for colorMapEntry attributes
+            // being lately used by SLD ColorMapBuilder
+            return "${" + CQL.toCQL(expression) + "}";
+        }
+    }
+
+    /** Applies contrast enhancement for the i-th band */
     private void applyContrastEnhancement(
             ContrastEnhancementBuilder ceb,
             String[] constrastEnhancements,
@@ -1593,19 +1581,16 @@ public class CssTranslator {
         protected abstract GraphicBuilder getGraphicBuilder();
     }
 
-    /**
-     * Builds the fill using a FillBuilder
-     *
-     * @param cssRule
-     * @param fb
-     * @param values
-     * @param i
-     */
+    /** Builds the fill using a FillBuilder */
     private void buildFill(
-            CssRule cssRule, final FillBuilder fb, Map<String, List<Value>> values, int i) {
-        for (Value fillValue : getMultiValue(values, "fill", i)) {
+            CssRule cssRule,
+            final FillBuilder fb,
+            Map<String, List<Value>> values,
+            int i,
+            final String fillPropertyName) {
+        for (Value fillValue : getMultiValue(values, fillPropertyName, i)) {
             if (Function.isGraphicsFunction(fillValue)) {
-                new SubgraphicBuilder("fill", fillValue, values, cssRule, i) {
+                new SubgraphicBuilder(fillPropertyName, fillValue, values, cssRule, i) {
 
                     @Override
                     protected GraphicBuilder getGraphicBuilder() {
@@ -1616,7 +1601,7 @@ public class CssTranslator {
                 fb.color(getExpression(fillValue));
             }
         }
-        Expression opacity = getExpression(values, "fill-opacity", i);
+        Expression opacity = getExpression(values, fillPropertyName + "-opacity", i);
         if (opacity != null) {
             fb.opacity(opacity);
         }
@@ -1625,8 +1610,6 @@ public class CssTranslator {
     /**
      * Adds a line symbolizer, assuming the <code>stroke<code> property is found
      *
-     * @param cssRule
-     * @param ruleBuilder
      */
     private void addLineSymbolizer(CssRule cssRule, RuleBuilder ruleBuilder) {
         Map<String, List<Value>> values = cssRule.getPropertyValues(PseudoClass.ROOT, "stroke");
@@ -1656,12 +1639,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Returns true if the expression is a constant value zero
-     *
-     * @param expression
-     * @return
-     */
+    /** Returns true if the expression is a constant value zero */
     private boolean isZero(Expression expression) {
         if (!(expression instanceof org.opengis.filter.expression.Literal)) {
             return false;
@@ -1671,14 +1649,7 @@ public class CssTranslator {
         return l.evaluate(null, Double.class) == 0;
     }
 
-    /**
-     * Builds a stroke using the stroke buidler for the i-th set of property values
-     *
-     * @param cssRule
-     * @param strokeBuilder
-     * @param values
-     * @param i
-     */
+    /** Builds a stroke using the stroke buidler for the i-th set of property values */
     private void buildStroke(
             CssRule cssRule,
             final StrokeBuilder strokeBuilder,
@@ -1751,9 +1722,6 @@ public class CssTranslator {
     /**
      * Returns true if the value is a {@link Literal}, or a {@link MultiValue} made of {@link
      * Literal}
-     *
-     * @param value
-     * @return
      */
     private boolean isLiterals(Value value) {
         if (value instanceof Literal) {
@@ -1771,14 +1739,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Adds the vendor options available
-     *
-     * @param sb
-     * @param vendorOptions
-     * @param values
-     * @param idx
-     */
+    /** Adds the vendor options available */
     private void addVendorOptions(
             SymbolizerBuilder<?> sb,
             Map<String, String> vendorOptions,
@@ -1799,15 +1760,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Builds a mark into the graphic builder from the idx-th set of property alues
-     *
-     * @param markName
-     * @param cssRule
-     * @param indexedPseudoClass
-     * @param idx
-     * @param gb
-     */
+    /** Builds a mark into the graphic builder from the idx-th set of property alues */
     private void buildMark(
             Value markName,
             CssRule cssRule,
@@ -1826,7 +1779,7 @@ public class CssTranslator {
             // unless specified and empty, a mark always has a fill and a stroke
             if (values.containsKey("fill") && values.get("fill") != null) {
                 FillBuilder fb = mark.fill();
-                buildFill(cssRule, fb, values, idx);
+                buildFill(cssRule, fb, values, idx, "fill");
             } else if (!values.containsKey("fill")) {
                 mark.fill();
             }
@@ -1851,11 +1804,6 @@ public class CssTranslator {
     /**
      * Returns the set of values for the idx-th pseudo-class taking into account both generic and
      * non indexed pseudo class names
-     *
-     * @param cssRule
-     * @param pseudoClassName
-     * @param idx
-     * @return
      */
     private Map<String, List<Value>> getValuesForIndexedPseudoClass(
             CssRule cssRule, String pseudoClassName, int idx) {
@@ -1872,14 +1820,7 @@ public class CssTranslator {
         return combined;
     }
 
-    /**
-     * Builds an expression out of the i-th value
-     *
-     * @param valueMap
-     * @param name
-     * @param i
-     * @return
-     */
+    /** Builds an expression out of the i-th value */
     private Expression getExpression(Map<String, List<Value>> valueMap, String name, int i) {
         Value v = getValue(valueMap, name, i);
         return getExpression(v);
@@ -1888,9 +1829,6 @@ public class CssTranslator {
     /**
      * Builds/grabs an expression from the specified value, if a multi value is passed the first
      * value will be used
-     *
-     * @param v
-     * @return
      */
     private Expression getExpression(Value v) {
         if (v == null) {
@@ -1907,12 +1845,6 @@ public class CssTranslator {
     /**
      * Returns an expression for the i-th value of the specified property, taking into account units
      * of measure
-     *
-     * @param valueMap
-     * @param name
-     * @param i
-     * @param defaultUnit
-     * @return
      */
     private Expression getMeasureExpression(
             Map<String, List<Value>> valueMap, String name, int i, String defaultUnit) {
@@ -1936,14 +1868,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Returns the i-th value of the specified property
-     *
-     * @param valueMap
-     * @param name
-     * @param i
-     * @return
-     */
+    /** Returns the i-th value of the specified property */
     private Value getValue(Map<String, List<Value>> valueMap, String name, int i) {
         List<Value> values = valueMap.get(name);
         if (values == null || values.isEmpty()) {
@@ -1998,15 +1923,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Returns the i-th value of the specified property, as a literal
-     *
-     * @param valueMap
-     * @param name
-     * @param i
-     * @param defaultValue
-     * @return
-     */
+    /** Returns the i-th value of the specified property, as a literal */
     private String getLiteral(
             Map<String, List<Value>> valueMap, String name, int i, String defaultValue) {
         Value v = getValue(valueMap, name, i);
@@ -2017,14 +1934,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Returns the i-th value of the specified property, as a array of floats
-     *
-     * @param valueMap
-     * @param name
-     * @param i
-     * @return
-     */
+    /** Returns the i-th value of the specified property, as a array of floats */
     private float[] getFloatArray(Map<String, List<Value>> valueMap, String name, int i) {
         double[] doubles = getDoubleArray(valueMap, name, i);
         if (doubles == null) {
@@ -2038,14 +1948,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Returns the i-th value of the specified property, as a array of doubles
-     *
-     * @param valueMap
-     * @param name
-     * @param i
-     * @return
-     */
+    /** Returns the i-th value of the specified property, as a array of doubles */
     private double[] getDoubleArray(Map<String, List<Value>> valueMap, String name, int i) {
         Value v = getValue(valueMap, name, i);
         if (v == null) {
@@ -2074,14 +1977,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Returns the i-th value of the specified property, as a array of strings
-     *
-     * @param valueMap
-     * @param name
-     * @param i
-     * @return
-     */
+    /** Returns the i-th value of the specified property, as a array of strings */
     private String[] getStringArray(Map<String, List<Value>> valueMap, String name, int i) {
         Value v = getValue(valueMap, name, i);
         if (v == null) {
@@ -2103,14 +1999,7 @@ public class CssTranslator {
         }
     }
 
-    /**
-     * Returns the i-th value of the specified property, as a array of expressions
-     *
-     * @param valueMap
-     * @param name
-     * @param i
-     * @return
-     */
+    /** Returns the i-th value of the specified property, as a array of expressions */
     private Expression[] getExpressionArray(Map<String, List<Value>> valueMap, String name, int i) {
         Value v = getValue(valueMap, name, i);
         if (v == null) {
@@ -2135,9 +2024,6 @@ public class CssTranslator {
     /**
      * Returns the max number of property values in the provided property set (for repeated
      * symbolizers)
-     *
-     * @param valueMap
-     * @return
      */
     private int getMaxRepeatCount(Map<String, List<Value>> valueMap) {
         int max = 1;

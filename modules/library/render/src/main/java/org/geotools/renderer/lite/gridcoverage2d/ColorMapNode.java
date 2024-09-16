@@ -174,8 +174,8 @@ class ColorMapNode extends StyleVisitorCoverageProcessingNodeAdapter
                     .setNumberColorMapEntries(cmEntries.length)
                     .setColorForValuesToPreserve(new Color(0, 0, 0, 0))
                     .setGapsColor(new Color(0, 0, 0, 0));
-            for (int i = 0; i < cmEntries.length; i++) {
-                builder.addColorMapEntry(cmEntries[i]);
+            for (ColorMapEntry cmEntry : cmEntries) {
+                builder.addColorMapEntry(cmEntry);
             }
 
             // /////////////////////////////////////////////////////////////////////
@@ -201,11 +201,7 @@ class ColorMapNode extends StyleVisitorCoverageProcessingNodeAdapter
         } else this.type = TYPE_NONE;
     }
 
-    /**
-     * @param candidateSD
-     * @return
-     * @throws IllegalStateException
-     */
+    /** */
     private static double[] preparaNoDataValues(final GridSampleDimension candidateSD)
             throws IllegalStateException {
         double[] candidateNoDataValues = candidateSD.getNoDataValues();
@@ -311,7 +307,8 @@ class ColorMapNode extends StyleVisitorCoverageProcessingNodeAdapter
             // Create the the output coverage by preserving its gridgeometry and its bands
             //
             ////
-            Map properties = sourceCoverage.getProperties();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> properties = sourceCoverage.getProperties();
             if (properties == null) {
                 properties = new HashMap<>();
             }

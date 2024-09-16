@@ -20,10 +20,13 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
 import org.geotools.data.ows.GetCapabilitiesRequest;
-import org.geotools.data.ows.HTTPResponse;
 import org.geotools.data.ows.Response;
+import org.geotools.http.HTTPResponse;
 import org.geotools.ows.ServiceException;
-import org.geotools.ows.wms.request.*;
+import org.geotools.ows.wms.request.AbstractDescribeLayerRequest;
+import org.geotools.ows.wms.request.AbstractGetLegendGraphicRequest;
+import org.geotools.ows.wms.request.DescribeLayerRequest;
+import org.geotools.ows.wms.request.GetLegendGraphicRequest;
 import org.geotools.ows.wms.response.DescribeLayerResponse;
 import org.geotools.ows.wms.response.GetLegendGraphicResponse;
 
@@ -127,10 +130,7 @@ public class WMS1_1_0 extends WMS1_0_0 {
 
     public static class GetFeatureInfoRequest extends WMS1_0_0.GetFeatureInfoRequest {
 
-        /**
-         * @param onlineResource
-         * @param request
-         */
+        /** */
         public GetFeatureInfoRequest(
                 URL onlineResource, org.geotools.ows.wms.request.GetMapRequest request) {
             super(onlineResource, request);
@@ -151,10 +151,7 @@ public class WMS1_1_0 extends WMS1_0_0 {
 
     public static class InternalDescribeLayerRequest extends AbstractDescribeLayerRequest {
 
-        /**
-         * @param onlineResource
-         * @param properties
-         */
+        /** */
         public InternalDescribeLayerRequest(URL onlineResource, Properties properties) {
             super(onlineResource, properties);
         }

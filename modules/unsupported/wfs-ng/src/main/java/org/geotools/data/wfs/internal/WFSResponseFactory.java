@@ -18,7 +18,7 @@ package org.geotools.data.wfs.internal;
 
 import java.io.IOException;
 import java.util.List;
-import org.geotools.data.ows.HTTPResponse;
+import org.geotools.http.HTTPResponse;
 
 /**
  * A factory interface meant to be used through the usual GeoTools SPI mechanism to dynamically find
@@ -40,8 +40,6 @@ public interface WFSResponseFactory {
      *
      * <p>The decision may usually be made depending on the request type, ouput format, etc
      *
-     * @param originatingRequest
-     * @param contentType
      * @return {@code true} if this factory can create a parser for the responses of the given
      *     request
      */
@@ -52,7 +50,6 @@ public interface WFSResponseFactory {
      *
      * @param response the handle to the response contents the WFS sent
      * @return a {@link WFSResponseParser} that can deal with the given WFS response
-     * @throws IOException
      */
     public WFSResponse createResponse(WFSRequest request, HTTPResponse response) throws IOException;
 

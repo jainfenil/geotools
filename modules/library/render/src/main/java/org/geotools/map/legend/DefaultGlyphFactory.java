@@ -16,8 +16,8 @@
  */
 package org.geotools.map.legend;
 
-import java.awt.*;
-import javax.swing.*;
+import java.awt.Color;
+import javax.swing.Icon;
 import org.geotools.map.Layer;
 import org.geotools.styling.Rule;
 import org.geotools.styling.SLD;
@@ -38,7 +38,6 @@ public class DefaultGlyphFactory implements GlyphFactory {
      *   <li>layer style, defaults will be used if not recognized
      * </ul>
      *
-     * @param layer
      * @return Icon For the provided layer
      */
     public Icon icon(Layer layer) {

@@ -37,12 +37,8 @@ public abstract class DefaultTemporalGeometricPrimitive extends DefaultTemporalP
     /**
      * Returns the distance from this TM_GeometricPrimitive to another TM_GeometricPrimitive, i.e.
      * the absolute value of the difference between their temporal positions.
-     *
-     * @param other
-     * @return
      */
     public Duration distance(TemporalGeometricPrimitive other) {
-        Duration response = null;
         long diff = 0L;
 
         if (this instanceof Instant && other instanceof Instant) {
@@ -196,15 +192,11 @@ public abstract class DefaultTemporalGeometricPrimitive extends DefaultTemporalP
             }
         }
 
-        response = new DefaultPeriodDuration(Math.abs(diff));
+        Duration response = new DefaultPeriodDuration(Math.abs(diff));
         return response;
     }
 
-    /**
-     * Returns the length of this TM_GeometricPrimitive
-     *
-     * @return
-     */
+    /** Returns the length of this TM_GeometricPrimitive */
     public Duration length() {
         Duration response = null;
         long diff = 0L;
@@ -214,9 +206,7 @@ public abstract class DefaultTemporalGeometricPrimitive extends DefaultTemporalP
         } else {
             if (this instanceof Period) {
                 if (((Period) this).getBeginning() != null && ((Period) this).getEnding() != null) {
-                    response =
-                            ((DefaultInstant) ((Period) this).getBeginning())
-                                    .distance(((DefaultInstant) ((Period) this).getEnding()));
+                    response = ((Period) this).getBeginning().distance(((Period) this).getEnding());
                     return response;
                 }
             }

@@ -47,7 +47,7 @@ public class XSISAXHandler extends DefaultHandler {
             org.geotools.util.logging.Logging.getLogger(XSISAXHandler.class);
 
     // the stack of handers representing a portion of the parse tree
-    private Stack handlers = new Stack();
+    private Stack<XSIElementHandler> handlers = new Stack<>();
 
     // The schema being used to parse into
     private Schema schema = null;
@@ -72,11 +72,7 @@ public class XSISAXHandler extends DefaultHandler {
         /* not used*/
     }
 
-    /**
-     * Stores the uri being parsed to help resolve relative uris within the document.
-     *
-     * @param uri
-     */
+    /** Stores the uri being parsed to help resolve relative uris within the document. */
     public XSISAXHandler(URI uri) {
         //        this.uri = uri;
         rootHandler = new RootHandler(uri);
@@ -113,10 +109,6 @@ public class XSISAXHandler extends DefaultHandler {
     /**
      * Implementation of characters. push String
      *
-     * @param ch
-     * @param start
-     * @param length
-     * @throws SAXException
      * @see org.xml.sax.ContentHandler#characters(char[], int, int)
      */
     public void characters(char[] ch, int start, int length) throws SAXException {
@@ -133,7 +125,7 @@ public class XSISAXHandler extends DefaultHandler {
         XSIElementHandler peek = null;
         try {
             if ((text != null) && !"".equals(text.trim())) {
-                peek = (XSIElementHandler) handlers.peek();
+                peek = handlers.peek();
                 peek.characters(text);
             }
         } catch (SAXException e) {
@@ -145,10 +137,6 @@ public class XSISAXHandler extends DefaultHandler {
     /**
      * Implementation of endElement. push NS,Name
      *
-     * @param namespaceURI
-     * @param localName
-     * @param qName
-     * @throws SAXException
      * @see org.xml.sax.ContentHandler#endElement(java.lang.String, java.lang.String,
      *     java.lang.String)
      */
@@ -158,7 +146,7 @@ public class XSISAXHandler extends DefaultHandler {
         logger.fine("END: " + qName);
 
         try {
-            XSIElementHandler element = (XSIElementHandler) handlers.pop();
+            XSIElementHandler element = handlers.pop();
             element.endElement(namespaceURI, localName);
         } catch (SAXException e) {
             logger.warning(e.toString());
@@ -169,11 +157,6 @@ public class XSISAXHandler extends DefaultHandler {
     /**
      * Implementation of startElement.
      *
-     * @param namespaceURI
-     * @param localName
-     * @param qName
-     * @param atts
-     * @throws SAXException
      * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String,
      *     java.lang.String, org.xml.sax.Attributes)
      */
@@ -183,10 +166,8 @@ public class XSISAXHandler extends DefaultHandler {
         logger.fine("START: " + qName);
 
         try {
-            XSIElementHandler eh =
-                    ((XSIElementHandler) handlers.peek()).getHandler(namespaceURI, localName);
-            logger.finest(
-                    "Parent Node = " + ((XSIElementHandler) handlers.peek()).getClass().getName());
+            XSIElementHandler eh = handlers.peek().getHandler(namespaceURI, localName);
+            logger.finest("Parent Node = " + handlers.peek().getClass().getName());
 
             if (eh == null) {
                 eh = new IgnoreHandler();
@@ -203,11 +184,7 @@ public class XSISAXHandler extends DefaultHandler {
         }
     }
 
-    /**
-     * Sets the logging level for all the XSISAXHandlers.
-     *
-     * @param l
-     */
+    /** Sets the logging level for all the XSISAXHandlers. */
     public static void setLogLevel(Level l) {
         logger.setLevel(l);
         XSIElementHandler.setLogLevel(l);
@@ -220,7 +197,6 @@ public class XSISAXHandler extends DefaultHandler {
      * then return a compressed schema instance.
      *
      * @return schema
-     * @throws SAXException
      */
     public Schema getSchema() throws SAXException {
         if (schema == null) {
@@ -233,7 +209,6 @@ public class XSISAXHandler extends DefaultHandler {
     /**
      * Implementation of error.
      *
-     * @param exception
      * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
      */
     public void error(SAXParseException exception) {
@@ -244,8 +219,6 @@ public class XSISAXHandler extends DefaultHandler {
     /**
      * Implementation of fatalError.
      *
-     * @param exception
-     * @throws SAXException
      * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
      */
     public void fatalError(SAXParseException exception) throws SAXException {
@@ -257,7 +230,6 @@ public class XSISAXHandler extends DefaultHandler {
     /**
      * Implementation of warning.
      *
-     * @param exception
      * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
      */
     public void warning(SAXParseException exception) {

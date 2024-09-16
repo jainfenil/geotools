@@ -16,10 +16,13 @@
  */
 package org.geotools.referencing.wkt;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
@@ -30,8 +33,10 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.crs.DefaultProjectedCRS;
 import org.geotools.referencing.cs.DefaultCartesianCS;
 import org.geotools.referencing.operation.DefaultMathTransformFactory;
+import org.geotools.referencing.operation.projection.CylindricalEqualArea;
 import org.geotools.test.TestData;
-import org.junit.*;
+import org.junit.Test;
+import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
@@ -53,14 +58,11 @@ public final class ParserTest {
     @Test
     public void testHardCoded() throws ParseException {
         final Parser parser = new Parser();
-        String wkt1, wkt2;
-        DefaultProjectedCRS crs1, crs2;
-        ParameterValueGroup param;
         /*
          * First, rather simple Mercator projection.
          * Uses standard units and axis order.
          */
-        wkt1 =
+        String wkt1 =
                 "PROJCS[\"Mercator test\",\n"
                         + "  GEOGCS[\"WGS84\",\n"
                         + "    DATUM[\"WGS84\",\n"
@@ -78,10 +80,10 @@ public final class ParserTest {
                         + "  AXIS[\"x\", EAST],\n"
                         + "  AXIS[\"y\", NORTH]]\n";
         assertTrue(Symbols.DEFAULT.containsAxis(wkt1));
-        crs1 = (DefaultProjectedCRS) parser.parseObject(wkt1);
-        wkt2 = parser.format(crs1);
-        crs2 = (DefaultProjectedCRS) parser.parseObject(wkt2);
-        param = crs1.getConversionFromBase().getParameterValues();
+        DefaultProjectedCRS crs1 = (DefaultProjectedCRS) parser.parseObject(wkt1);
+        String wkt2 = parser.format(crs1);
+        DefaultProjectedCRS crs2 = (DefaultProjectedCRS) parser.parseObject(wkt2);
+        ParameterValueGroup param = crs1.getConversionFromBase().getParameterValues();
         assertEquals(crs1, crs2);
         assertEquals("Mercator_1SP", crs1.getConversionFromBase().getMethod().getName().getCode());
         assertTrue(
@@ -321,6 +323,35 @@ public final class ParserTest {
         assertEquals(wkt, check.toWKT());
     }
 
+    @Test
+    public void testCylindricalEqualAreaStandardParallel() throws FactoryException {
+        CylindricalEqualArea.LambertCylindricalEqualAreaProvider
+                lambertCylindricalEqualAreaProvider =
+                        new CylindricalEqualArea.LambertCylindricalEqualAreaProvider();
+        DefaultMathTransformFactory factory = new DefaultMathTransformFactory();
+
+        ParameterDescriptorGroup parameterDescriptorGroup =
+                lambertCylindricalEqualAreaProvider.getParameters();
+        ParameterValueGroup parameters = parameterDescriptorGroup.createValue();
+        final double majorAxis = 6.3712e+6;
+        final double minorAxis = 6.3712e+6;
+        parameters.parameter("semi_major").setValue(majorAxis);
+        parameters.parameter("semi_minor").setValue(minorAxis);
+        parameters.parameter("longitude_of_origin").setValue(25.0);
+        parameters.parameter("standard_parallel_1").setValue(22.2);
+        parameters.parameter("false_easting").setValue(0.0);
+        parameters.parameter("false_northing").setValue(0.0);
+        GeographicCRS base = DefaultGeographicCRS.WGS84;
+        MathTransform mt = factory.createParameterizedTransform(parameters);
+        CartesianCS cs = DefaultCartesianCS.PROJECTED;
+        CoordinateReferenceSystem crs =
+                new DefaultProjectedCRS("Cylindrical_Equal_Area", base, mt, cs);
+
+        final String wkt = crs.toWKT();
+        assertTrue(wkt.contains("standard_parallel_1"));
+        assertTrue(wkt.contains("22.2"));
+    }
+
     /** Tests parsing of math transforms. */
     @Test
     public void testMathTransform() throws IOException, ParseException {
@@ -340,71 +371,65 @@ public final class ParserTest {
      */
     private void testParsing(final AbstractParser parser, final String filename)
             throws IOException, ParseException {
-        final BufferedReader reader = TestData.openReader(ScriptRunner.class, filename);
-        if (reader == null) {
-            throw new FileNotFoundException(filename);
+        try (BufferedReader reader = TestData.openReader(ScriptRunner.class, filename)) {
+            final Collection<Object> pool = new HashSet<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.length() == 0 || line.startsWith("#")) {
+                    continue;
+                }
+                /*
+                 * Parses a line. If the parse fails, then dump the WKT and rethrow the exception.
+                 */
+                final Object parsed;
+                try {
+                    parsed = parser.parseObject(line);
+                } catch (ParseException exception) {
+                    // System.err.println();
+                    // System.err.println("-----------------------------");
+                    // System.err.println("Parse failed. Dump WKT below.");
+                    // System.err.println("-----------------------------");
+                    // System.err.println(line);
+                    // System.err.println();
+                    throw exception;
+                }
+                assertNotNull("Parsing returns null.", parsed);
+                assertEquals("Inconsistent equals method", parsed, parsed);
+                assertSame(
+                        "Parsing twice returns different objects.",
+                        parsed,
+                        parser.parseObject(line));
+                assertTrue("An identical object already exists.", pool.add(parsed));
+                assertTrue("Inconsistent hashCode or equals method.", pool.contains(parsed));
+                /*
+                 * Formats the object and parse it again.
+                 * Ensures that the result is consistent.
+                 */
+                String formatted = parser.format(parsed);
+                final Object again;
+                try {
+                    again = parser.parseObject(formatted);
+                } catch (ParseException exception) {
+                    // System.err.println();
+                    // System.err.println("------------------------------------");
+                    // System.err.println("Second parse failed. Dump WKT below.");
+                    // System.err.println("------------------------------------");
+                    // System.err.println(line);
+                    // System.err.println();
+                    // System.err.println("------ Reformatted WKT below -------");
+                    // System.err.println();
+                    // System.err.println(formatted);
+                    // System.err.println();
+                    throw exception;
+                }
+                assertEquals("Second parsing produced different objects", parsed, again);
+                assertTrue("Inconsistent hashCode or equals method.", pool.contains(again));
+            }
         }
-        final Collection<Object> pool = new HashSet<Object>();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            line = line.trim();
-            if (line.length() == 0 || line.startsWith("#")) {
-                continue;
-            }
-            /*
-             * Parses a line. If the parse fails, then dump the WKT and rethrow the exception.
-             */
-            final Object parsed;
-            try {
-                parsed = parser.parseObject(line);
-            } catch (ParseException exception) {
-                // System.err.println();
-                // System.err.println("-----------------------------");
-                // System.err.println("Parse failed. Dump WKT below.");
-                // System.err.println("-----------------------------");
-                // System.err.println(line);
-                // System.err.println();
-                throw exception;
-            }
-            assertNotNull("Parsing returns null.", parsed);
-            assertEquals("Inconsistent equals method", parsed, parsed);
-            assertSame(
-                    "Parsing twice returns different objects.", parsed, parser.parseObject(line));
-            assertTrue("An identical object already exists.", pool.add(parsed));
-            assertTrue("Inconsistent hashCode or equals method.", pool.contains(parsed));
-            /*
-             * Formats the object and parse it again.
-             * Ensures that the result is consistent.
-             */
-            String formatted = parser.format(parsed);
-            final Object again;
-            try {
-                again = parser.parseObject(formatted);
-            } catch (ParseException exception) {
-                // System.err.println();
-                // System.err.println("------------------------------------");
-                // System.err.println("Second parse failed. Dump WKT below.");
-                // System.err.println("------------------------------------");
-                // System.err.println(line);
-                // System.err.println();
-                // System.err.println("------ Reformatted WKT below -------");
-                // System.err.println();
-                // System.err.println(formatted);
-                // System.err.println();
-                throw exception;
-            }
-            assertEquals("Second parsing produced different objects", parsed, again);
-            assertTrue("Inconsistent hashCode or equals method.", pool.contains(again));
-        }
-        reader.close();
     }
 
-    /**
-     * Test if the parser handles string and number coded Authority code-values.
-     *
-     * @throws IOException
-     * @throws ParseException
-     */
+    /** Test if the parser handles string and number coded Authority code-values. */
     @Test
     public void testAuthorityCodeParsing() throws IOException, ParseException {
         testParsing(new Parser(), "wkt/AuthorityCode.txt");
@@ -431,9 +456,14 @@ public final class ParserTest {
                         expected.getCoordinateSystem(), observed.getCoordinateSystem()));
 
         assertTrue(CRS.equalsIgnoreMetadata(expected, observed));
-        assertTrue(expected.equals(observed));
+        assertEquals(expected, observed);
         assertEquals("Incorrect reading", expected, observed);
         assertFalse(check.contains("semi_major"));
         assertFalse(check.contains("semi_minor"));
+    }
+
+    @Test
+    public void testExtension() throws IOException, ParseException {
+        testParsing(new Parser(), "wkt/Extension.txt");
     }
 }

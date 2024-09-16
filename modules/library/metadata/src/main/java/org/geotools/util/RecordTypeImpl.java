@@ -69,7 +69,7 @@ public class RecordTypeImpl implements RecordType {
             final Collection<MemberName> members) {
         this.parent = parent;
         this.typeName = typeName;
-        final Map<MemberName, TypeName> attributeTypes = new HashMap<MemberName, TypeName>();
+        final Map<MemberName, TypeName> attributeTypes = new HashMap<>();
         for (final MemberName member : members) {
             attributeTypes.put(member, member.getAttributeType());
         }
@@ -81,7 +81,6 @@ public class RecordTypeImpl implements RecordType {
      *
      * @param parent The schema that contains this record type.
      * @param typeName The name that identifies this record type.
-     * @param attributeTypes
      * @todo Should we really provide this method? There is no garantee that the user-provided
      *     values are consistent with {@link MemberName#getAttributeType}.
      */

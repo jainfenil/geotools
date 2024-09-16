@@ -29,6 +29,7 @@ import org.geotools.data.jdbc.FilterToSQL;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.filter.function.FilterFunction_strToLowerCase;
 import org.geotools.geometry.jts.LiteCoordinateSequenceFactory;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -46,6 +47,7 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.Or;
 import org.opengis.filter.PropertyIsEqualTo;
 import org.opengis.filter.PropertyIsLike;
+import org.opengis.filter.expression.Function;
 import org.opengis.filter.expression.PropertyName;
 import org.opengis.filter.expression.Subtract;
 import org.opengis.filter.sort.SortBy;
@@ -54,6 +56,7 @@ import org.opengis.filter.spatial.BBOX;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+@SuppressWarnings("PMD.JUnit4TestShouldUseTestAnnotation") // not yet a JUnit4 test
 public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
     protected JDBCFeatureStore featureSource;
 
@@ -103,12 +106,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         assertTrue(areCRSEqual(getWGS84(), bounds.getCoordinateReferenceSystem()));
     }
 
-    /**
-     * Allows subclasses to use a axis order specific version of it
-     *
-     * @return
-     * @throws FactoryException
-     */
+    /** Allows subclasses to use a axis order specific version of it */
     protected CoordinateReferenceSystem getWGS84() throws FactoryException {
         return CRS.decode("EPSG:4326");
     }
@@ -150,7 +148,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         try (SimpleFeatureIterator iterator = features.features()) {
             assertTrue(iterator.hasNext());
 
-            SimpleFeature feature = (SimpleFeature) iterator.next();
+            SimpleFeature feature = iterator.next();
             assertEquals("one", feature.getAttribute(aname("stringProperty")));
             assertEquals(Double.valueOf(1.1), feature.getAttribute(aname("doubleProperty")));
         }
@@ -182,7 +180,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         try (SimpleFeatureIterator iterator = features.features()) {
             assertTrue(iterator.hasNext());
 
-            SimpleFeature feature = (SimpleFeature) iterator.next();
+            SimpleFeature feature = iterator.next();
             assertEquals("one", feature.getAttribute(aname("stringProperty")));
             assertEquals(Double.valueOf(1.1), feature.getAttribute(aname("doubleProperty")));
         }
@@ -204,7 +202,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
                 ff.equals(ff.property(aname("stringProperty")), ff.literal("one"));
 
         Query query = new Query();
-        query.setPropertyNames(new String[] {aname("doubleProperty"), aname("intProperty")});
+        query.setPropertyNames(aname("doubleProperty"), aname("intProperty"));
         query.setFilter(filter);
 
         SimpleFeatureCollection features = featureSource.getFeatures(query);
@@ -213,7 +211,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         try (SimpleFeatureIterator iterator = features.features()) {
             assertTrue(iterator.hasNext());
 
-            SimpleFeature feature = (SimpleFeature) iterator.next();
+            SimpleFeature feature = iterator.next();
             assertEquals(2, feature.getAttributeCount());
 
             assertEquals(Double.valueOf(1.1), feature.getAttribute(aname("doubleProperty")));
@@ -238,7 +236,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         FilterFactory ff = dataStore.getFilterFactory();
         SortBy sort = ff.sort(aname("stringProperty"), SortOrder.ASCENDING);
         Query query = new Query();
-        query.setSortBy(new SortBy[] {sort});
+        query.setSortBy(sort);
 
         SimpleFeatureCollection features = featureSource.getFeatures(query);
         assertEquals(3, features.size());
@@ -247,34 +245,34 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         try (SimpleFeatureIterator iterator = features.features()) {
             assertTrue(iterator.hasNext());
 
-            f = (SimpleFeature) iterator.next();
+            f = iterator.next();
             assertEquals("one", f.getAttribute(aname("stringProperty")));
 
             assertTrue(iterator.hasNext());
-            f = (SimpleFeature) iterator.next();
+            f = iterator.next();
             assertEquals("two", f.getAttribute(aname("stringProperty")));
 
             assertTrue(iterator.hasNext());
-            f = (SimpleFeature) iterator.next();
+            f = iterator.next();
             assertEquals("zero", f.getAttribute(aname("stringProperty")));
         }
 
         sort = ff.sort(aname("stringProperty"), SortOrder.DESCENDING);
-        query.setSortBy(new SortBy[] {sort});
+        query.setSortBy(sort);
         features = featureSource.getFeatures(query);
 
         try (SimpleFeatureIterator iterator = features.features()) {
             assertTrue(iterator.hasNext());
 
-            f = (SimpleFeature) iterator.next();
+            f = iterator.next();
             assertEquals("zero", f.getAttribute(aname("stringProperty")));
 
             assertTrue(iterator.hasNext());
-            f = (SimpleFeature) iterator.next();
+            f = iterator.next();
             assertEquals("two", f.getAttribute(aname("stringProperty")));
 
             assertTrue(iterator.hasNext());
-            f = (SimpleFeature) iterator.next();
+            f = iterator.next();
             assertEquals("one", f.getAttribute(aname("stringProperty")));
         }
     }
@@ -304,10 +302,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
 
     public void testGetFeaturesWithOffset() throws Exception {
         Query q = new Query(featureSource.getSchema().getTypeName());
-        q.setSortBy(
-                new SortBy[] {
-                    dataStore.getFilterFactory().sort(aname("intProperty"), SortOrder.ASCENDING)
-                });
+        q.setSortBy(dataStore.getFilterFactory().sort(aname("intProperty"), SortOrder.ASCENDING));
         q.setStartIndex(2);
         SimpleFeatureCollection features = featureSource.getFeatures(q);
 
@@ -377,11 +372,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         }
     }
 
-    /**
-     * Makes sure the datastore works when the renderer uses the typical rendering hints
-     *
-     * @throws Exception
-     */
+    /** Makes sure the datastore works when the renderer uses the typical rendering hints */
     public void testRendererBehaviour() throws Exception {
         Query query = new Query(featureSource.getSchema().getTypeName());
         query.setHints(
@@ -402,20 +393,12 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         QueryCapabilities caps = featureSource.getQueryCapabilities();
 
         // check we advertise support for sorting on basic attributes
-        assertTrue(
-                caps.supportsSorting(
-                        new SortBy[] {ff.sort(aname("intProperty"), SortOrder.ASCENDING)}));
-        assertTrue(
-                caps.supportsSorting(
-                        new SortBy[] {ff.sort(aname("stringProperty"), SortOrder.DESCENDING)}));
-        assertTrue(
-                caps.supportsSorting(
-                        new SortBy[] {ff.sort(aname("doubleProperty"), SortOrder.ASCENDING)}));
+        assertTrue(caps.supportsSorting(ff.sort(aname("intProperty"), SortOrder.ASCENDING)));
+        assertTrue(caps.supportsSorting(ff.sort(aname("stringProperty"), SortOrder.DESCENDING)));
+        assertTrue(caps.supportsSorting(ff.sort(aname("doubleProperty"), SortOrder.ASCENDING)));
 
         // but we cannot sort geometries
-        assertFalse(
-                caps.supportsSorting(
-                        new SortBy[] {ff.sort(aname("geometry"), SortOrder.ASCENDING)}));
+        assertFalse(caps.supportsSorting(ff.sort(aname("geometry"), SortOrder.ASCENDING)));
     }
 
     public void testQueryCapabilitiesReliableFid() throws Exception {
@@ -426,7 +409,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
 
     public void testNaturalSortingAsc() throws Exception {
         Query q = new Query(featureSource.getSchema().getTypeName());
-        q.setSortBy(new SortBy[] {SortBy.NATURAL_ORDER});
+        q.setSortBy(SortBy.NATURAL_ORDER);
         try (SimpleFeatureIterator features = featureSource.getFeatures(q).features()) {
             String prevId = null;
             while (features.hasNext()) {
@@ -439,7 +422,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
 
     public void testNaturalSortingdesc() throws Exception {
         Query q = new Query(featureSource.getSchema().getTypeName());
-        q.setSortBy(new SortBy[] {SortBy.REVERSE_ORDER});
+        q.setSortBy(SortBy.REVERSE_ORDER);
         try (SimpleFeatureIterator features = featureSource.getFeatures(q).features()) {
             String prevId = null;
             while (features.hasNext()) {
@@ -554,20 +537,17 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         JDBCFeatureStore ft1 = (JDBCFeatureStore) dataStore.getFeatureSource(tname("ft1"));
         try (Transaction transaction = new DefaultTransaction()) {
             ft1.setTransaction(transaction);
-            Connection connection = ft1.getDataStore().getConnection(ft1.getState());
-            assertFalse("connection established", connection.isClosed());
+            try (Connection connection = ft1.getDataStore().getConnection(ft1.getState())) {
+                assertFalse("connection established", connection.isClosed());
 
-            ft1.accepts(Query.ALL, visitor, null);
+                ft1.accepts(Query.ALL, visitor, null);
 
-            assertFalse("connection maintained", connection.isClosed());
+                assertFalse("connection maintained", connection.isClosed());
+            }
         }
     }
 
-    /**
-     * Integration test checking that a CQL IN filter goes back being a IN in SQL
-     *
-     * @throws Exception
-     */
+    /** Integration test checking that a CQL IN filter goes back being a IN in SQL */
     public void testSimpleEncodeIn() throws Exception {
         FilterFactory ff = dataStore.getFilterFactory();
         String property = aname("stringProperty");
@@ -596,6 +576,7 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         } else if (dialect instanceof PreparedStatementSQLDialect) {
             PreparedFilterToSQL filterToSQL =
                     ((PreparedStatementSQLDialect) dialect).createPreparedFilterToSQL();
+            filterToSQL.setFeatureType(featureSource.getSchema());
             String sql = filterToSQL.encodeToString(filters[0]);
             String escapedProperty = filterToSQL.escapeName(property);
             assertEquals(
@@ -611,12 +592,12 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
             fail("Unexpected dialect type: " + dialect);
         }
     }
+    /** @return expected list for {@link #testMixedEncodeIn()} */
+    protected List<Object> getTestMixedEncodeInExpected() {
+        return Arrays.asList("zero", "two", 1, 2, 0d);
+    }
 
-    /**
-     * Integration test checking that a CQL IN filter goes back being a IN in SQL
-     *
-     * @throws Exception
-     */
+    /** Integration test checking that a CQL IN filter goes back being a IN in SQL */
     public void testMixedEncodeIn() throws Exception {
         FilterFactory ff = dataStore.getFilterFactory();
         String sp = aname("stringProperty");
@@ -663,6 +644,9 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
         } else if (dialect instanceof PreparedStatementSQLDialect) {
             PreparedFilterToSQL filterToSQL =
                     ((PreparedStatementSQLDialect) dialect).createPreparedFilterToSQL();
+            // some dialects actually need the feature type to work, JDBCDataStore code
+            // always set its up, mimic that behavior in the test
+            filterToSQL.setFeatureType(featureSource.getSchema());
             String sql = filterToSQL.encodeToString(filters[0]);
             String spe = filterToSQL.escapeName(sp);
             String ipe = filterToSQL.escapeName(ip);
@@ -685,9 +669,25 @@ public abstract class JDBCFeatureSourceOnlineTest extends JDBCTestSupport {
                             + " IS NOT NULL ))",
                     sql);
             List<Object> literals = filterToSQL.getLiteralValues();
-            assertEquals(Arrays.asList("zero", "two", 1, 2, 0d), literals);
+            assertEquals(getTestMixedEncodeInExpected(), literals);
         } else {
             fail("Unexpected dialect, supports basic or prepared, but was a : " + dialect);
         }
+    }
+
+    /** Online tests for String functions along with Like operator */
+    public void testStringFunction() throws Exception {
+        // ignore if the String function is not supported
+        if (!dataStore.getFilterCapabilities().supports(FilterFunction_strToLowerCase.class)) {
+            LOGGER.info("Ignoring testStringFunction test");
+            return;
+        }
+
+        FilterFactory ff = dataStore.getFilterFactory();
+        Function function = ff.function("strToLowerCase", ff.property("stringProperty"));
+
+        // should hit the row where stringProperty starts with z (e.g zero)
+        PropertyIsLike likeWithStringFunction = ff.like(function, "z%", "%", "-", "\\", true);
+        assertEquals(1, featureSource.getCount(new Query(null, likeWithStringFunction)));
     }
 }

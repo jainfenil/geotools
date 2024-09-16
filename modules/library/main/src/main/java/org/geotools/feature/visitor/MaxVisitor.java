@@ -18,6 +18,7 @@ package org.geotools.feature.visitor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.IllegalFilterException;
@@ -69,6 +70,11 @@ public class MaxVisitor implements FeatureCalc, FeatureAttributeVisitor {
         return Arrays.asList(expr);
     }
 
+    @Override
+    public Optional<List<Class>> getResultType(List<Class> inputTypes) {
+        return CalcUtil.reflectInputTypes(1, inputTypes);
+    }
+
     /**
      * Visitor function, which looks at each feature and finds the maximum.
      *
@@ -78,6 +84,7 @@ public class MaxVisitor implements FeatureCalc, FeatureAttributeVisitor {
         visit((org.opengis.feature.Feature) feature);
     }
 
+    @SuppressWarnings("unchecked")
     public void visit(org.opengis.feature.Feature feature) {
         Object attribValue = expr.evaluate(feature);
 
@@ -152,8 +159,6 @@ public class MaxVisitor implements FeatureCalc, FeatureAttributeVisitor {
      * will tell the visitor the answer rather than visiting all features.
      *
      * <p>For 'max', the value stored is of type 'Comparable'.
-     *
-     * @param result
      */
     public void setValue(Object result) {
         visited = true;
@@ -168,7 +173,7 @@ public class MaxVisitor implements FeatureCalc, FeatureAttributeVisitor {
         }
 
         public Object getValue() {
-            Comparable max = (Comparable) maxValue;
+            Comparable max = maxValue;
 
             return max;
         }
@@ -182,6 +187,7 @@ public class MaxVisitor implements FeatureCalc, FeatureAttributeVisitor {
             return false;
         }
 
+        @SuppressWarnings("unchecked")
         public CalcResult merge(CalcResult resultsToAdd) {
             if (!isCompatible(resultsToAdd)) {
                 throw new IllegalArgumentException("Parameter is not a compatible type");
@@ -198,7 +204,7 @@ public class MaxVisitor implements FeatureCalc, FeatureAttributeVisitor {
 
                 if (newMax.getClass()
                         != toAdd.getClass()) { // 2 different data types, therefore convert
-                    Class bestClass = CalcUtil.bestClass(new Object[] {toAdd, newMax});
+                    Class bestClass = CalcUtil.bestClass(toAdd, newMax);
                     if (bestClass != toAdd.getClass())
                         toAdd = (Comparable) CalcUtil.convert(toAdd, bestClass);
                     if (bestClass != newMax.getClass())

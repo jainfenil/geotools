@@ -124,19 +124,13 @@ public class WKBAttributeIO {
         if (blob == null) {
             return null;
         }
-        InputStream is = null;
-        try {
-            is = blob.getBinaryStream();
+        try (InputStream is = blob.getBinaryStream()) {
             if (is == null || is.available() == 0) // ie. its a 0 length column
                 // -> return a null geometry!
                 return null;
             return wkb2Geometry(is);
         } catch (SQLException e) {
             throw new DataSourceException("SQL exception occurred while reading the geometry.", e);
-        } finally {
-            if (is != null) {
-                is.close();
-            }
         }
     }
 
@@ -165,11 +159,7 @@ public class WKBAttributeIO {
         }
     }
 
-    /**
-     * Turns a char that encodes four bits in hexadecimal notation into a byte
-     *
-     * @param c
-     */
+    /** Turns a char that encodes four bits in hexadecimal notation into a byte */
     public static byte getFromChar(char c) {
         if (c <= '9') {
             return (byte) (c - '0');
@@ -195,10 +185,11 @@ public class WKBAttributeIO {
             this.position = 0;
         }
 
-        public void read(final byte[] buf) throws IOException {
+        public int read(final byte[] buf) throws IOException {
             final int size = buf.length;
             System.arraycopy(buffer, position, buf, 0, size);
             position += size;
+            return size;
         }
     }
 
@@ -209,8 +200,8 @@ public class WKBAttributeIO {
             this.in = in;
         }
 
-        public void read(final byte[] buf) throws IOException {
-            in.read(buf);
+        public int read(final byte[] buf) throws IOException {
+            return in.read(buf);
         }
     }
 }

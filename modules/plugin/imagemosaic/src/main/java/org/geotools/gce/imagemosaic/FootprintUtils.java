@@ -53,7 +53,7 @@ class FootprintUtils {
      * A set of properties to be ignored when parsing the properties file. It is used to get only
      * the FootprintManagement property, avoiding by this way to load and compute useless elements.
      */
-    static final Set<String> IGNORE_PROPS = new HashSet<String>();
+    static final Set<String> IGNORE_PROPS = new HashSet<>();
 
     static {
         IGNORE_PROPS.add(Prop.ENVELOPE2D);
@@ -105,12 +105,7 @@ class FootprintUtils {
                 }
             }
             bReader.close();
-        } catch (IOException e) {
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.log(Level.FINE, e.getLocalizedMessage(), e);
-            }
-        } catch (ParseException e) {
-
+        } catch (IOException | ParseException e) {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.log(Level.FINE, e.getLocalizedMessage(), e);
             }
@@ -137,11 +132,7 @@ class FootprintUtils {
         return null;
     }
 
-    /**
-     * Init the provided footprint map containing <String(location), Geometry(footprint)> pairs.
-     *
-     * @throws IOException
-     */
+    /** Init the provided footprint map containing <String(location), Geometry(footprint)> pairs. */
     static void initFootprintsLocationGeometryMap(
             final ShapefileDataStore footprintStore, final Map<String, Geometry> footprintsMap)
             throws IOException {
@@ -165,13 +156,12 @@ class FootprintUtils {
             return;
         }
 
-        FeatureIterator<SimpleFeature> it = null;
-        try {
+        try (FeatureIterator<SimpleFeature> it = features.features()) {
             // load the feature from the footprint shapefile store
-            it = features.features();
             if (!it.hasNext()) {
                 throw new IllegalArgumentException(
-                        "The provided FeatureCollection<SimpleFeatureType, SimpleFeature>  or empty, it's impossible to create an index!");
+                        "The provided FeatureCollection<SimpleFeatureType, SimpleFeature>  or "
+                                + "empty, it's impossible to create an index!");
             }
 
             // now add the footprint to the Map
@@ -181,32 +171,12 @@ class FootprintUtils {
                 final String location = (String) feature.getAttribute("location");
                 footprintsMap.put(location, g);
             }
-
-        } finally {
-
-            try {
-                if (it != null) {
-                    it.close();
-                }
-            } catch (Throwable e) {
-            }
-
-            try {
-                it.close();
-            } catch (Throwable e) {
-            }
         }
     }
 
     /**
      * Build a "ID=Geometry" pair for the provided feature ID, by looking for a geometry in the
      * provided footprintsMap for the specified locationKey
-     *
-     * @param footprintGeometryMap
-     * @param featureID
-     * @param locationKey
-     * @param writer
-     * @return
      */
     private static String buildIDGeometryPair(
             final Map<String, Geometry> footprintGeometryMap,
@@ -220,7 +190,7 @@ class FootprintUtils {
         Utilities.ensureNonNull("footprintGeometryMap", footprintGeometryMap);
 
         if (!footprintGeometryMap.isEmpty() && footprintGeometryMap.containsKey(locationKey)) {
-            final Geometry polygon = (Geometry) footprintGeometryMap.get(locationKey);
+            final Geometry polygon = footprintGeometryMap.get(locationKey);
             if (polygon != null) {
                 final String s = writer.write(polygon);
                 String id = featureID;
@@ -332,12 +302,7 @@ class FootprintUtils {
         }
     }
 
-    /**
-     * Search the footprint shape file in the specified directory.
-     *
-     * @param indexingDirectory
-     * @return
-     */
+    /** Search the footprint shape file in the specified directory. */
     static File searchFootprint(final String indexingDirectory) {
         File footprintFile = null;
         if (indexingDirectory != null && indexingDirectory.trim().length() > 0) {

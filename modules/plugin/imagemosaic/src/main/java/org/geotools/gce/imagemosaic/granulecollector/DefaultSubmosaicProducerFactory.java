@@ -62,7 +62,7 @@ public class DefaultSubmosaicProducerFactory implements SubmosaicProducerFactory
 
                 // Prepare filtering
                 Map.Entry<String, List> multipleSelectionEntry = null;
-                final List<Filter> filters = new ArrayList<Filter>(entries.size());
+                final List<Filter> filters = new ArrayList<>(entries.size());
 
                 // Loop over the additional domains
                 for (Map.Entry<String, List> entry : entries) {
@@ -82,9 +82,9 @@ public class DefaultSubmosaicProducerFactory implements SubmosaicProducerFactory
 
                 // Anding all filters together
                 Filter andFilter =
-                        filters.size() > 0
-                                ? FeatureUtilities.DEFAULT_FILTER_FACTORY.and(filters)
-                                : null;
+                        filters.isEmpty()
+                                ? null
+                                : FeatureUtilities.DEFAULT_FILTER_FACTORY.and(filters);
 
                 if (multipleSelectionEntry == null) {
                     // Simpler case... no multiple selections. All filter have already been combined
@@ -133,8 +133,6 @@ public class DefaultSubmosaicProducerFactory implements SubmosaicProducerFactory
     /**
      * Check whether the specified custom domains contain multiple selection. That case isn't
      * supported so we will throw an exception
-     *
-     * @param entries
      */
     private void checkMultipleSelection(Set<Map.Entry<String, List>> entries) {
         int multipleDimensionsSelections = 0;

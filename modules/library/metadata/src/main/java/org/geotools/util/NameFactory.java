@@ -50,7 +50,7 @@ public final class NameFactory {
      * @param separator The separator character.
      */
     public static GenericName create(final String name, final char separator) {
-        final List<String> names = new ArrayList<String>();
+        final List<String> names = new ArrayList<>();
         int lower = 0;
         while (true) {
             final int upper = name.indexOf(separator, lower);
@@ -75,7 +75,7 @@ public final class NameFactory {
      * @param names The local names as an array of strings or international strings. This array must
      *     contains at least one element.
      */
-    public static GenericName create(final CharSequence[] names) {
+    public static GenericName create(final CharSequence... names) {
         return create(names, org.geotools.util.GenericName.DEFAULT_SEPARATOR);
     }
 

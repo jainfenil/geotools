@@ -84,11 +84,7 @@ public class CQLGeoOperationTest {
         this(Language.CQL);
     }
 
-    /**
-     * New instance of CQLTemporalPredicateTest
-     *
-     * @param language
-     */
+    /** New instance of CQLTemporalPredicateTest */
     protected CQLGeoOperationTest(final Language language) {
 
         assert language != null : "language cannot be null value";
@@ -108,14 +104,11 @@ public class CQLGeoOperationTest {
      * Intersects geooperation
      *
      * @see intersects
-     * @throws CQLException
      */
     @Test
     public void Intersects() throws CQLException {
 
-        Filter resultFilter;
-
-        resultFilter = CompilerUtil.parseFilter(language, "INTERSECTS(ATTR1, POINT(1 2))");
+        Filter resultFilter = CompilerUtil.parseFilter(language, "INTERSECTS(ATTR1, POINT(1 2))");
 
         assertTrue("Intersects was expected", resultFilter instanceof Intersects);
 
@@ -130,13 +123,12 @@ public class CQLGeoOperationTest {
     @Test
     public void relate() throws CQLException {
 
-        PropertyIsEqualTo resultFilter;
-
-        resultFilter =
+        PropertyIsEqualTo resultFilter =
                 (PropertyIsEqualTo)
                         CompilerUtil.parseFilter(
                                 language,
-                                "RELATE(the_geom, LINESTRING (-134.921387 58.687767, -135.303391 59.092838), T*****FF*)");
+                                "RELATE(the_geom, LINESTRING (-134.921387 58.687767, -135.303391 59"
+                                        + ".092838), T*****FF*)");
 
         Expression relateFunction = resultFilter.getExpression1();
         assertTrue(relateFunction instanceof FilterFunction_relatePattern);
@@ -159,13 +151,12 @@ public class CQLGeoOperationTest {
 
     private void testRelatePatten(final String pattern) throws CQLException {
 
-        PropertyIsEqualTo resultFilter;
-
-        resultFilter =
+        PropertyIsEqualTo resultFilter =
                 (PropertyIsEqualTo)
                         CompilerUtil.parseFilter(
                                 language,
-                                "RELATE(the_geom, LINESTRING (-134.921387 58.687767, -135.303391 59.092838), "
+                                "RELATE(the_geom, LINESTRING (-134.921387 58.687767, -135.303391 59"
+                                        + ".092838), "
                                         + pattern
                                         + ")");
 
@@ -176,33 +167,21 @@ public class CQLGeoOperationTest {
         assertTrue(trueLiteral.getValue() instanceof Boolean);
     }
 
-    /**
-     * The length of relate pattern must be 9 (nine) dimension characters
-     *
-     * @throws CQLException
-     */
+    /** The length of relate pattern must be 9 (nine) dimension characters */
     @Test(expected = CQLException.class)
     public void relateBadLongitudInPattern() throws CQLException {
         CQL.toFilter(
                 "RELATE(geometry, LINESTRING (-134.921387 58.687767, -135.303391 59.092838), **1******T)");
     }
 
-    /**
-     * The illegal dimension character in relate pattern
-     *
-     * @throws CQLException
-     */
+    /** The illegal dimension character in relate pattern */
     @Test(expected = CQLException.class)
     public void relateIlegalPattern() throws CQLException {
         CQL.toFilter(
                 "RELATE(geometry, LINESTRING (-134.921387 58.687767, -135.303391 59.092838), **1*****X)");
     }
 
-    /**
-     * Invalid Geooperation Test
-     *
-     * @throws CQLException
-     */
+    /** Invalid Geooperation Test */
     @Test(expected = CQLException.class)
     public void invalidGeoOperation() throws CQLException {
         CompilerUtil.parseFilter(
@@ -218,37 +197,25 @@ public class CQLGeoOperationTest {
         } catch (CQLException e) {
             final String error = e.getSyntaxError();
             Assert.assertNotNull(error);
-            Assert.assertFalse("".equals(error));
+            Assert.assertNotEquals("", error);
         }
     }
 
-    /**
-     * TOUCHES geooperation
-     *
-     * @throws CQLException
-     */
+    /** TOUCHES geooperation */
     @Test
     public void touches() throws CQLException {
 
-        Filter resultFilter;
-
         // TOUCHES
-        resultFilter = CompilerUtil.parseFilter(language, "TOUCHES(ATTR1, POINT(1 2))");
+        Filter resultFilter = CompilerUtil.parseFilter(language, "TOUCHES(ATTR1, POINT(1 2))");
 
         assertTrue("Touches was expected", resultFilter instanceof Touches);
     }
 
-    /**
-     * CROSSES geooperation operation
-     *
-     * @throws CQLException
-     */
+    /** CROSSES geooperation operation */
     @Test
     public void crosses() throws CQLException {
 
-        Filter resultFilter;
-
-        resultFilter = CompilerUtil.parseFilter(language, "CROSSES(ATTR1, POINT(1 2))");
+        Filter resultFilter = CompilerUtil.parseFilter(language, "CROSSES(ATTR1, POINT(1 2))");
 
         assertTrue("Crosses was expected", resultFilter instanceof Crosses);
     }
@@ -260,40 +227,26 @@ public class CQLGeoOperationTest {
         assertTrue("Contains was expected", resultFilter instanceof Contains);
     }
 
-    /**
-     * OVERLAPS geooperation operation test
-     *
-     * @throws CQLException
-     */
+    /** OVERLAPS geooperation operation test */
     @Test
     public void overlaps() throws Exception {
-        Filter resultFilter;
 
-        resultFilter = CompilerUtil.parseFilter(language, "OVERLAPS(ATTR1, POINT(1 2))");
+        Filter resultFilter = CompilerUtil.parseFilter(language, "OVERLAPS(ATTR1, POINT(1 2))");
 
         assertTrue("Overlaps was expected", resultFilter instanceof Overlaps);
     }
 
-    /**
-     * EQULS geooperation operation test
-     *
-     * @throws CQLException
-     */
+    /** EQULS geooperation operation test */
     @Test
     public void equals() throws CQLException {
-        Filter resultFilter;
 
         // EQUALS
-        resultFilter = CompilerUtil.parseFilter(language, "EQUALS(ATTR1, POINT(1 2))");
+        Filter resultFilter = CompilerUtil.parseFilter(language, "EQUALS(ATTR1, POINT(1 2))");
 
         assertTrue("not an instance of Equals", resultFilter instanceof Equals);
     }
 
-    /**
-     * WITHIN test
-     *
-     * @throws CQLException
-     */
+    /** WITHIN test */
     @Test
     public void within() throws CQLException {
 
@@ -304,18 +257,14 @@ public class CQLGeoOperationTest {
         assertTrue("Within was expected", resultFilter instanceof Within);
     }
 
-    /**
-     * BBOX test
-     *
-     * @throws CQLException
-     */
+    /** BBOX test */
     @Test
+    @SuppressWarnings("PMD.UseAssertEqualsInsteadOfAssertTrue") // not the same equals
     public void bbox() throws CQLException, FactoryException {
 
-        Filter resultFilter;
-
         // BBOX
-        resultFilter = CompilerUtil.parseFilter(language, "BBOX(ATTR1, 10.0,20.0,30.0,40.0)");
+        Filter resultFilter =
+                CompilerUtil.parseFilter(language, "BBOX(ATTR1, 10.0,20.0,30.0,40.0)");
         assertTrue("BBox was expected", resultFilter instanceof BBOX);
         BBOX bboxFilter = (BBOX) resultFilter;
         assertTrue(

@@ -35,6 +35,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * need to override some of the tests method to fix the expectations for specific geometry class
  * types.
  */
+@SuppressWarnings("PMD.JUnit4TestShouldUseTestAnnotation") // not yet a JUnit4 test
 public abstract class JDBCGeometryOnlineTest extends JDBCTestSupport {
 
     @Override
@@ -68,20 +69,12 @@ public abstract class JDBCGeometryOnlineTest extends JDBCTestSupport {
         assertEquals(MultiPolygon.class, checkGeometryType(MultiPolygon.class));
     }
 
-    /**
-     * Sometimes the source cannot anticipate the geometry type, can we cope with this?
-     *
-     * @throws Exception
-     */
+    /** Sometimes the source cannot anticipate the geometry type, can we cope with this? */
     public void testGeometry() throws Exception {
         assertEquals(Geometry.class, checkGeometryType(Geometry.class));
     }
 
-    /**
-     * Same goes for heterogeneous collections
-     *
-     * @throws Exception
-     */
+    /** Same goes for heterogeneous collections */
     public void testGeometryCollection() throws Exception {
         assertEquals(GeometryCollection.class, checkGeometryType(GeometryCollection.class));
     }

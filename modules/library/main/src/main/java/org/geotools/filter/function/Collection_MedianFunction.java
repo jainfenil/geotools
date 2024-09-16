@@ -68,8 +68,6 @@ public class Collection_MedianFunction extends FunctionExpressionImpl {
      * @param collection collection to calculate the median
      * @param expression Single Expression argument
      * @return An object containing the median value of the attributes
-     * @throws IllegalFilterException
-     * @throws IOException
      */
     static CalcResult calculateMedian(
             FeatureCollection<? extends FeatureType, ? extends Feature> collection,
@@ -89,10 +87,9 @@ public class Collection_MedianFunction extends FunctionExpressionImpl {
      *
      * <p>To refer to all 'X': <code>featureMember/asterisk/X</code>
      */
-    public void setParameters(List args) {
+    public void setParameters(List<Expression> args) {
         // if we see "featureMembers/*/ATTRIBUTE" change to "ATTRIBUTE"
-        org.opengis.filter.expression.Expression expr =
-                (org.opengis.filter.expression.Expression) args.get(0);
+        org.opengis.filter.expression.Expression expr = args.get(0);
         expr =
                 (org.opengis.filter.expression.Expression)
                         expr.accept(new CollectionFeatureMemberFilterVisitor(), null);
@@ -104,7 +101,7 @@ public class Collection_MedianFunction extends FunctionExpressionImpl {
         if (feature == null) {
             return Integer.valueOf(0); // no features were visited in the making of this answer
         }
-        Expression expr = (Expression) getExpression(0);
+        Expression expr = getExpression(0);
         FeatureCollection<? extends FeatureType, ? extends Feature> featureCollection =
                 (SimpleFeatureCollection) feature;
         synchronized (featureCollection) {
@@ -116,9 +113,7 @@ public class Collection_MedianFunction extends FunctionExpressionImpl {
                     if (result != null) {
                         median = result.getValue();
                     }
-                } catch (IllegalFilterException e) {
-                    LOGGER.log(Level.FINER, e.getLocalizedMessage(), e);
-                } catch (IOException e) {
+                } catch (IllegalFilterException | IOException e) {
                     LOGGER.log(Level.FINER, e.getLocalizedMessage(), e);
                 }
             }

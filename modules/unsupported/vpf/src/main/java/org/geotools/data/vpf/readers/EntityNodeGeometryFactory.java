@@ -52,7 +52,6 @@ public class EntityNodeGeometryFactory extends VPFGeometryFactory implements Fil
      */
     public synchronized Geometry buildGeometry(VPFFeatureClass featureClass, SimpleFeature values)
             throws SQLException, IOException, IllegalAttributeException {
-        Geometry result = null;
         int nodeId = ((Number) values.getAttribute("end_id")).intValue();
         //        VPFFeatureType featureType = (VPFFeatureType)values.getFeatureType();
 
@@ -66,7 +65,7 @@ public class EntityNodeGeometryFactory extends VPFGeometryFactory implements Fil
             Short tileId =
                     Short.valueOf(Short.parseShort(values.getAttribute("tile_id").toString()));
             VPFLibrary vpf = featureClass.getCoverage().getLibrary();
-            String tileName = (String) vpf.getTileMap().get(tileId);
+            String tileName = vpf.getTileMap().get(tileId);
 
             if (tileName != null) {
 
@@ -82,7 +81,7 @@ public class EntityNodeGeometryFactory extends VPFGeometryFactory implements Fil
         String nodeTableName = tileDirectory.concat(File.separator).concat(ENTITY_NODE_PRIMITIVE);
         VPFFile nodeFile = VPFFileFactory.getInstance().getFile(nodeTableName);
         SimpleFeature row = nodeFile.getRowFromId("id", nodeId);
-        result = (Geometry) row.getAttribute("coordinate");
+        Geometry result = (Geometry) row.getAttribute("coordinate");
         return result;
     }
 }

@@ -20,7 +20,41 @@ import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.Set;
 import org.geotools.filter.FilterAttributeExtractor;
-import org.geotools.styling.*;
+import org.geotools.styling.AnchorPoint;
+import org.geotools.styling.ChannelSelection;
+import org.geotools.styling.ColorMap;
+import org.geotools.styling.ColorMapEntry;
+import org.geotools.styling.ContrastEnhancement;
+import org.geotools.styling.Displacement;
+import org.geotools.styling.ExternalGraphic;
+import org.geotools.styling.FeatureTypeConstraint;
+import org.geotools.styling.FeatureTypeStyle;
+import org.geotools.styling.Fill;
+import org.geotools.styling.Font;
+import org.geotools.styling.Graphic;
+import org.geotools.styling.Halo;
+import org.geotools.styling.ImageOutline;
+import org.geotools.styling.LinePlacement;
+import org.geotools.styling.LineSymbolizer;
+import org.geotools.styling.Mark;
+import org.geotools.styling.NamedLayer;
+import org.geotools.styling.OverlapBehavior;
+import org.geotools.styling.PointPlacement;
+import org.geotools.styling.PointSymbolizer;
+import org.geotools.styling.PolygonSymbolizer;
+import org.geotools.styling.RasterSymbolizer;
+import org.geotools.styling.Rule;
+import org.geotools.styling.SelectedChannelType;
+import org.geotools.styling.ShadedRelief;
+import org.geotools.styling.Stroke;
+import org.geotools.styling.StyleVisitor;
+import org.geotools.styling.StyledLayer;
+import org.geotools.styling.StyledLayerDescriptor;
+import org.geotools.styling.Symbol;
+import org.geotools.styling.Symbolizer;
+import org.geotools.styling.TextSymbolizer;
+import org.geotools.styling.TextSymbolizer2;
+import org.geotools.styling.UserLayer;
 import org.opengis.filter.Filter;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.expression.Literal;
@@ -57,11 +91,7 @@ public class StyleAttributeExtractor extends FilterAttributeExtractor implements
         return symbolizerGeometriesVisitEnabled;
     }
 
-    /**
-     * Enables/disables visit of the symbolizer geometry property (on by default)
-     *
-     * @param symbolizerGeometriesVisitEnabled
-     */
+    /** Enables/disables visit of the symbolizer geometry property (on by default) */
     public void setSymbolizerGeometriesVisitEnabled(boolean symbolizerGeometriesVisitEnabled) {
         this.symbolizerGeometriesVisitEnabled = symbolizerGeometriesVisitEnabled;
     }
@@ -353,11 +383,7 @@ public class StyleAttributeExtractor extends FilterAttributeExtractor implements
         }
     }
 
-    /**
-     * Handles the special CQL expressions embedded in the style markers since the time
-     *
-     * @param expression
-     */
+    /** Handles the special CQL expressions embedded in the style markers since the time */
     private void visitCqlExpression(String expression) {
         Expression parsed = ExpressionExtractor.extractCqlExpressions(expression);
         if (parsed != null) parsed.accept(this, null);
@@ -434,11 +460,11 @@ public class StyleAttributeExtractor extends FilterAttributeExtractor implements
     public void visit(StyledLayerDescriptor sld) {
         StyledLayer[] layers = sld.getStyledLayers();
 
-        for (int i = 0; i < layers.length; i++) {
-            if (layers[i] instanceof NamedLayer) {
-                ((NamedLayer) layers[i]).accept(this);
-            } else if (layers[i] instanceof UserLayer) {
-                ((UserLayer) layers[i]).accept(this);
+        for (StyledLayer layer : layers) {
+            if (layer instanceof NamedLayer) {
+                ((NamedLayer) layer).accept(this);
+            } else if (layer instanceof UserLayer) {
+                ((UserLayer) layer).accept(this);
             }
         }
     }
@@ -446,16 +472,16 @@ public class StyleAttributeExtractor extends FilterAttributeExtractor implements
     public void visit(NamedLayer layer) {
         org.geotools.styling.Style[] styles = layer.getStyles();
 
-        for (int i = 0; i < styles.length; i++) {
-            styles[i].accept(this);
+        for (org.geotools.styling.Style style : styles) {
+            style.accept(this);
         }
     }
 
     public void visit(UserLayer layer) {
         org.geotools.styling.Style[] styles = layer.getUserStyles();
 
-        for (int i = 0; i < styles.length; i++) {
-            styles[i].accept(this);
+        for (org.geotools.styling.Style style : styles) {
+            style.accept(this);
         }
     }
 
@@ -466,8 +492,8 @@ public class StyleAttributeExtractor extends FilterAttributeExtractor implements
     public void visit(ColorMap map) {
         ColorMapEntry[] entries = map.getColorMapEntries();
 
-        for (int i = 0; i < entries.length; i++) {
-            entries[i].accept(this);
+        for (ColorMapEntry entry : entries) {
+            entry.accept(this);
         }
     }
 

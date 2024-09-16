@@ -153,7 +153,7 @@ public class Query {
      *
      * <p>Note the query will still return a result - limited to FeatureIDs.
      */
-    public static final List<PropertyName> NO_PROPERTIES = Collections.<PropertyName>emptyList();
+    public static final List<PropertyName> NO_PROPERTIES = Collections.emptyList();
 
     /**
      * A constant (value {@code null}) that can be used with {@linkplain
@@ -202,7 +202,7 @@ public class Query {
     protected Hints hints;
 
     /** join clauses for this query */
-    protected List<Join> joins = new ArrayList();
+    protected List<Join> joins = new ArrayList<>();
 
     /**
      * Default constructor. Use setter methods to configure the Query before use (the default Query
@@ -238,7 +238,7 @@ public class Query {
      * @param filter the OGC filter to constrain the request.
      * @param properties an array of the properties to fetch.
      */
-    public Query(String typeName, Filter filter, String[] properties) {
+    public Query(String typeName, Filter filter, String... properties) {
         this(typeName, null, filter, Query.DEFAULT_MAX, properties, null);
     }
 
@@ -332,7 +332,7 @@ public class Query {
         this.namespace = namespace;
         this.maxFeatures = maxFeatures;
         this.handle = handle;
-        this.properties = properties == null ? null : new ArrayList<PropertyName>(properties);
+        this.properties = properties == null ? null : new ArrayList<>(properties);
     }
 
     /**
@@ -355,7 +355,7 @@ public class Query {
         this.hints = query.getHints();
         this.startIndex = query.getStartIndex();
         this.alias = query.getAlias();
-        this.joins = new ArrayList();
+        this.joins = new ArrayList<>();
         for (Join j : query.getJoins()) {
             this.joins.add(new Join(j));
         }
@@ -403,16 +403,15 @@ public class Query {
      * @param propNames the names of the properties to retrieve or one of {@linkplain #ALL_NAMES} or
      *     {@linkplain #NO_NAMES}.
      */
-    public void setPropertyNames(String[] propNames) {
+    public void setPropertyNames(String... propNames) {
         if (propNames == null) {
             properties = ALL_PROPERTIES;
             return;
         }
 
         final FilterFactory ff = CommonFactoryFinder.getFilterFactory(null);
-        properties = new ArrayList<PropertyName>(propNames.length);
-        for (int i = 0; i < propNames.length; i++) {
-            String xpath = propNames[i];
+        properties = new ArrayList<>(propNames.length);
+        for (String xpath : propNames) {
             if (xpath != null) {
                 properties.add(ff.property(xpath));
             }
@@ -430,7 +429,7 @@ public class Query {
         if (properties == ALL_PROPERTIES) {
             return ALL_PROPERTIES;
         }
-        return Collections.<PropertyName>unmodifiableList(properties);
+        return Collections.unmodifiableList(properties);
     }
 
     /**
@@ -451,10 +450,7 @@ public class Query {
      *     #ALL_PROPERTIES} or {@linkplain #NO_PROPERTIES}.
      */
     public void setProperties(List<PropertyName> propNames) {
-        this.properties =
-                propNames == ALL_PROPERTIES
-                        ? ALL_PROPERTIES
-                        : new ArrayList<PropertyName>(propNames);
+        this.properties = propNames == ALL_PROPERTIES ? ALL_PROPERTIES : new ArrayList<>(propNames);
     }
 
     /**
@@ -479,9 +475,8 @@ public class Query {
 
         final FilterFactory ff = CommonFactoryFinder.getFilterFactory(null);
 
-        properties = new ArrayList<PropertyName>(propNames.size());
-        for (int i = 0; i < propNames.size(); i++) {
-            String xpath = propNames.get(i);
+        properties = new ArrayList<>(propNames.size());
+        for (String xpath : propNames) {
             if (xpath != null) {
                 properties.add(ff.property(xpath));
             }
@@ -726,7 +721,6 @@ public class Query {
      * Set the version of features to retrieve where this is supported by the data source being
      * queried.
      *
-     * @param version
      * @see #getVersion() getVersion() for explanation
      * @since 2.4
      */
@@ -815,7 +809,7 @@ public class Query {
     }
 
     /** Sets the sort by information. */
-    public void setSortBy(SortBy[] sortBy) {
+    public void setSortBy(SortBy... sortBy) {
         this.sortBy = sortBy;
     }
 
@@ -916,10 +910,19 @@ public class Query {
                         ? (other.getCoordinateSystemReproject() == null)
                         : getCoordinateSystemReproject()
                                 .equals(other.getCoordinateSystemReproject()))
+                && isSortEquals(other)
                 && Objects.equals(getStartIndex(), other.getStartIndex())
                 && (getHints() == null
                         ? (other.getHints() == null)
                         : getHints().equals(other.getHints()));
+    }
+
+    /** Compares the sortby by their effect (null and empty arrays are considered the same) */
+    private boolean isSortEquals(Query other) {
+        if (this.sortBy == null || this.sortBy.length == 0) {
+            return other.getSortBy() == null || other.getSortBy().length == 0;
+        }
+        return Arrays.equals(getSortBy(), other.getSortBy());
     }
 
     /**
@@ -943,7 +946,7 @@ public class Query {
 
         returnString.append("\n   [properties: ");
 
-        if ((properties == null) || (properties.size() == 0)) {
+        if ((properties == null) || (properties.isEmpty())) {
             returnString.append(" ALL ]");
         } else {
             for (int i = 0; i < properties.size(); i++) {

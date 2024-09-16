@@ -43,7 +43,7 @@ import org.opengis.referencing.operation.ConicProjection;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import si.uom.NonSI;
-import tec.uom.se.AbstractUnit;
+import tech.units.indriya.AbstractUnit;
 
 /**
  * Krovak Oblique Conformal Conic projection (EPSG code 9819). This projection is used in the Czech
@@ -200,22 +200,21 @@ public class Krovak extends MapProjection {
         n = sin(pseudoStandardParallel);
         tanS2 = tan(pseudoStandardParallel / 2 + s45);
 
-        final double sinLat, cosLat, cosL2, u0;
-        sinLat = sin(latitudeOfOrigin);
-        cosLat = cos(latitudeOfOrigin);
-        cosL2 = cosLat * cosLat;
+        final double sinLat = sin(latitudeOfOrigin);
+        final double cosLat = cos(latitudeOfOrigin);
+        final double cosL2 = cosLat * cosLat;
         alfa = sqrt(1 + ((excentricitySquared * (cosL2 * cosL2)) / (1 - excentricitySquared)));
         hae = alfa * excentricity / 2;
-        u0 = asin(sinLat / alfa);
+        final double u0 = asin(sinLat / alfa);
 
-        final double g, esl;
-        esl = excentricity * sinLat;
+        final double g;
+        final double esl = excentricity * sinLat;
         g = pow((1 - esl) / (1 + esl), (alfa * excentricity) / 2);
         k1 = pow(tan(latitudeOfOrigin / 2 + s45), alfa) * g / tan(u0 / 2 + s45);
         ka = pow(1 / k1, -1 / alfa);
 
-        final double radius;
-        radius = sqrt(1 - excentricitySquared) / (1 - (excentricitySquared * (sinLat * sinLat)));
+        final double radius =
+                sqrt(1 - excentricitySquared) / (1 - (excentricitySquared * (sinLat * sinLat)));
 
         ro0 = scaleFactor * radius / tan(pseudoStandardParallel);
         rop = ro0 * pow(tanS2, n);

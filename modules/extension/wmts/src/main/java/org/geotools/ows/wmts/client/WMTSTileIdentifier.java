@@ -30,11 +30,6 @@ class WMTSTileIdentifier extends TileIdentifier {
 
     /**
      * create an identifier based on /layername/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}.png
-     *
-     * @param x
-     * @param y
-     * @param zoomLevel
-     * @param serviceName
      */
     public WMTSTileIdentifier(int x, int y, ZoomLevel zoomLevel, String serviceName) {
         super(x, y, zoomLevel, serviceName);
@@ -71,7 +66,7 @@ class WMTSTileIdentifier extends TileIdentifier {
     @Override
     public TileIdentifier getLowerNeighbour() {
         int newY = getY() + 1;
-        if (newY >= ((WMTSZoomLevel) getZoomLevel()).getMaxTilePerColNumber()) return null;
+        if (newY >= getZoomLevel().getMaxTilePerColNumber()) return null;
         else return new WMTSTileIdentifier(getX(), newY, getZoomLevel(), getServiceName());
     }
 }

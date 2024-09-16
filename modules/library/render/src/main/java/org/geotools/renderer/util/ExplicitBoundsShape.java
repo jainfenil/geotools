@@ -46,11 +46,7 @@ public class ExplicitBoundsShape implements Shape {
         this.shape = shape;
     }
 
-    /**
-     * Sets the explicitly defined bounds for this shape.
-     *
-     * @param bounds
-     */
+    /** Sets the explicitly defined bounds for this shape. */
     public void setBounds(Rectangle2D bounds) {
         this.bounds = bounds;
     }
@@ -64,11 +60,11 @@ public class ExplicitBoundsShape implements Shape {
     }
 
     public boolean contains(Point2D p) {
-        return shape.contains((Point2D) p);
+        return shape.contains(p);
     }
 
     public boolean contains(Rectangle2D r) {
-        return shape.contains((Rectangle2D) r);
+        return shape.contains(r);
     }
 
     /**

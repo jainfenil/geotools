@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -39,22 +40,13 @@ public class FileSystemIndexStore implements IndexStore {
     private File file;
     private byte byteOrder;
 
-    /**
-     * Constructor. The byte order defaults to NEW_MSB_ORDER
-     *
-     * @param file
-     */
+    /** Constructor. The byte order defaults to NEW_MSB_ORDER */
     public FileSystemIndexStore(File file) {
         this.file = file;
         this.byteOrder = IndexHeader.NEW_MSB_ORDER;
     }
 
-    /**
-     * Constructor
-     *
-     * @param file
-     * @param byteOrder
-     */
+    /** Constructor */
     public FileSystemIndexStore(File file, byte byteOrder) {
         this.file = file;
         this.byteOrder = byteOrder;
@@ -68,12 +60,9 @@ public class FileSystemIndexStore implements IndexStore {
         tree.trim();
 
         // Open the stream...
-        FileOutputStream fos = null;
-        FileChannel channel = null;
 
-        try {
-            fos = new FileOutputStream(file);
-            channel = fos.getChannel();
+        try (FileOutputStream fos = new FileOutputStream(file);
+                FileChannel channel = fos.getChannel()) {
 
             ByteBuffer buf = ByteBuffer.allocate(8);
 
@@ -100,16 +89,6 @@ public class FileSystemIndexStore implements IndexStore {
             this.writeNode(tree.getRoot(), channel, order);
         } catch (IOException e) {
             throw new StoreException(e);
-        } finally {
-            try {
-                channel.close();
-            } catch (Exception e) {
-            }
-
-            try {
-                fos.close();
-            } catch (Exception e) {
-            }
         }
     }
 
@@ -118,7 +97,6 @@ public class FileSystemIndexStore implements IndexStore {
      *
      * @param node The node
      * @param order byte order
-     * @throws IOException
      */
     private void writeNode(Node node, FileChannel channel, ByteOrder order)
             throws IOException, StoreException {
@@ -151,11 +129,7 @@ public class FileSystemIndexStore implements IndexStore {
         }
     }
 
-    /**
-     * Calculates the offset
-     *
-     * @param node
-     */
+    /** Calculates the offset */
     private int getSubNodeOffset(Node node) throws StoreException {
         int offset = 0;
         Node tmp = null;
@@ -177,6 +151,7 @@ public class FileSystemIndexStore implements IndexStore {
      *
      * @see org.geotools.index.quadtree.IndexStore#load()
      */
+    @SuppressWarnings("PMD.CloseResource") // channel is managed in the returned value
     public QuadTree load(IndexFile indexfile, boolean useMemoryMapping) throws StoreException {
         QuadTree tree = null;
 
@@ -194,7 +169,7 @@ public class FileSystemIndexStore implements IndexStore {
             ByteBuffer buf = ByteBuffer.allocate(8);
             buf.order(order);
             channel.read(buf);
-            buf.flip();
+            ((Buffer) buf).flip();
 
             tree =
                     new QuadTree(buf.getInt(), buf.getInt(), indexfile) {

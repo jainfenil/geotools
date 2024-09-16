@@ -56,7 +56,7 @@ class DirectoryTypeCache {
      * The feature type cache, a map from the feature type to the information of where the feature
      * type is coming from
      */
-    Map<String, FileEntry> ftCache = new ConcurrentHashMap<String, FileEntry>();
+    Map<String, FileEntry> ftCache = new ConcurrentHashMap<>();
 
     /** The directory we're gathering data from */
     File directory;
@@ -74,7 +74,6 @@ class DirectoryTypeCache {
      * Builds a new cache.
      *
      * @param directory a non null File pointing to an existing directory
-     * @throws IOException
      */
     DirectoryTypeCache(File directory, FileStoreFactory factory) throws IOException {
         // some basic checks
@@ -101,9 +100,7 @@ class DirectoryTypeCache {
     /**
      * Returns the data store containing a specific feature type, or null if not found
      *
-     * @param typeName
      * @param forceUpdate If true, it will force the update
-     * @return
      */
     DataStore getDataStore(String typeName, boolean forceUpdate) throws IOException {
         lock.readLock().lock();
@@ -121,11 +118,7 @@ class DirectoryTypeCache {
         }
     }
 
-    /**
-     * Returns all the type names known
-     *
-     * @return
-     */
+    /** Returns all the type names known */
     Set<String> getTypeNames() throws IOException {
         lock.readLock().lock();
 
@@ -143,7 +136,7 @@ class DirectoryTypeCache {
      * whole thing
      */
     List<DataStore> getDataStores() {
-        List<DataStore> stores = new ArrayList<DataStore>();
+        List<DataStore> stores = new ArrayList<>();
         lock.readLock().lock();
 
         try {
@@ -202,15 +195,13 @@ class DirectoryTypeCache {
      * All of this should be done trying to avoid re-creating all of the datastores already loaded.
      * We assume a properly written datastore will be able to detect changes in its own feature type
      * list and feature type schemas on its own.
-     *
-     * @throws IOException
      */
     void refreshCacheContents() throws IOException {
         // prepare the replacement ft cache
-        Map<String, FileEntry> result = new TreeMap<String, FileEntry>();
+        Map<String, FileEntry> result = new TreeMap<>();
 
         // build support structure used to quickly find files that need updating
-        Map<File, FileEntry> fileCache = new HashMap<File, FileEntry>();
+        Map<File, FileEntry> fileCache = new HashMap<>();
         for (FileEntry entry : ftCache.values()) {
             fileCache.put(entry.file, entry);
         }
@@ -260,14 +251,14 @@ class DirectoryTypeCache {
         // hinder users of live data stores since we are not going to touch
         // the ones that are not being removed (the ones that we are going to
         // remove should be not working anyways)
-        Set<String> removedFTs = new HashSet<String>(ftCache.keySet());
+        Set<String> removedFTs = new HashSet<>(ftCache.keySet());
         removedFTs.removeAll(result.keySet());
 
         // collect all data stores that are referred by a feature type that we
         // are going to remove, but are not referred by any feature type we're
         // going to keep. Clean the ftCache from removed feature types at the same
         // time.
-        Set<FileEntry> disposable = new HashSet<FileEntry>();
+        Set<FileEntry> disposable = new HashSet<>();
         for (String removedFT : removedFTs) {
             disposable.add(ftCache.remove(removedFT));
         }
@@ -279,7 +270,7 @@ class DirectoryTypeCache {
         }
 
         // now let's add all the new ones
-        Set<String> added = new HashSet<String>(result.keySet());
+        Set<String> added = new HashSet<>(result.keySet());
         added.removeAll(ftCache.keySet());
         for (String newFeatureType : added) {
             ftCache.put(newFeatureType, result.get(newFeatureType));
@@ -292,7 +283,7 @@ class DirectoryTypeCache {
      * a datastore given a File and a namespace.
      */
     List<FactoryAdapter> lookupFileDataStores() {
-        List<FactoryAdapter> adapters = new ArrayList<FactoryAdapter>();
+        List<FactoryAdapter> adapters = new ArrayList<>();
 
         // look for factories that do accept a file/url and a namespace
         Iterator<DataStoreFactorySpi> it = DataStoreFinder.getAllDataStores();

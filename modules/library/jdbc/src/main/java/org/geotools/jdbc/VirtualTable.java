@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -65,17 +66,15 @@ public class VirtualTable implements Serializable {
 
     String sql;
 
-    List<String> primaryKeyColumns = new CopyOnWriteArrayList<String>();
+    List<String> primaryKeyColumns = new CopyOnWriteArrayList<>();
 
-    Map<String, Class<? extends Geometry>> geometryTypes =
-            new ConcurrentHashMap<String, Class<? extends Geometry>>();
+    Map<String, Class<? extends Geometry>> geometryTypes = new ConcurrentHashMap<>();
 
-    Map<String, Integer> nativeSrids = new ConcurrentHashMap<String, Integer>();
+    Map<String, Integer> nativeSrids = new ConcurrentHashMap<>();
 
-    Map<String, Integer> dimensions = new ConcurrentHashMap<String, Integer>();
+    Map<String, Integer> dimensions = new ConcurrentHashMap<>();
 
-    Map<String, VirtualTableParameter> parameters =
-            new ConcurrentHashMap<String, VirtualTableParameter>();
+    Map<String, VirtualTableParameter> parameters = new ConcurrentHashMap<>();
 
     boolean escapeSql = false;
 
@@ -113,12 +112,7 @@ public class VirtualTable implements Serializable {
         return hints;
     }
 
-    /**
-     * Builds a new virtual table stating its name and the query to be executed to work on it
-     *
-     * @param name
-     * @param sql
-     */
+    /** Builds a new virtual table stating its name and the query to be executed to work on it */
     public VirtualTable(String name, String sql) {
         this.name = name;
         // make sure we end the query with a newline to handle eventual comments in the last line
@@ -131,47 +125,31 @@ public class VirtualTable implements Serializable {
     /**
      * Builds a new virtual table stating its name, the query to be executed to work on it and a
      * flag to indicate if SQL special characters should be escaped.
-     *
-     * @param name
-     * @param sql
-     * @param escapeSql
      */
     public VirtualTable(String name, String sql, boolean escapeSql) {
         this(name, sql);
         this.escapeSql = escapeSql;
     }
 
-    /**
-     * Clone a virtual table under a different name
-     *
-     * @param name
-     * @param other
-     */
+    /** Clone a virtual table under a different name */
     public VirtualTable(String name, VirtualTable other) {
         this(name, other.sql);
-        this.geometryTypes =
-                new ConcurrentHashMap<String, Class<? extends Geometry>>(other.geometryTypes);
-        this.nativeSrids = new ConcurrentHashMap<String, Integer>(other.nativeSrids);
-        this.dimensions = new ConcurrentHashMap<String, Integer>(other.dimensions);
-        this.parameters = new ConcurrentHashMap<String, VirtualTableParameter>(other.parameters);
-        this.primaryKeyColumns = new ArrayList<String>(other.primaryKeyColumns);
+        this.geometryTypes = new ConcurrentHashMap<>(other.geometryTypes);
+        this.nativeSrids = new ConcurrentHashMap<>(other.nativeSrids);
+        this.dimensions = new ConcurrentHashMap<>(other.dimensions);
+        this.parameters = new ConcurrentHashMap<>(other.parameters);
+        this.primaryKeyColumns = new ArrayList<>(other.primaryKeyColumns);
         this.escapeSql = other.escapeSql;
     }
 
-    /**
-     * Clone a virtual table
-     *
-     * @param name
-     * @param other
-     */
+    /** Clone a virtual table */
     public VirtualTable(VirtualTable other) {
         this(other.name, other.sql);
-        this.geometryTypes =
-                new ConcurrentHashMap<String, Class<? extends Geometry>>(other.geometryTypes);
-        this.nativeSrids = new ConcurrentHashMap<String, Integer>(other.nativeSrids);
-        this.dimensions = new ConcurrentHashMap<String, Integer>(other.dimensions);
-        this.parameters = new ConcurrentHashMap<String, VirtualTableParameter>(other.parameters);
-        this.primaryKeyColumns = new ArrayList<String>(other.primaryKeyColumns);
+        this.geometryTypes = new ConcurrentHashMap<>(other.geometryTypes);
+        this.nativeSrids = new ConcurrentHashMap<>(other.nativeSrids);
+        this.dimensions = new ConcurrentHashMap<>(other.dimensions);
+        this.parameters = new ConcurrentHashMap<>(other.parameters);
+        this.primaryKeyColumns = new ArrayList<>(other.primaryKeyColumns);
         this.escapeSql = other.escapeSql;
     }
 
@@ -183,11 +161,7 @@ public class VirtualTable implements Serializable {
         return primaryKeyColumns;
     }
 
-    /**
-     * Sets the virtual table primary key
-     *
-     * @param primaryKeyColumns
-     */
+    /** Sets the virtual table primary key */
     public void setPrimaryKeyColumns(List<String> primaryKeyColumns) {
         this.primaryKeyColumns.clear();
         if (primaryKeyColumns != null) {
@@ -195,20 +169,12 @@ public class VirtualTable implements Serializable {
         }
     }
 
-    /**
-     * The virtual table name
-     *
-     * @return
-     */
+    /** The virtual table name */
     public String getName() {
         return name;
     }
 
-    /**
-     * The virtual table sql (raw, without parameter expansion)
-     *
-     * @return
-     */
+    /** The virtual table sql (raw, without parameter expansion) */
     public String getSql() {
         return sql;
     }
@@ -220,18 +186,16 @@ public class VirtualTable implements Serializable {
             // remove the where clause place holder
             result = removeWhereClausePlaceHolder(result);
         }
-        if (parameters.size() == 0) {
+        if (parameters.isEmpty()) {
             return result;
         }
 
         // grab the parameter values
-        Map<String, String> values = null;
-        if (hints != null) {
-            values = (Map<String, String>) hints.get(Hints.VIRTUAL_TABLE_PARAMETERS);
-        }
-        if (values == null) {
-            values = Collections.emptyMap();
-        }
+        @SuppressWarnings("unchecked")
+        Map<String, String> values =
+                Optional.ofNullable(hints)
+                        .map(h -> (Map<String, String>) hints.get(Hints.VIRTUAL_TABLE_PARAMETERS))
+                        .orElse(Collections.emptyMap());
 
         // perform the expansion, checking for validity and applying default values as needed
         for (VirtualTableParameter param : parameters.values()) {
@@ -271,10 +235,6 @@ public class VirtualTable implements Serializable {
     /**
      * Adds geometry metadata to the virtual table. This is important to get the datastore working,
      * often that is not the case if the right native srid is not in place
-     *
-     * @param geometry
-     * @param binding
-     * @param nativeSrid
      */
     public void addGeometryMetadatata(
             String geometry, Class<? extends Geometry> binding, int nativeSrid) {
@@ -285,10 +245,6 @@ public class VirtualTable implements Serializable {
     /**
      * Adds geometry metadata to the virtual table. This is important to get the datastore working,
      * often that is not the case if the right native srid is not in place
-     *
-     * @param geometry
-     * @param binding
-     * @param nativeSrid
      */
     public void addGeometryMetadatata(
             String geometry, Class<? extends Geometry> binding, int nativeSrid, int dimension) {
@@ -297,67 +253,37 @@ public class VirtualTable implements Serializable {
         dimensions.put(geometry, dimension);
     }
 
-    /**
-     * Adds a parameter to the virtual table
-     *
-     * @param param
-     */
+    /** Adds a parameter to the virtual table */
     public void addParameter(VirtualTableParameter param) {
         parameters.put(param.getName(), param);
     }
 
-    /**
-     * Removes a parameter from the virtual table
-     *
-     * @param paramName
-     */
+    /** Removes a parameter from the virtual table */
     public void removeParameter(String paramName) {
         parameters.remove(paramName);
     }
 
-    /**
-     * The current parameter names
-     *
-     * @return
-     */
+    /** The current parameter names */
     public Collection<String> getParameterNames() {
-        return new ArrayList(parameters.keySet());
+        return new ArrayList<>(parameters.keySet());
     }
 
-    /**
-     * Returns the requested parameter, or null if it could not be found
-     *
-     * @return
-     */
+    /** Returns the requested parameter, or null if it could not be found */
     public VirtualTableParameter getParameter(String name) {
         return parameters.get(name);
     }
 
-    /**
-     * Returns the geometry's specific type, or null if not known
-     *
-     * @param geometryName
-     * @return
-     */
+    /** Returns the geometry's specific type, or null if not known */
     public Class<? extends Geometry> getGeometryType(String geometryName) {
         return geometryTypes.get(geometryName);
     }
 
-    /**
-     * Returns the name of the geometry colums declared in this virtual table
-     *
-     * @return
-     */
+    /** Returns the name of the geometry colums declared in this virtual table */
     public Set<String> getGeometries() {
         return geometryTypes.keySet();
     }
 
-    /**
-     * Returns the geometry native srid, or -1 if not known
-     *
-     * @param geometryName
-     * @return
-     */
+    /** Returns the geometry native srid, or -1 if not known */
     public int getNativeSrid(String geometryName) {
         Integer srid = nativeSrids.get(geometryName);
         if (srid == null) {
@@ -366,12 +292,7 @@ public class VirtualTable implements Serializable {
         return srid;
     }
 
-    /**
-     * Returns the geometry dimension, or 2 if not known
-     *
-     * @param geometryName
-     * @return
-     */
+    /** Returns the geometry dimension, or 2 if not known */
     public int getDimension(String geometryName) {
         Integer dimension = dimensions.get(geometryName);
         if (dimension == null) {

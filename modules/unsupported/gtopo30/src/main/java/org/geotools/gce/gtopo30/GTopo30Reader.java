@@ -20,7 +20,11 @@ package org.geotools.gce.gtopo30;
 import com.sun.media.imageio.stream.RawImageInputStream;
 import com.sun.media.imageioimpl.plugins.raw.RawImageReader;
 import com.sun.media.imageioimpl.plugins.raw.RawImageReaderSpi;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
@@ -141,7 +145,6 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
      * @param source The source object (can be a File, an URL or a String representing a File or an
      *     URL).
      * @throws MalformedURLException if the URL does not correspond to one of the GTopo30 files
-     * @throws IOException
      * @throws DataSourceException if the given url points to an unrecognized file
      */
     public GTopo30Reader(final Object source) throws IOException {
@@ -154,7 +157,6 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
      * @param source The source object (can be a File, an URL or a String representing a File or an
      *     URL).
      * @throws MalformedURLException if the URL does not correspond to one of the GTopo30 files
-     * @throws IOException
      * @throws DataSourceException if the given url points to an unrecognized file
      */
     public GTopo30Reader(final Object source, final Hints hints) throws IOException {
@@ -183,9 +185,8 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
         // decoding source
         //
         // ///////////////////////////////////////////////////////////
-        final String filename;
 
-        filename = URLs.urlToFile(urlToUse).getName();
+        final String filename = URLs.urlToFile(urlToUse).getName();
 
         boolean recognized = false;
         boolean extUpperCase = false;
@@ -326,8 +327,8 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
         //
         // /////////////////////////////////////////////////////////////////////
         if (params != null) {
-            for (int i = 0; i < params.length; i++) {
-                final ParameterValue<?> param = (ParameterValue<?>) params[i];
+            for (GeneralParameterValue generalParameterValue : params) {
+                final ParameterValue<?> param = (ParameterValue<?>) generalParameterValue;
                 final String name = param.getDescriptor().getName().getCode();
                 if (name.equals(AbstractGridFormat.READ_GRIDGEOMETRY2D.getName().toString())) {
                     final GridGeometry2D gg = (GridGeometry2D) param.getValue();
@@ -354,10 +355,8 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
      * Gets the bounding box of this datasource using the default speed of this datasource as set by
      * the implementer.
      *
-     * @param lonFirst
      * @return The bounding box of the datasource or null if unknown and too expensive for the
      *     method to calculate.
-     * @throws IOException
      */
     private GeneralEnvelope getBounds(CoordinateReferenceSystem crs) throws IOException {
         GeneralEnvelope env = new GeneralEnvelope(new double[] {0, 0}, new double[] {0, 0});
@@ -369,15 +368,11 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
         final double yDim = header.getYDim(); // dy
         final int imageWidth = header.getNCols();
         final int imageHeight = header.getNRows();
-        final double longMin;
-        final double latMax;
-        final double longMax;
-        final double latMin;
 
-        longMin = xULC - xDim / 2.0;
-        latMax = yULC + yDim / 2.0;
-        longMax = longMin + imageWidth * xDim;
-        latMin = latMax - imageHeight * yDim;
+        final double longMin = xULC - xDim / 2.0;
+        final double latMax = yULC + yDim / 2.0;
+        final double longMax = longMin + imageWidth * xDim;
+        final double latMin = latMax - imageHeight * yDim;
 
         // longitude
         env.setRange(0, longMin, longMax);
@@ -393,9 +388,6 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
      * Retrieves a grid coverage based on the DEM assoicated to this gtopo coverage. The color
      * palette is fixed and there is no possibility for the final user to change it.
      *
-     * @param dim
-     * @param requestedEnvelope
-     * @param overviewPolicy
      * @return the GridCoverage object
      * @throws DataSourceException if an error occurs
      */
@@ -435,6 +427,7 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
         // /////////////////////////////////////////////////////////////////////
         // trying to create a channel to the file to read
         final File file = URLs.urlToFile(demURL);
+        @SuppressWarnings("PMD.CloseResource") // used in deferred loading
         final ImageInputStream iis = ImageIO.createImageInputStream(file);
         if (header.getByteOrder().compareToIgnoreCase("M") == 0) {
             iis.setByteOrder(ByteOrder.BIG_ENDIAN);
@@ -449,6 +442,7 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
                 new ImageTypeSpecifier(layout.getColorModel(null), layout.getSampleModel(null));
 
         // Finally, build the image input stream
+        @SuppressWarnings("PMD.CloseResource") // used in deferred loading
         final RawImageInputStream raw =
                 new RawImageInputStream(
                         iis,
@@ -488,7 +482,7 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
         final GridSampleDimension band = getSampleDimension(max, min);
 
         // setting metadata
-        final Map<String, Double> metadata = new HashMap<String, Double>();
+        final Map<String, Double> metadata = new HashMap<>();
         metadata.put("maximum", Double.valueOf(stats.getMax()));
         metadata.put("minimum", Double.valueOf(stats.getMin()));
         metadata.put("mean", Double.valueOf(stats.getAverage()));
@@ -516,14 +510,13 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
         }
 
         // return the coverage
-        return (GridCoverage2D)
-                coverageFactory.create(
-                        coverageName,
-                        image,
-                        new GeneralEnvelope(originalEnvelope),
-                        new GridSampleDimension[] {band},
-                        null,
-                        metadata);
+        return coverageFactory.create(
+                coverageName,
+                image,
+                new GeneralEnvelope(originalEnvelope),
+                new GridSampleDimension[] {band},
+                null,
+                metadata);
     }
 
     /**
@@ -531,8 +524,6 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
      * are two, EPSG:4326 and POlar Stereographc. Inc ase an error occurs the default CRS is chosen.
      *
      * @return CoordinateReferenceSystem a CRS for this coverage.
-     * @throws IOException
-     * @throws FactoryException
      */
     @SuppressWarnings("deprecation")
     private CoordinateReferenceSystem initCRS() {
@@ -577,7 +568,7 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
                     parameters.parameter("false_northing").setValue(0.0);
                     final ReferencingFactoryContainer factories =
                             ReferencingFactoryContainer.instance(null);
-                    final Map<String, String> properties =
+                    final Map<String, Object> properties =
                             Collections.singletonMap(
                                     "name", "WGS 84 / Antartic Polar Stereographic");
 
@@ -602,13 +593,10 @@ public final class GTopo30Reader extends AbstractGridCoverage2DReader
                 }
                 return CRS.parseWKT(crsDescription);
             }
-        } catch (IOException e) {
+        } catch (IOException | FactoryException e) {
             // do nothing and return a default CRS but write down a message
             LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
 
-        } catch (FactoryException e) {
-            // do nothing and return a default CRS but write down a message
-            LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
         } finally {
             if (reader != null)
                 try {

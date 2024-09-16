@@ -47,7 +47,6 @@ final class DurationUtil {
     /**
      * Extract from duration string the values of years, month and days
      *
-     * @param duration
      * @return int[3] with years,months,days, if some value are not present -1 will be returned.
      */
     private static int[] extractDurationDate(final String duration) {
@@ -106,7 +105,6 @@ final class DurationUtil {
     /**
      * Extract from duration string the values of hours, minutes and seconds
      *
-     * @param duration
      * @return int[3] with hours, minutes and seconds if some value are not present -1 will be
      *     returned.
      */
@@ -187,8 +185,7 @@ final class DurationUtil {
     private static Date computeDateFromDurationDate(
             final Date date, final String duration, int sign) {
 
-        int[] durationDate = new int[3];
-        durationDate = extractDurationDate(duration);
+        int[] durationDate = extractDurationDate(duration);
 
         if (isNull(durationDate)) {
             return date;
@@ -220,12 +217,11 @@ final class DurationUtil {
     /**
      * durDate is null if all his values are -1
      *
-     * @param durDate
      * @return true if has some greater than or equal 0
      */
     private static boolean isNull(int[] durDate) {
-        for (int i = 0; i < durDate.length; i++) {
-            if (durDate[i] >= 0) {
+        for (int j : durDate) {
+            if (j >= 0) {
                 return false;
             }
         }

@@ -19,6 +19,7 @@ package org.geotools.feature.visitor;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import org.geotools.util.Converters;
 import org.locationtech.jts.geom.Geometry;
 import org.opengis.feature.type.PropertyDescriptor;
@@ -49,7 +50,6 @@ public class NearestVisitor implements FeatureCalc, FeatureAttributeVisitor {
     /**
      * Creates a NearestVisitor instance for the given attribute and a value to match.
      *
-     * @param expression
      * @param valueToMatch The target value to match
      */
     public NearestVisitor(Expression expression, Object valueToMatch) {
@@ -87,7 +87,7 @@ public class NearestVisitor implements FeatureCalc, FeatureAttributeVisitor {
         }
     }
 
-    private NearestAccumulator getAccumulator(Class attributeClass) {
+    private NearestAccumulator<?> getAccumulator(Class<?> attributeClass) {
         if (Number.class.isAssignableFrom(attributeClass)) {
             Double convertedTarget = Converters.convert(valueToMatch, Double.class);
             return new NumberAccumulator(convertedTarget);
@@ -116,30 +116,27 @@ public class NearestVisitor implements FeatureCalc, FeatureAttributeVisitor {
         nearest = null;
     }
 
-    public void setValue(Object nearest) {
+    public void setValue(Comparable nearest) {
         this.nearest = nearest;
         this.visited = true;
     }
 
-    public void setValue(Object maxBelow, Object minAbove) {
+    public void setValue(Comparable maxBelow, Comparable minAbove) {
         if (maxBelow == null) {
             this.nearest = minAbove;
         } else if (minAbove == null) {
             this.nearest = maxBelow;
         } else {
-            NearestAccumulator accumulator = getAccumulator(maxBelow.getClass());
+            @SuppressWarnings("unchecked")
+            NearestAccumulator<Object> accumulator =
+                    (NearestAccumulator<Object>) getAccumulator(maxBelow.getClass());
             accumulator.visit(maxBelow);
             accumulator.visit(minAbove);
             nearest = accumulator.getNearest();
         }
     }
 
-    /**
-     * Returns the match after {@link #visit}.
-     *
-     * @return
-     * @throws IllegalStateException
-     */
+    /** Returns the match after {@link #visit}. */
     public Object getNearestMatch() throws IllegalStateException {
         if (nearest == null) {
             if (accumulator != null) {
@@ -183,12 +180,18 @@ public class NearestVisitor implements FeatureCalc, FeatureAttributeVisitor {
         return Arrays.asList(expr);
     }
 
+    @Override
+    public Optional<List<Class>> getResultType(List<Class> inputTypes) {
+        return CalcUtil.reflectInputTypes(1, inputTypes);
+    }
+
     static interface NearestAccumulator<T> {
         public boolean visit(T value);
 
         public T getNearest();
     }
 
+    @SuppressWarnings("unchecked") // we don't know what type of comparable till runtime
     static class ComparableAccumulator implements NearestAccumulator<Comparable> {
 
         private Comparable minAbove;

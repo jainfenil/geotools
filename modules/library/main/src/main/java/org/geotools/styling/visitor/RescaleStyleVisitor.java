@@ -16,7 +16,17 @@
  */
 package org.geotools.styling.visitor;
 
-import static org.geotools.styling.TextSymbolizer.*;
+import static org.geotools.styling.TextSymbolizer.AUTO_WRAP_KEY;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_AUTO_WRAP;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_LABEL_REPEAT;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_MAX_DISPLACEMENT;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_MIN_GROUP_DISTANCE;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_SPACE_AROUND;
+import static org.geotools.styling.TextSymbolizer.GRAPHIC_MARGIN_KEY;
+import static org.geotools.styling.TextSymbolizer.LABEL_REPEAT_KEY;
+import static org.geotools.styling.TextSymbolizer.MAX_DISPLACEMENT_KEY;
+import static org.geotools.styling.TextSymbolizer.MIN_GROUP_DISTANCE_KEY;
+import static org.geotools.styling.TextSymbolizer.SPACE_AROUND_KEY;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +102,6 @@ public class RescaleStyleVisitor extends DuplicatingStyleVisitor {
      * <p>We do optimize the case where the provided expression is a literal; no sense doing a
      * calculation each time if we don't have to.
      *
-     * @param expr
      * @return expr multiplied by the provided scale
      */
     protected Expression rescale(Expression expr) {
@@ -119,12 +128,7 @@ public class RescaleStyleVisitor extends DuplicatingStyleVisitor {
         return rescaled;
     }
 
-    /**
-     * Rescale using listMultiply, if there is only one entry.
-     *
-     * @param expressions
-     * @return
-     */
+    /** Rescale using listMultiply, if there is only one entry. */
     protected List<Expression> rescaleDashArray(List<Expression> expressions) {
         if (expressions == null || expressions.isEmpty()) {
             return expressions;
@@ -172,7 +176,6 @@ public class RescaleStyleVisitor extends DuplicatingStyleVisitor {
 
     /** Make graphics (such as used with PointSymbolizer) bigger */
     public void visit(Graphic gr) {
-        Graphic copy = null;
 
         Displacement displacementCopy = null;
 
@@ -202,7 +205,7 @@ public class RescaleStyleVisitor extends DuplicatingStyleVisitor {
         Expression rotationCopy = copy(gr.getRotation());
         Expression sizeCopy = rescaleGraphicSize(gr);
 
-        copy = sf.createDefaultGraphic();
+        Graphic copy = sf.createDefaultGraphic();
         copy.setDisplacement(displacementCopy);
         copy.setAnchorPoint(anchorCopy);
         copy.graphicalSymbols().clear();
@@ -326,16 +329,9 @@ public class RescaleStyleVisitor extends DuplicatingStyleVisitor {
         }
     }
 
-    /**
-     * Rescales the specified vendor option
-     *
-     * @param options
-     * @param key
-     * @param defaultAutoWrap
-     * @param value
-     */
+    /** Rescales the specified vendor option */
     protected void rescaleOption(Map<String, String> options, String key, double defaultValue) {
-        double scaleFactor = (double) scale.evaluate(null, Double.class);
+        double scaleFactor = scale.evaluate(null, Double.class);
         if (options.get(key) != null) {
             double rescaled = Converters.convert(options.get(key), Double.class) * scaleFactor;
             options.put(key, String.valueOf(rescaled));
@@ -344,16 +340,9 @@ public class RescaleStyleVisitor extends DuplicatingStyleVisitor {
         }
     };
 
-    /**
-     * Rescales the specified vendor option
-     *
-     * @param options
-     * @param key
-     * @param defaultAutoWrap
-     * @param value
-     */
+    /** Rescales the specified vendor option */
     protected void rescaleOption(Map<String, String> options, String key, int defaultValue) {
-        double scaleFactor = (double) scale.evaluate(null, Double.class);
+        double scaleFactor = scale.evaluate(null, Double.class);
         if (options.get(key) != null) {
             int rescaled =
                     (int)
@@ -366,16 +355,9 @@ public class RescaleStyleVisitor extends DuplicatingStyleVisitor {
         }
     };
 
-    /**
-     * Rescales the specified vendor option
-     *
-     * @param options
-     * @param key
-     * @param defaultAutoWrap
-     * @param value
-     */
+    /** Rescales the specified vendor option */
     protected void rescaleArrayOption(Map<String, String> options, String key, int defaultValue) {
-        double scaleFactor = (double) scale.evaluate(null, Double.class);
+        double scaleFactor = scale.evaluate(null, Double.class);
         if (options.get(key) != null) {
             String strValue = options.get(key);
             String[] splitted = strValue.split("\\s+");

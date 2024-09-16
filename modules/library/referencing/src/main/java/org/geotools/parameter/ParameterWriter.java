@@ -91,8 +91,7 @@ public class ParameterWriter extends FilterWriter {
      * ParameterWriter().{@linkplain #format(OperationMethod) format}(operation)</code>.
      */
     public static void print(final OperationMethod operation) {
-        final ParameterWriter writer = new ParameterWriter();
-        try {
+        try (ParameterWriter writer = new ParameterWriter()) {
             writer.format(operation);
         } catch (IOException exception) {
             // Should never happen, since we are writting to System.out.
@@ -107,8 +106,7 @@ public class ParameterWriter extends FilterWriter {
      * format}(descriptor)</code>.
      */
     public static void print(final ParameterDescriptorGroup descriptor) {
-        final ParameterWriter writer = new ParameterWriter();
-        try {
+        try (ParameterWriter writer = new ParameterWriter()) {
             writer.format(descriptor);
         } catch (IOException exception) {
             // Should never happen, since we are writting to System.out.
@@ -123,8 +121,7 @@ public class ParameterWriter extends FilterWriter {
      * format}(values)</code>.
      */
     public static void print(final ParameterValueGroup values) {
-        final ParameterWriter writer = new ParameterWriter();
-        try {
+        try (ParameterWriter writer = new ParameterWriter()) {
             writer.format(values);
         } catch (IOException exception) {
             // Should never happen, since we are writting to System.out.
@@ -178,6 +175,7 @@ public class ParameterWriter extends FilterWriter {
      * @param values The parameter values, or {@code null} if none.
      * @throws IOException if an error occured will writing to the stream.
      */
+    @SuppressWarnings("PMD.CloseResource")
     private void format(
             final String name,
             final ParameterDescriptorGroup group,
@@ -247,7 +245,7 @@ public class ParameterWriter extends FilterWriter {
              */
             if (generalDescriptor instanceof ParameterDescriptorGroup) {
                 if (deferredGroups == null) {
-                    deferredGroups = new ArrayList<Object>();
+                    deferredGroups = new ArrayList<>();
                 }
                 deferredGroups.add(element);
                 continue;
@@ -355,6 +353,7 @@ public class ParameterWriter extends FilterWriter {
      *     restricted a set will produce a table with less columns.
      * @throws IOException if an error occured will writing to the stream.
      */
+    @SuppressWarnings("PMD.CloseResource")
     public void summary(
             final Collection<? extends IdentifiedObject> parameters, final Set<String> scopes)
             throws IOException {
@@ -366,8 +365,8 @@ public class ParameterWriter extends FilterWriter {
          *   titles    -  The column number for each column title.
          *   names     -  The names (including alias) for each line.
          */
-        final Map<Object, Integer> titles = new LinkedHashMap<Object, Integer>();
-        final List<String[]> names = new ArrayList<String[]>();
+        final Map<Object, Integer> titles = new LinkedHashMap<>();
+        final List<String[]> names = new ArrayList<>();
         final Locale locale = this.locale; // Protect from changes.
         String[] descriptions = null;
         titles.put(null, 0); // Special value for the identifier column.

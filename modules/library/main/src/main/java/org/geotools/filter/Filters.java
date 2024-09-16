@@ -16,13 +16,12 @@
  */
 package org.geotools.filter;
 
-import java.awt.*;
+import java.awt.Color;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import org.geotools.factory.CommonFactoryFinder;
@@ -149,13 +148,10 @@ public class Filters {
      * Safe version of FilterFactory *and* that is willing to combine filter1 and filter2 correctly
      * in the even either of them is already an And filter.
      *
-     * @param ff
-     * @param filter1
-     * @param filter2
      * @return And
      */
     public static Filter and(org.opengis.filter.FilterFactory ff, Filter filter1, Filter filter2) {
-        ArrayList<Filter> list = new ArrayList<Filter>(2);
+        ArrayList<Filter> list = new ArrayList<>(2);
         if (filter1 instanceof And) {
             And some = (And) filter1;
             list.addAll(some.getChildren());
@@ -170,7 +166,7 @@ public class Filters {
             list.add(filter2);
         }
 
-        if (list.size() == 0) {
+        if (list.isEmpty()) {
             return Filter.EXCLUDE;
         } else if (list.size() == 1) {
             return list.get(0);
@@ -201,14 +197,9 @@ public class Filters {
     /**
      * Safe version of FilterFactory *or* that is willing to combine filter1 and filter2 correctly
      * in the even either of them is already an Or filter.
-     *
-     * @param ff
-     * @param filter1
-     * @param filter2
-     * @return
      */
     public static Filter or(org.opengis.filter.FilterFactory ff, Filter filter1, Filter filter2) {
-        ArrayList<Filter> list = new ArrayList<Filter>();
+        ArrayList<Filter> list = new ArrayList<>();
         if (filter1 instanceof Or) {
             Or some = (Or) filter1;
             list.addAll(some.getChildren());
@@ -223,7 +214,7 @@ public class Filters {
             list.add(filter2);
         }
 
-        if (list.size() == 0) {
+        if (list.isEmpty()) {
             return Filter.EXCLUDE;
         } else if (list.size() == 1) {
             return list.get(0);
@@ -258,7 +249,6 @@ public class Filters {
      * </pre>
      *
      * @see ExpressionType
-     * @param experssion
      * @return ExpressionType constant.
      */
     public static short getExpressionType(org.opengis.filter.expression.Expression experssion) {
@@ -303,7 +293,6 @@ public class Filters {
      *
      * <p>This method is quickly used to safely check Literal expressions.
      *
-     * @param expr
      * @return int value of first Number, or NOTFOUND
      */
     public static int asInt(Expression expr) {
@@ -344,7 +333,6 @@ public class Filters {
      *
      * <p>This method only reliably works when the Expression is a Literal.
      *
-     * @param expr
      * @return Expression as a String, or null
      */
     public static String asString(Expression expr) {
@@ -360,7 +348,6 @@ public class Filters {
     /**
      * Obtain the provided Expression as a double.
      *
-     * @param expr
      * @return int value of first Number, or Double.NaN
      */
     public static double asDouble(Expression expr) {
@@ -393,7 +380,6 @@ public class Filters {
      *   <li>String - valid Integer and Double encodings
      * </ul>
      *
-     * @param value
      * @return double or Double.NaN;
      * @throws IllegalArgumentException For non numerical among us -- like Geometry
      */
@@ -406,7 +392,7 @@ public class Filters {
         if (value instanceof String) {
             String text = (String) value;
             try {
-                Number number = (Number) gets(text, Number.class);
+                Number number = gets(text, Number.class);
                 return number.doubleValue();
             } catch (Throwable e) {
                 throw new IllegalArgumentException("Unable to decode '" + text + "' as a number");
@@ -440,8 +426,6 @@ public class Filters {
      * Remember Strong typing is for whimps who know what they are doing ahead of time. Real
      * programmers let their program learn at runtime... :-)
      *
-     * @param text
-     * @param TYPE
      * @throws open set of Throwable reflection for TYPE( String )
      */
     public static <T> T gets(String text, Class<T> TYPE) throws Throwable {
@@ -476,17 +460,12 @@ public class Filters {
         try {
             Constructor<T> create = TYPE.getConstructor(new Class[] {String.class});
             return create.newInstance(new Object[] {text});
-        } catch (SecurityException e) {
-            // hates you
-        } catch (NoSuchMethodException e) {
-            // nope
-        } catch (IllegalArgumentException e) {
-            // should not occur
-        } catch (InstantiationException e) {
-            // should not occur, perhaps the class was abstract?
-            // eg. Number.class is a bad idea
-        } catch (IllegalAccessException e) {
-            // hates you
+        } catch (SecurityException
+                | IllegalAccessException
+                | NoSuchMethodException
+                | IllegalArgumentException
+                | InstantiationException e) {
+            // should not occurr, or is meant to be ignored
         } catch (InvocationTargetException e) {
             // should of worked but we got a real problem,
             // an actual problem
@@ -504,7 +483,6 @@ public class Filters {
      *   <li>Filters.puts( 1.0 ) => "1"
      * </ul>
      *
-     * @param number
      * @return text representation
      */
     public static String puts(double number) {
@@ -549,7 +527,6 @@ public class Filters {
      * <p>This method has been superseeded by Converters which offers a more general and open ended
      * solution.
      *
-     * @param color
      * @return String representation of provided color.
      */
     public static String puts(Color color) {
@@ -573,9 +550,6 @@ public class Filters {
     /**
      * Returns true if the given filter can contain more than one subfilter. Only And and Or filters
      * match this now.
-     *
-     * @param filter
-     * @return
      */
     //    static boolean isGroupFilter(Filter filter) {
     //        //Note: Can't use BinaryLogicOperator here because the Not implementation also
@@ -597,10 +571,6 @@ public class Filters {
      *       last item is removed from an Or statement then Filter.EXCLUDE is return If the last
      *       item is removed from an And statement then Filter.INCLUDE is returned
      * </ul>
-     *
-     * @param baseFilter
-     * @param targetFilter
-     * @return
      */
     public Filter remove(Filter baseFilter, Filter targetFilter) {
         return remove(baseFilter, targetFilter, true);
@@ -615,11 +585,8 @@ public class Filters {
      * See {@link #removeFilter(org.opengis.filter.Filter, org.opengis.filter.Filter)} for details,
      * except this method includes the option to not recurse into child filters.
      *
-     * @param baseFilter
-     * @param targetFilter
      * @param recurse true if the method should descend into child group filters looking for the
      *     target
-     * @return
      */
     public Filter remove(Filter baseFilter, final Filter targetFilter, boolean recurse) {
         if (baseFilter == null) {
@@ -671,9 +638,8 @@ public class Filters {
                                 final Filter targetFilter,
                                 Object extraData) {
                             List<Filter> children = filter.getChildren();
-                            List<Filter> newChildren = new ArrayList<Filter>();
-                            for (Iterator<Filter> iter = children.iterator(); iter.hasNext(); ) {
-                                Filter child = iter.next();
+                            List<Filter> newChildren = new ArrayList<>();
+                            for (Filter child : children) {
                                 if (targetFilter.equals(child)) {
                                     continue; // skip this one
                                 }
@@ -693,7 +659,7 @@ public class Filters {
                 children = Collections.emptyList();
             }
 
-            List<Filter> copy = new ArrayList<Filter>(children.size());
+            List<Filter> copy = new ArrayList<>(children.size());
             for (Filter filter : children) {
                 if (targetFilter.equals(filter)) {
                     continue; // skip this one
@@ -733,7 +699,6 @@ public class Filters {
      *
      * <p>You can use this method to quickly build up the set of any mentioned attribute names.
      *
-     * @param filter
      * @return Set of propertyNames
      */
     public Set<String> attributeNames(Filter filter) {
@@ -810,9 +775,7 @@ public class Filters {
      * <p>Note this is a simple test and is faster than calling <code>
      * attributeNames( filter ).contains( name )</code>
      *
-     * @param filter
      * @param propertyName - name of the property to look for
-     * @return
      */
     static boolean uses(Filter filter, final String propertyName) {
         if (filter == null) {
@@ -847,7 +810,6 @@ public class Filters {
      *
      * Any other filter will return false.
      *
-     * @param filter
      * @return list of child filters
      */
     public static boolean hasChildren(Filter filter) {
@@ -873,7 +835,6 @@ public class Filters {
      * new filter when you are ready. To make that explicit I am returning an ArrayList so it is
      * clear that the result can be modified.
      *
-     * @param filter
      * @return are belong to us
      */
     public static ArrayList<Filter> children(Filter filter) {
@@ -900,13 +861,12 @@ public class Filters {
      * new filter when you are ready. To make that explicit I am returning an ArrayList so it is
      * clear that the result can be modified.
      *
-     * @param filter
      * @param all true to recurse into the filter and retrieve all children; false to only return
      *     the top level children
      * @return are belong to us
      */
     public static ArrayList<Filter> children(Filter filter, boolean all) {
-        final ArrayList<Filter> children = new ArrayList<Filter>();
+        final ArrayList<Filter> children = new ArrayList<>();
         if (filter == null) {
             return children;
         }
@@ -975,10 +935,8 @@ public class Filters {
      * Find the first child-filter (or the base filter itself) that is of the given type and uses
      * the specified property.
      *
-     * @param filter
      * @param filterType - class of the filter to look for
      * @param propertyName - name of the property to look for
-     * @return
      */
     public static <T extends Filter> T search(
             Filter filter, Class<T> filterType, String propertyName) {
@@ -994,9 +952,6 @@ public class Filters {
     /**
      * Given a filter which contains a term which is a PropertyName, returns the name of the
      * property. Returns null if no PropertyName is passed
-     *
-     * @param filter
-     * @return
      */
     public static String findPropertyName(Filter filter) {
         if (filter == null) return null;
@@ -1018,14 +973,11 @@ public class Filters {
      * Find all filters (including the base filter itself) that are of the given type and use the
      * specified property.
      *
-     * @param filter
-     * @param filterType
-     * @param property
      * @return all filters that are of the given type using the specified property
      */
     static <T extends Filter> List<T> findAllByTypeAndName(
             Filter filter, Class<T> filterType, String property) {
-        List<T> retVal = new ArrayList<T>();
+        List<T> retVal = new ArrayList<>();
         List<Filter> allBase = children(filter);
         allBase.add(0, filter);
         for (Filter base : allBase) {

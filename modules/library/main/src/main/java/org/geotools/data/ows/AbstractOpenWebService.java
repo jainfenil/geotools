@@ -23,14 +23,17 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.data.ResourceInfo;
 import org.geotools.data.ServiceInfo;
+import org.geotools.http.HTTPClient;
+import org.geotools.http.HTTPClientFinder;
+import org.geotools.http.HTTPResponse;
 import org.geotools.ows.ServiceException;
+import org.geotools.util.logging.Logging;
 
 /**
  * This abstract class provides a building block for one to implement an Open Web Service (OWS)
@@ -47,9 +50,11 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
 
     private HTTPClient httpClient;
     protected final URL serverURL;
+    protected final Map<String, String> headers;
+
     protected C capabilities;
     protected ServiceInfo info;
-    protected Map<R, ResourceInfo> resourceInfo = new HashMap<R, ResourceInfo>();
+    protected Map<R, ResourceInfo> resourceInfo = new HashMap<>();
 
     /** Contains the specifications that are to be used with this service */
     protected Specification[] specs;
@@ -59,8 +64,7 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
     /** Hints, now used for the XML parsing * */
     protected Map<String, Object> hints;
 
-    protected static final Logger LOGGER =
-            org.geotools.util.logging.Logging.getLogger(AbstractOpenWebService.class);
+    protected static final Logger LOGGER = Logging.getLogger(AbstractOpenWebService.class);
 
     /**
      * Set up the specifications used and retrieve the Capabilities document given by serverURL.
@@ -70,7 +74,12 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
      * @throws ServiceException if the server responds with an error
      */
     public AbstractOpenWebService(final URL serverURL) throws IOException, ServiceException {
-        this(serverURL, new SimpleHttpClient(), null);
+        this(serverURL, HTTPClientFinder.createClient(), null);
+    }
+
+    public AbstractOpenWebService(final URL serverURL, HTTPClient httpClient)
+            throws IOException, ServiceException {
+        this(serverURL, httpClient, null);
     }
 
     public AbstractOpenWebService(
@@ -85,6 +94,17 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
             final C capabilities,
             Map<String, Object> hints)
             throws ServiceException, IOException {
+        this(serverURL, httpClient, capabilities, hints, null);
+    }
+
+    public AbstractOpenWebService(
+            final URL serverURL,
+            final HTTPClient httpClient,
+            final C capabilities,
+            Map<String, Object> hints,
+            Map<String, String> headers)
+            throws ServiceException, IOException {
+
         if (serverURL == null) {
             throw new NullPointerException("serverURL");
         }
@@ -94,6 +114,8 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
 
         this.serverURL = serverURL;
         this.httpClient = httpClient;
+        this.headers = headers;
+
         this.hints = hints;
 
         setupSpecifications();
@@ -108,9 +130,9 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
             this.capabilities = capabilities;
         }
 
-        for (int i = 0; i < specs.length; i++) {
-            if (specs[i].getVersion().equals(this.capabilities.getVersion())) {
-                specification = specs[i];
+        for (Specification spec : specs) {
+            if (spec.getVersion().equals(this.capabilities.getVersion())) {
+                specification = spec;
                 break;
             }
         }
@@ -125,6 +147,11 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
         }
     }
 
+    /**
+     * @deprecated httpClient should be treated as a final
+     * @param httpClient
+     */
+    @Deprecated
     public void setHttpClient(HTTPClient httpClient) {
         this.httpClient = httpClient;
     }
@@ -221,7 +248,7 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
      */
     @SuppressWarnings("unchecked")
     protected C negotiateVersion() throws IOException, ServiceException {
-        List<String> versions = new ArrayList<String>(specs.length);
+        List<String> versions = new ArrayList<>(specs.length);
         Exception exception = null;
 
         for (int i = 0; i < specs.length; i++) {
@@ -356,8 +383,8 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
 
         String before = null;
 
-        for (Iterator i = known.iterator(); i.hasNext(); ) {
-            String test = (String) i.next();
+        for (Object o : known) {
+            String test = (String) o;
 
             if (test.compareTo(version) < 0) {
 
@@ -384,8 +411,8 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
 
         String after = null;
 
-        for (Iterator i = known.iterator(); i.hasNext(); ) {
-            String test = (String) i.next();
+        for (Object o : known) {
+            String test = (String) o;
 
             if (test.compareTo(version) > 0) {
                 if ((after == null) || (after.compareTo(test) < 0)) {
@@ -417,6 +444,7 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
 
                 final String postContentType = request.getPostContentType();
 
+                // For logging use the internals of HTTPClientFactory
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 request.performPostOutput(out);
                 InputStream in;
@@ -433,7 +461,11 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
                     in.close();
                 }
             } else {
-                httpResponse = httpClient.get(finalURL);
+                if (headers == null) {
+                    httpResponse = httpClient.get(finalURL);
+                } else {
+                    httpResponse = httpClient.get(finalURL, headers);
+                }
             }
 
             final Response response = request.createResponse(httpResponse);
@@ -464,11 +496,7 @@ public abstract class AbstractOpenWebService<C extends Capabilities, R extends O
         return hints;
     }
 
-    /**
-     * Sets the hints affecting the service operations
-     *
-     * @param hints
-     */
+    /** Sets the hints affecting the service operations */
     public void setHints(Map<String, Object> hints) {
         this.hints = hints;
     }

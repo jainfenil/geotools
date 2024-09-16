@@ -16,7 +16,7 @@
   <parent>
     <groupId>org.geotools</groupId>
     <artifactId>plugin</artifactId>
-    <version>22-SNAPSHOT</version>
+    <version>26-SNAPSHOT</version>
   </parent>
 
   <!-- =========================================================== -->
@@ -145,6 +145,11 @@
           <version>${project.version}</version>
           <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     
     <build>
@@ -173,6 +178,17 @@
 	  <followComplexTypes>true</followComplexTypes>
 	  <!--<printRecursionPaths>true</printRecursionPaths>
 	  <overwriteExistingFiles>true</overwriteExistingFiles>-->
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>${maven.pmd.plugin.version}</version>       
+        <configuration>
+          <!-- Disable JUnit specific rules, this module tests extends JUnit3 based OnlineTest -->
+          <rulesets>
+            <ruleset>${geotoolsBaseDir}/build/qa/pmd-ruleset.xml</ruleset>
+          </rulesets>
         </configuration>
       </plugin>
     </plugins>

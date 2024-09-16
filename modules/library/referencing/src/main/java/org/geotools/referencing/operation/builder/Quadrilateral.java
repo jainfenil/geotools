@@ -51,7 +51,7 @@ class Quadrilateral extends Polygon {
      */
     public Quadrilateral(
             DirectPosition p0, DirectPosition p1, DirectPosition p2, DirectPosition p3) {
-        super(new DirectPosition[] {p0, p1, p2, p3, p0});
+        super(p0, p1, p2, p3, p0);
         this.p0 = p0;
         this.p1 = p1;
         this.p2 = p2;
@@ -82,7 +82,7 @@ class Quadrilateral extends Polygon {
      */
     public List<TINTriangle> getTriangles() {
         // Assert.isTrue(this.isValid());
-        ArrayList<TINTriangle> triangles = new ArrayList<TINTriangle>();
+        ArrayList<TINTriangle> triangles = new ArrayList<>();
         TINTriangle trigA = new TINTriangle(p0, p1, p2);
         TINTriangle trigB = new TINTriangle(p0, p3, p2);
 

@@ -41,8 +41,6 @@ public class SpatialRequestHelperTest extends Assert {
      * Requesting the same area at a much smaller resolution.
      *
      * <p>The computed resolution should be much coarser and that is it.
-     *
-     * @throws Exception
      */
     @Test
     public void testNoRequest() throws Exception {
@@ -86,12 +84,12 @@ public class SpatialRequestHelperTest extends Assert {
         // computed raster area
         Rectangle computedRasterArea = spatialRequestHelper.getComputedRasterArea();
         assertFalse(computedRasterArea.isEmpty());
-        assertTrue(computedRasterArea.equals(coverageProperties.rasterArea));
+        assertEquals(computedRasterArea, coverageProperties.rasterArea);
 
         // computed bbox
         BoundingBox computedBBox = spatialRequestHelper.getComputedBBox();
         assertFalse(computedBBox.isEmpty());
-        assertTrue(computedBBox.equals(sourceBBox));
+        assertEquals(computedBBox, sourceBBox);
 
         // transform
         AffineTransform computedG2W = spatialRequestHelper.getComputedGridToWorld();
@@ -139,8 +137,6 @@ public class SpatialRequestHelperTest extends Assert {
      *
      * <p>1) The computed resolution should be much coarser. 2) The computed BBOX and the Computed
      * raster area should be equal to the requested ones
-     *
-     * @throws Exception
      */
     @Test
     public void testBasic2() throws Exception {
@@ -189,12 +185,12 @@ public class SpatialRequestHelperTest extends Assert {
         // computed raster area is equal to requested raster area
         Rectangle computedRasterArea = spatialRequestHelper.getComputedRasterArea();
         assertFalse(computedRasterArea.isEmpty());
-        assertTrue(computedRasterArea.equals(requestedRasterArea));
+        assertEquals(computedRasterArea, requestedRasterArea);
 
         // computed bbox is equal to requestede bbox
         BoundingBox computedBBox = spatialRequestHelper.getComputedBBox();
         assertFalse(computedBBox.isEmpty());
-        assertTrue(computedBBox.equals(requestedBBox));
+        assertEquals(computedBBox, requestedBBox);
 
         // transform
         AffineTransform computedG2W = spatialRequestHelper.getComputedGridToWorld();
@@ -232,8 +228,6 @@ public class SpatialRequestHelperTest extends Assert {
      *
      * <p>1) The computed resolution should be much coarser. 2) The computed BBOX and the Computed
      * raster area should be equal to the requested ones
-     *
-     * @throws Exception
      */
     @Test
     public void testBasic3() throws Exception {
@@ -284,7 +278,7 @@ public class SpatialRequestHelperTest extends Assert {
         assertFalse(computedBBox.isEmpty());
         ReferencedEnvelope finalReferencedEnvelope =
                 new ReferencedEnvelope(0, 100, 0, 90, sourceCRS);
-        assertTrue(computedBBox.equals(finalReferencedEnvelope));
+        assertEquals(computedBBox, finalReferencedEnvelope);
 
         // computed raster area is equal to requested raster area
         Rectangle computedRasterArea = spatialRequestHelper.getComputedRasterArea();
@@ -382,8 +376,6 @@ public class SpatialRequestHelperTest extends Assert {
      * Requesting the same area at a much smaller resolution in a different project.
      *
      * <p>The computed resolution should be much coarser and that is it.
-     *
-     * @throws Exception
      */
     @Test
     public void testBasicReproject() throws Exception {
@@ -435,7 +427,7 @@ public class SpatialRequestHelperTest extends Assert {
         // computed raster area
         Rectangle computedRasterArea = spatialRequestHelper.getComputedRasterArea();
         assertFalse(computedRasterArea.isEmpty());
-        assertTrue(computedRasterArea.equals(requestedRasterArea));
+        assertEquals(computedRasterArea, requestedRasterArea);
 
         // computed bbox is equal to the requested one
         BoundingBox computedBBox = spatialRequestHelper.getComputedBBox();
@@ -479,8 +471,6 @@ public class SpatialRequestHelperTest extends Assert {
      *
      * <p>1) The computed resolution should be much coarser. 2) The computed BBOX and the Computed
      * raster area should be equal to the requested ones
-     *
-     * @throws Exception
      */
     @Test
     public void testBasic2Reproject() throws Exception {
@@ -531,7 +521,7 @@ public class SpatialRequestHelperTest extends Assert {
         // computed raster area is equal to requested raster area
         Rectangle computedRasterArea = spatialRequestHelper.getComputedRasterArea();
         assertFalse(computedRasterArea.isEmpty());
-        assertTrue(computedRasterArea.equals(requestedRasterArea));
+        assertEquals(computedRasterArea, requestedRasterArea);
 
         // computed bbox is equal to requestede bbox
         BoundingBox computedBBox = spatialRequestHelper.getComputedBBox();
@@ -591,8 +581,6 @@ public class SpatialRequestHelperTest extends Assert {
      *
      * <p>1) The computed resolution should be much coarser. 2) The computed BBOX and the Computed
      * raster area should be equal to the requested ones
-     *
-     * @throws Exception
      */
     @Test
     public void testBasic3Reproject() throws Exception {
@@ -684,8 +672,6 @@ public class SpatialRequestHelperTest extends Assert {
      * Requesting the same area at a much smaller resolution.
      *
      * <p>The computed resolution should be much coarser and that is it.
-     *
-     * @throws Exception
      */
     @Test
     public void testBasic() throws Exception {
@@ -733,12 +719,12 @@ public class SpatialRequestHelperTest extends Assert {
         // computed raster area
         Rectangle computedRasterArea = spatialRequestHelper.getComputedRasterArea();
         assertFalse(computedRasterArea.isEmpty());
-        assertTrue(computedRasterArea.equals(requestedRasterArea));
+        assertEquals(computedRasterArea, requestedRasterArea);
 
         // computed bbox
         BoundingBox computedBBox = spatialRequestHelper.getComputedBBox();
         assertFalse(computedBBox.isEmpty());
-        assertTrue(computedBBox.equals(sourceBBox));
+        assertEquals(computedBBox, sourceBBox);
 
         // transform
         AffineTransform computedG2W = spatialRequestHelper.getComputedGridToWorld();

@@ -19,7 +19,6 @@ package org.geotools.data.store;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FeatureWriter;
@@ -155,6 +154,7 @@ public abstract class ContentFeatureStore extends ContentFeatureSource
                         (DiffTransactionState) getTransaction().getState(getEntry());
                 // reader will take care of filtering
                 // DiffContentWriter takes care of events
+                @SuppressWarnings("PMD.CloseResource") // wrapped and returned
                 FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(query);
                 writer = state.diffWriter(this, reader);
             }
@@ -223,53 +223,37 @@ public abstract class ContentFeatureStore extends ContentFeatureSource
     public List<FeatureId> addFeatures(Collection collection) throws IOException {
 
         // gather up id's
-        List<FeatureId> ids = new ArrayList<FeatureId>(collection.size());
+        List<FeatureId> ids = new ArrayList<>(collection.size());
 
-        FeatureWriter<SimpleFeatureType, SimpleFeature> writer = getWriterAppend();
-        try {
-            for (Iterator f = collection.iterator(); f.hasNext(); ) {
-                FeatureId id = addFeature((SimpleFeature) f.next(), writer);
+        try (FeatureWriter<SimpleFeatureType, SimpleFeature> writer = getWriterAppend()) {
+            for (Object o : collection) {
+                FeatureId id = addFeature((SimpleFeature) o, writer);
                 ids.add(id);
             }
-        } finally {
-            writer.close();
         }
 
         return ids;
     }
 
-    /**
-     * Adds a collection of features to the store.
-     *
-     * @param featureCollection
-     */
+    /** Adds a collection of features to the store. */
     public List<FeatureId> addFeatures(
             FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection)
             throws IOException {
         // gather up id's
-        List<FeatureId> ids = new ArrayList<FeatureId>();
+        List<FeatureId> ids = new ArrayList<>();
 
-        FeatureWriter<SimpleFeatureType, SimpleFeature> writer = getWriterAppend();
-        FeatureIterator<SimpleFeature> f = featureCollection.features();
-        try {
+        try (FeatureWriter<SimpleFeatureType, SimpleFeature> writer = getWriterAppend();
+                FeatureIterator<SimpleFeature> f = featureCollection.features()) {
             while (f.hasNext()) {
                 SimpleFeature feature = f.next();
                 FeatureId id = addFeature(feature, writer);
                 ids.add(id);
             }
-        } finally {
-            writer.close();
-            f.close();
         }
         return ids;
     }
 
-    /**
-     * Utility method that ensures we are going to write only in append mode
-     *
-     * @return
-     * @throws IOException
-     */
+    /** Utility method that ensures we are going to write only in append mode */
     private FeatureWriter<SimpleFeatureType, SimpleFeature> getWriterAppend() throws IOException {
         FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
                 getWriter(Filter.INCLUDE, WRITER_ADD);
@@ -303,7 +287,7 @@ public abstract class ContentFeatureStore extends ContentFeatureSource
         }
 
         // Need to save a link to the original feature in order to be able to set the ID once it
-        // is actuall saved (see JDBCInsertFeatureWriter)
+        // is actually saved (see JDBCInsertFeatureWriter)
         toWrite.getUserData().put(ORIGINAL_FEATURE_KEY, feature);
 
         // perform the write
@@ -330,9 +314,8 @@ public abstract class ContentFeatureStore extends ContentFeatureSource
         removeFeatures(Filter.INCLUDE);
 
         // grab a feature writer for insert
-        FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
-                getWriter(Filter.INCLUDE, WRITER_ADD);
-        try {
+        try (FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
+                getWriter(Filter.INCLUDE, WRITER_ADD)) {
             while (reader.hasNext()) {
                 SimpleFeature feature = reader.next();
 
@@ -349,8 +332,6 @@ public abstract class ContentFeatureStore extends ContentFeatureSource
                 // perform the write
                 writer.write();
             }
-        } finally {
-            writer.close();
         }
     }
 
@@ -380,8 +361,8 @@ public abstract class ContentFeatureStore extends ContentFeatureSource
         filter = resolvePropertyNames(filter);
 
         // grab a feature writer
-        FeatureWriter<SimpleFeatureType, SimpleFeature> writer = getWriter(filter, WRITER_UPDATE);
-        try {
+        try (FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
+                getWriter(filter, WRITER_UPDATE)) {
             while (writer.hasNext()) {
                 SimpleFeature toWrite = writer.next();
 
@@ -391,9 +372,6 @@ public abstract class ContentFeatureStore extends ContentFeatureSource
 
                 writer.write();
             }
-
-        } finally {
-            writer.close();
         }
     }
 
@@ -448,16 +426,13 @@ public abstract class ContentFeatureStore extends ContentFeatureSource
         filter = resolvePropertyNames(filter);
 
         // grab a feature writer
-        FeatureWriter<SimpleFeatureType, SimpleFeature> writer = getWriter(filter, WRITER_UPDATE);
-        try {
+        try (FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
+                getWriter(filter, WRITER_UPDATE)) {
             // remove everything
             while (writer.hasNext()) {
                 writer.next();
                 writer.remove();
             }
-
-        } finally {
-            writer.close();
         }
     }
 }

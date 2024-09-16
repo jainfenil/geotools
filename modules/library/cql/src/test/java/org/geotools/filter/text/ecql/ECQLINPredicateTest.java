@@ -43,15 +43,11 @@ import org.opengis.filter.expression.PropertyName;
  */
 public class ECQLINPredicateTest {
 
-    /**
-     * sample: length IN (4100001)
-     *
-     * @throws CQLException
-     */
+    /** sample: length IN (4100001) */
     @Test
     public void oneIntegerLiteralInList() throws CQLException {
 
-        List<String> intList = new LinkedList<String>();
+        List<String> intList = new LinkedList<>();
         intList.add("4100001");
         String propName = "length";
         final String txtPredicate = makeInPredicate(propName, intList);
@@ -63,15 +59,11 @@ public class ECQLINPredicateTest {
         assertFilterHasProperty((Or) filter, propName);
     }
 
-    /**
-     * sample: length IN (4100001,4100002, 4100003 )
-     *
-     * @throws CQLException
-     */
+    /** sample: length IN (4100001,4100002, 4100003 ) */
     @Test
     public void manyIntegerLiteralInList() throws CQLException {
 
-        List<String> intList = new LinkedList<String>();
+        List<String> intList = new LinkedList<>();
         String v1 = "4100001";
         intList.add(v1);
         String v2 = "4100002";
@@ -88,15 +80,11 @@ public class ECQLINPredicateTest {
         assertFilterHasProperty((Or) filter, propName);
     }
 
-    /**
-     * sample: length IN (4100001,4100002, 4100003 )
-     *
-     * @throws CQLException
-     */
+    /** sample: length IN (4100001,4100002, 4100003 ) */
     @Test
     public void manyStringLiteralInList() throws CQLException {
 
-        List<String> stringList = new LinkedList<String>();
+        List<String> stringList = new LinkedList<>();
         String v1 = "one";
         stringList.add(v1);
         String v2 = "two";
@@ -113,15 +101,11 @@ public class ECQLINPredicateTest {
         assertFilterHasProperty((Or) filter, propName);
     }
 
-    /**
-     * Sample: length in ((1+2), 3-4, [5*6])
-     *
-     * @throws CQLException
-     */
+    /** Sample: length in ((1+2), 3-4, [5*6]) */
     @Test
     public void binaryExpression() throws CQLException {
 
-        List<String> mathExptList = new LinkedList<String>();
+        List<String> mathExptList = new LinkedList<>();
         mathExptList.add("(1+2)");
         mathExptList.add("3-4");
         mathExptList.add("[5*6]");
@@ -135,15 +119,11 @@ public class ECQLINPredicateTest {
         assertFilterHasProperty((Or) filter, propName);
     }
 
-    /**
-     * sample: huc_8 IN (abs(-1),area(the_geom) )
-     *
-     * @throws CQLException
-     */
+    /** sample: huc_8 IN (abs(-1),area(the_geom) ) */
     @Test
     public void functions() throws CQLException {
 
-        List<String> intList = new LinkedList<String>();
+        List<String> intList = new LinkedList<>();
         intList.add("abs(-1)");
         intList.add("area(the_geom)");
         String propName = "length";
@@ -161,7 +141,6 @@ public class ECQLINPredicateTest {
      *
      * @param propName property name
      * @param exprList list of integer values
-     * @throws CQLException
      */
     private void commonAssertForInPredicate(Filter filter) throws CQLException {
 
@@ -170,15 +149,12 @@ public class ECQLINPredicateTest {
 
         Or filterId = (Or) filter;
         List<Filter> filterList = filterId.getChildren();
-        Assert.assertTrue(
-                "one or more expressions in Or filter was expected", filterList.size() >= 1);
+        Assert.assertFalse(
+                "one or more expressions in Or filter was expected", filterList.isEmpty());
     }
     /**
      * This is successful if each PropertyIsEqual filter has on the left hand the same property
      * name.
-     *
-     * @param filter
-     * @param expectedName
      */
     private void assertFilterHasProperty(final Or filter, final String expectedName) {
 
@@ -199,8 +175,6 @@ public class ECQLINPredicateTest {
     /**
      * Makes an in predicate using the property name and the list of expressions
      *
-     * @param propName
-     * @param exprList
      * @return an In Predicate
      */
     private String makeInPredicate(final String propName, final List<String> exprList) {
@@ -221,8 +195,6 @@ public class ECQLINPredicateTest {
     /**
      * Makes an in predicate using the property name and the list of expressions
      *
-     * @param propName
-     * @param exprList
      * @return an In Predicate
      */
     private String makeInPredicateUsingString(final String propName, final List<String> exprList) {

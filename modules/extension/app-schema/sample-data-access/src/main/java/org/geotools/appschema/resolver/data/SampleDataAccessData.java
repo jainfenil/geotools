@@ -39,7 +39,6 @@ import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
-import org.opengis.filter.Filter;
 
 /**
  * Constants and methods to create sample features for {@link SampleDataAccess}.
@@ -64,10 +63,10 @@ public class SampleDataAccessData {
     public static final FeatureType GEOLOGICUNIT_TYPE =
             new FeatureTypeImpl(
                     GEOLOGICUNIT_TYPE_NAME,
-                    Collections.<PropertyDescriptor>emptyList(),
+                    Collections.emptyList(),
                     null,
                     false,
-                    Collections.<Filter>emptyList(),
+                    Collections.emptyList(),
                     GMLSchema.ABSTRACTFEATURETYPE_TYPE,
                     null);
 
@@ -109,7 +108,7 @@ public class SampleDataAccessData {
                     MAPPEDFEATURE_TYPE_SCHEMA,
                     null,
                     false,
-                    Collections.<Filter>emptyList(),
+                    Collections.emptyList(),
                     GMLSchema.ABSTRACTFEATURETYPE_TYPE,
                     null);
 
@@ -120,7 +119,6 @@ public class SampleDataAccessData {
      * @param bgsid an alternate id (not yet used)
      * @param description name of the feature
      * @param shape the shape of the feature
-     * @return
      */
     public static Feature createMappedFeature(
             String id,

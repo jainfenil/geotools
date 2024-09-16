@@ -39,11 +39,7 @@ import org.opengis.util.ProgressListener;
  */
 public abstract class FeatureToFeatureProcess extends AbstractFeatureCollectionProcess {
 
-    /**
-     * Constructor
-     *
-     * @param factory
-     */
+    /** Constructor */
     public FeatureToFeatureProcess(FeatureToFeatureProcessFactory factory) {
         super(factory);
     }
@@ -66,9 +62,8 @@ public abstract class FeatureToFeatureProcess extends AbstractFeatureCollectionP
                 getTargetSchema((SimpleFeatureType) features.getSchema(), input);
         DefaultFeatureCollection result = new DefaultFeatureCollection(null, targetSchema);
 
-        SimpleFeatureBuilder fb = new SimpleFeatureBuilder((SimpleFeatureType) result.getSchema());
-        FeatureIterator fi = features.features();
-        try {
+        SimpleFeatureBuilder fb = new SimpleFeatureBuilder(result.getSchema());
+        try (FeatureIterator fi = features.features()) {
             int counter = 0;
             while (fi.hasNext()) {
                 // copy the feature
@@ -85,13 +80,11 @@ public abstract class FeatureToFeatureProcess extends AbstractFeatureCollectionP
                 monitor.progress(scale * counter++);
                 result.add(feature);
             }
-        } finally {
-            fi.close();
         }
         monitor.complete();
 
         // return the result
-        Map<String, Object> output = new HashMap<String, Object>();
+        Map<String, Object> output = new HashMap<>();
         output.put(FeatureToFeatureProcessFactory.RESULT.key, result);
         return output;
     }
@@ -100,10 +93,6 @@ public abstract class FeatureToFeatureProcess extends AbstractFeatureCollectionP
      * Subclasses should override if the target schema is different that then original schema (mind,
      * if the number of attributes changes it's better to roll your own class instead of using this
      * one)
-     *
-     * @param sourceSchema
-     * @param input
-     * @return
      */
     protected SimpleFeatureType getTargetSchema(
             SimpleFeatureType sourceSchema, Map<String, Object> input) {

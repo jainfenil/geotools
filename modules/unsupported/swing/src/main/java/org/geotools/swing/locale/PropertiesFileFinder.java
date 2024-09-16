@@ -19,7 +19,6 @@ package org.geotools.swing.locale;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -54,25 +53,21 @@ public class PropertiesFileFinder {
     /**
      * Searches for properties files in the specified resource directory and returns information
      * about each file and the {@code Locales} that it supports.
-     *
-     * @param resourceDir
-     * @return
-     * @throws IOException
      */
     public List<PropertiesFileInfo> scan(String resourceDir) throws IOException {
-        List<SingleFileInfo> infoList = new ArrayList<SingleFileInfo>();
+        List<SingleFileInfo> infoList = new ArrayList<>();
 
         String path = getSelfPath();
         if (isJarPath(path)) {
-            JarInputStream jarFile = getAsJarInputStream(path);
-            JarEntry entry;
-            while ((entry = jarFile.getNextJarEntry()) != null) {
-                String name = entry.getName();
-                if (name.startsWith(resourceDir) && name.endsWith("properties")) {
-                    infoList.add(parseEntry(resourceDir.length(), name));
+            try (JarInputStream jarFile = getAsJarInputStream(path)) {
+                JarEntry entry;
+                while ((entry = jarFile.getNextJarEntry()) != null) {
+                    String name = entry.getName();
+                    if (name.startsWith(resourceDir) && name.endsWith("properties")) {
+                        infoList.add(parseEntry(resourceDir.length(), name));
+                    }
                 }
             }
-            jarFile.close();
 
         } else if (isBundle(path)) {
             // try to load the eclipse classes which enable to solve bundle:/ urls
@@ -186,14 +181,8 @@ public class PropertiesFileFinder {
      * @throws IOException on error opening file
      */
     private JarInputStream getAsJarInputStream(String jarPath) throws IOException {
-        JarInputStream jis = null;
-
         URL jarUrl = new URL(jarPath);
-
-        InputStream is = jarUrl.openStream();
-        jis = new JarInputStream(is);
-
-        return jis;
+        return new JarInputStream(jarUrl.openStream());
     }
 
     /**
@@ -256,7 +245,7 @@ public class PropertiesFileFinder {
      * @return a new list of {@code PropertiesFileInfo} objects
      */
     private List<PropertiesFileInfo> createReturnList(List<SingleFileInfo> infoList) {
-        List<PropertiesFileInfo> pfiList = new ArrayList<PropertiesFileInfo>();
+        List<PropertiesFileInfo> pfiList = new ArrayList<>();
 
         if (!infoList.isEmpty()) {
             Collections.sort(
@@ -269,7 +258,7 @@ public class PropertiesFileFinder {
                     });
 
             String curName = infoList.get(0).name;
-            List<Locale> locales = new ArrayList<Locale>();
+            List<Locale> locales = new ArrayList<>();
             ListIterator<SingleFileInfo> iter = infoList.listIterator();
             while (iter.hasNext()) {
                 SingleFileInfo sfi = iter.next();

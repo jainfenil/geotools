@@ -223,18 +223,17 @@ public class GridCoverageFactory extends AbstractFactory {
             final CharSequence name, final float[][] matrix, final Envelope envelope) {
         int width = 0;
         int height = matrix.length;
-        for (int j = 0; j < height; j++) {
-            final float[] row = matrix[j];
+        for (final float[] row : matrix) {
             if (row != null) {
                 if (row.length > width) {
                     width = row.length;
                 }
             }
         }
-        final WritableRaster raster;
         // Need to use JAI raster factory, since WritableRaster
         // does not supports TYPE_FLOAT as of J2SE 1.5.0_06.
-        raster = RasterFactory.createBandedRaster(DataBuffer.TYPE_FLOAT, width, height, 1, null);
+        final WritableRaster raster =
+                RasterFactory.createBandedRaster(DataBuffer.TYPE_FLOAT, width, height, 1, null);
         for (int j = 0; j < height; j++) {
             int i = 0;
             final float[] row = matrix[j];
@@ -581,8 +580,7 @@ public class GridCoverageFactory extends AbstractFactory {
             final int dimension = gridGeometry.getDimension();
             gridGeometry = new GridGeometry2D(gridGeometry, getDefaultCRS(dimension));
         }
-        final GridCoverage2D coverage;
-        coverage =
+        final GridCoverage2D coverage =
                 new GridCoverage2D(
                         name,
                         PlanarImage.wrapRenderedImage(image),

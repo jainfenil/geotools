@@ -133,10 +133,10 @@ public class JSimpleStyleDialog extends JDialog {
     private JColorIcon fillColorIcon;
     private JLabel fillColorLabel;
     private JSlider fillOpacitySlider;
-    private JComboBox pointSizeCBox;
-    private JComboBox pointSymbolCBox;
+    private JComboBox<Number> pointSizeCBox;
+    private JComboBox<String> pointSymbolCBox;
     private JLabel typeLabel;
-    private JComboBox labelCBox;
+    private JComboBox<String> labelCBox;
 
     private static enum ControlCategory {
         LINE,
@@ -187,7 +187,7 @@ public class JSimpleStyleDialog extends JDialog {
      * @return a new Style instance or null if the user cancels the dialog
      */
     public static Style showDialog(Component parent, DataStore dataStore) {
-        return showDialog(parent, dataStore, (Style) null);
+        return showDialog(parent, dataStore, null);
     }
 
     /**
@@ -221,7 +221,7 @@ public class JSimpleStyleDialog extends JDialog {
      * @return a new Style instance or null if the user cancels the dialog
      */
     public static Style showDialog(Component parent, SimpleFeatureType featureType) {
-        return showDialog(parent, featureType, (Style) null);
+        return showDialog(parent, featureType, null);
     }
 
     /**
@@ -454,12 +454,9 @@ public class JSimpleStyleDialog extends JDialog {
     private void initComponents() {
         MigLayout layout = new MigLayout();
         JPanel panel = new JPanel(layout);
-        controls = new HashMap<Component, ControlCategory>();
+        controls = new HashMap<>();
 
-        JLabel label = null;
-        JButton btn = null;
-
-        label = new JLabel("Feature type");
+        JLabel label = new JLabel("Feature type");
         label.setForeground(Color.BLUE);
         panel.add(label, "wrap");
 
@@ -473,7 +470,7 @@ public class JSimpleStyleDialog extends JDialog {
         label.setForeground(Color.BLUE);
         panel.add(label, "wrap");
 
-        btn = new JButton("Color...");
+        JButton btn = new JButton("Color...");
         btn.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -494,7 +491,7 @@ public class JSimpleStyleDialog extends JDialog {
         for (int i = 1; i <= widths.length; i++) {
             widths[i - 1] = Integer.valueOf(i);
         }
-        final JComboBox lineWidthCBox = new JComboBox(widths);
+        final JComboBox<Integer> lineWidthCBox = new JComboBox<>(widths);
         lineWidthCBox.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -556,7 +553,7 @@ public class JSimpleStyleDialog extends JDialog {
         for (int i = 1; i <= sizes.length; i++) {
             sizes[i - 1] = Integer.valueOf(i * 5);
         }
-        pointSizeCBox = new JComboBox(sizes);
+        pointSizeCBox = new JComboBox<>(sizes);
         pointSizeCBox.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -570,7 +567,7 @@ public class JSimpleStyleDialog extends JDialog {
         label = new JLabel("Symbol");
         panel.add(label, "skip, split 2");
 
-        pointSymbolCBox = new JComboBox(WELL_KNOWN_SYMBOL_NAMES);
+        pointSymbolCBox = new JComboBox<>(WELL_KNOWN_SYMBOL_NAMES);
         pointSymbolCBox.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -597,7 +594,7 @@ public class JSimpleStyleDialog extends JDialog {
                     }
                 });
 
-        labelCBox = new JComboBox();
+        labelCBox = new JComboBox<>();
         labelCBox.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -654,6 +651,7 @@ public class JSimpleStyleDialog extends JDialog {
     private void setType() {
 
         GeometryDescriptor desc = schema.getGeometryDescriptor();
+        @SuppressWarnings("unchecked")
         Class<? extends Geometry> clazz = (Class<? extends Geometry>) desc.getType().getBinding();
         geomType = Geometries.getForBinding(clazz);
 
@@ -712,7 +710,7 @@ public class JSimpleStyleDialog extends JDialog {
             fieldsForLabels[k++] = attr.getLocalName();
         }
 
-        labelCBox.setModel(new DefaultComboBoxModel(fieldsForLabels));
+        labelCBox.setModel(new DefaultComboBoxModel<>(fieldsForLabels));
     }
 
     /**
@@ -886,7 +884,8 @@ public class JSimpleStyleDialog extends JDialog {
         pointSize = (float) Math.max(0.0, value);
         int newValue = (int) pointSize;
 
-        MutableComboBoxModel model = (MutableComboBoxModel) pointSizeCBox.getModel();
+        @SuppressWarnings("unchecked")
+        MutableComboBoxModel<Integer> model = (MutableComboBoxModel) pointSizeCBox.getModel();
         int insert = -1;
         for (int i = 0; i < model.getSize(); i++) {
             int elValue = ((Number) model.getElementAt(i)).intValue();

@@ -75,9 +75,6 @@ public class DefaultResourceLocator implements ResourceLocator {
     /**
      * Variant to URL.getQuery() that won't balk at having # in the query (e.g., a color in a
      * parametric SVG reference), e.g. <code>firestation.svg?fill=#FF0000</code>
-     *
-     * @param url
-     * @return
      */
     private String getQueryPart(URL url) {
         String external = url.toExternalForm();
@@ -90,8 +87,7 @@ public class DefaultResourceLocator implements ResourceLocator {
     }
 
     protected URL validateRelativeURL(URL relativeUrl) {
-        File f;
-        f = URLs.urlToFile(relativeUrl);
+        File f = URLs.urlToFile(relativeUrl);
         if (f != null && f.exists()) {
             // bingo!
             return relativeUrl;

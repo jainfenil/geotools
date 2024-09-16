@@ -144,20 +144,12 @@ public class LabelViewer {
 
     private SelectionListener listener;
 
-    /**
-     * Accepts a listener that will be notified when content changes.
-     *
-     * @param listener1
-     */
+    /** Accepts a listener that will be notified when content changes. */
     public void addListener(SelectionListener listener1) {
         this.listener = listener1;
     }
 
-    /**
-     * Remove listener.
-     *
-     * @param listener1
-     */
+    /** Remove listener. */
     public void removeListener(SelectionListener listener1) {
         if (this.listener == listener1) this.listener = null;
     }
@@ -169,7 +161,6 @@ public class LabelViewer {
     /**
      * Constructs a TextSymbolizer from the inputs
      *
-     * @param build
      * @return TextSymbolizer defined by this model
      */
     public TextSymbolizer get(StyleBuilder build) {
@@ -258,13 +249,7 @@ public class LabelViewer {
         return text;
     }
 
-    /**
-     * Start editing the provided symbolizer.
-     *
-     * @param schema
-     * @param sym
-     * @param mode
-     */
+    /** Start editing the provided symbolizer. */
     public void set(SimpleFeatureType schema, TextSymbolizer sym, Mode mode) {
         listen(false);
         try {
@@ -288,7 +273,7 @@ public class LabelViewer {
             if (schema != null) {
                 AttributeDescriptor[] attrs =
                         schema.getAttributeDescriptors().toArray(new AttributeDescriptor[0]);
-                List<String> list = new ArrayList<String>();
+                List<String> list = new ArrayList<>();
                 for (int i = 0; i < attrs.length; i++) {
                     Class<?> cls = attrs[i].getType().getBinding();
                     if (String.class.isAssignableFrom(cls)) {
@@ -428,7 +413,7 @@ public class LabelViewer {
         this.field.addKeyListener(klisten);
         if (this.schema != null) {
             List<AttributeDescriptor> types = this.schema.getAttributeDescriptors();
-            List<String> typeStrings = new ArrayList<String>();
+            List<String> typeStrings = new ArrayList<>();
             for (AttributeDescriptor attributeDescriptor : types) {
                 typeStrings.add(attributeDescriptor.getLocalName());
             }

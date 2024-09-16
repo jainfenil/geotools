@@ -66,7 +66,7 @@ public class XPathUtil {
         public String toString() {
             StringBuffer sb = new StringBuffer();
             for (Iterator<Step> it = iterator(); it.hasNext(); ) {
-                Step s = (Step) it.next();
+                Step s = it.next();
                 sb.append(s.toString());
                 if (it.hasNext()) {
                     sb.append("/");
@@ -76,8 +76,8 @@ public class XPathUtil {
         }
 
         public boolean containsPredicate() {
-            for (int i = 0; i < size(); i++) {
-                if (get(i).getPredicate() != null) {
+            for (Step step : this) {
+                if (step.getPredicate() != null) {
                     return true;
                 }
             }
@@ -117,7 +117,7 @@ public class XPathUtil {
         public StepList clone() {
             StepList copy = new StepList();
             for (Step step : this) {
-                copy.add((Step) step.clone());
+                copy.add(step.clone());
             }
             return copy;
         }
@@ -126,7 +126,6 @@ public class XPathUtil {
          * Compares this StepList with another for equivalence regardless of the indexes of each
          * Step.
          *
-         * @param propertyName
          * @return <code>true</code> if this step list has the same location paths than <code>
          *     propertyName</code> ignoring the indexes in each step. <code>false</code> otherwise.
          */
@@ -197,12 +196,7 @@ public class XPathUtil {
 
         private boolean isIndexed;
 
-        /**
-         * Creates a "property" xpath step (i.e. isXmlAttribute() == false).
-         *
-         * @param name
-         * @param index
-         */
+        /** Creates a "property" xpath step (i.e. isXmlAttribute() == false). */
         public Step(final QName name, final int index) {
             this(name, index, false, false);
         }
@@ -261,12 +255,7 @@ public class XPathUtil {
             this.predicate = predicate;
         }
 
-        /**
-         * Compares this Step with another for equivalence ignoring the steps indexes.
-         *
-         * @param hisStep
-         * @return
-         */
+        /** Compares this Step with another for equivalence ignoring the steps indexes. */
         public boolean equalsIgnoreIndex(Step other) {
             if (other == null) {
                 return false;
@@ -340,8 +329,6 @@ public class XPathUtil {
          *
          * <p>I.e. it was created from the last step of an expression like <code>foo/bar@attribute
          * </code>.
-         *
-         * @return
          */
         public boolean isXmlAttribute() {
             return isXmlAttribute;
@@ -360,7 +347,7 @@ public class XPathUtil {
      * @return list of string steps
      */
     private static List<String> splitPath(String s) {
-        ArrayList<String> parts = new ArrayList<String>();
+        ArrayList<String> parts = new ArrayList<>();
 
         StringBuffer b = new StringBuffer();
         int insideIndex = 0;
@@ -412,8 +399,6 @@ public class XPathUtil {
      * @param root non null descriptor of the root attribute, generally the Feature descriptor. Used
      *     to ignore the first step in xpathExpression if the expression's first step is named as
      *     rootName.
-     * @param xpathExpression
-     * @return
      * @throws IllegalArgumentException if <code>xpathExpression</code> has no steps or it isn't a
      *     valid XPath expression against <code>type</code>.
      */
@@ -449,7 +434,7 @@ public class XPathUtil {
 
         final List<String> partialSteps = splitPath(expression);
 
-        if (partialSteps.size() == 0) {
+        if (partialSteps.isEmpty()) {
             throw new IllegalArgumentException("no steps provided");
         }
 
@@ -473,12 +458,13 @@ public class XPathUtil {
                     int end = step.indexOf(']');
                     stepName = step.substring(0, start);
                     String s = step.substring(start + 1, end);
-                    Scanner scanner = new Scanner(s);
-                    if (scanner.hasNextInt()) {
-                        index = scanner.nextInt();
-                        isIndexed = true;
-                    } else {
-                        predicate = s;
+                    try (Scanner scanner = new Scanner(s)) {
+                        if (scanner.hasNextInt()) {
+                            index = scanner.nextInt();
+                            isIndexed = true;
+                        } else {
+                            predicate = s;
+                        }
                     }
                 }
                 if (step.charAt(0) == '@') {
@@ -516,7 +502,7 @@ public class XPathUtil {
         // root
         // node as it is redundant
         if (root != null && steps.size() > 1) {
-            Step step = (Step) steps.get(0);
+            Step step = steps.get(0);
             Name rootName = root.getName();
             QName stepName = step.getName();
             if (Types.equals(rootName, stepName)) {
@@ -536,8 +522,6 @@ public class XPathUtil {
         if (prefixedName == null) {
             throw new NullPointerException("prefixedName");
         }
-
-        QName name = null;
 
         String prefix;
         final String namespaceUri;
@@ -586,7 +570,7 @@ public class XPathUtil {
             namespaceUri = namespaces.getURI(prefix);
         }
 
-        name = new QName(namespaceUri, localName, prefix);
+        QName name = new QName(namespaceUri, localName, prefix);
 
         return name;
     }

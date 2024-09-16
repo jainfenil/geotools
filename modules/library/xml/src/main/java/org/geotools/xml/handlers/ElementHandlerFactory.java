@@ -45,8 +45,8 @@ public class ElementHandlerFactory {
     public static final String KEY = "org.geotools.xml.handlers.ElementHandlerFactory_KEY";
 
     private Logger logger;
-    private Map targSchemas = new HashMap(); // maps prefix -->> Schema
-    private Map prefixURIs = new HashMap(); // maps prefix -->> URI
+    private Map<URI, Schema> targSchemas = new HashMap<>(); // maps URI -->> Schema
+    private Map<String, URI> prefixURIs = new HashMap<>(); // maps prefix -->> URI
     protected URI defaultNS = null;
 
     /**
@@ -60,7 +60,7 @@ public class ElementHandlerFactory {
 
     /** @see org.xml.sax.ContentHandler#endPrefixMapping(java.lang.String) */
     public void endPrefixMapping(String prefix) {
-        URI s = (URI) prefixURIs.remove(prefix);
+        URI s = prefixURIs.remove(prefix);
 
         if (s != null) {
             targSchemas.remove(s);
@@ -144,9 +144,6 @@ public class ElementHandlerFactory {
      * Creates an element handler for the element specified by name and namespace. Will return null
      * if a suitable handler is not found.
      *
-     * @param namespaceURI
-     * @param localName
-     * @throws SAXException
      * @see ElementHandlerFactory#createElementHandler(Element)
      */
     public XMLElementHandler createElementHandler(URI namespaceURI, String localName)
@@ -163,7 +160,7 @@ public class ElementHandlerFactory {
         logger.finest(
                 "Trying to create an element handler for " + localName + " :: " + namespaceURI);
 
-        Schema s = (Schema) targSchemas.get(namespaceURI);
+        Schema s = targSchemas.get(namespaceURI);
 
         if (s == null) {
             logger.finest("Could not find Schema " + namespaceURI);
@@ -179,10 +176,10 @@ public class ElementHandlerFactory {
             return null;
         }
 
-        for (int i = 0; i < eth.length; i++) {
-            String name = eth[i].getName();
+        for (Element element : eth) {
+            String name = element.getName();
             if (localName.equalsIgnoreCase(name) || name.equals(IgnoreHandler.NAME)) {
-                return createElementHandler(eth[i]);
+                return createElementHandler(element);
             }
         }
 
@@ -194,7 +191,6 @@ public class ElementHandlerFactory {
      * Creates an element handler based on the element provided.
      *
      * @param eth Element
-     * @throws SAXException
      */
     public XMLElementHandler createElementHandler(Element eth) throws SAXException {
         Type type = eth.getType();
@@ -210,7 +206,7 @@ public class ElementHandlerFactory {
     }
 
     public URI getNamespace(String prefix) {
-        URI s = (URI) prefixURIs.get(prefix);
+        URI s = prefixURIs.get(prefix);
         return s;
     }
 }

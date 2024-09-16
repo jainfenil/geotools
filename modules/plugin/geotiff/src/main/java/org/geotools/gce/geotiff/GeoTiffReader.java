@@ -34,12 +34,17 @@
  */
 package org.geotools.gce.geotiff;
 
+import it.geosolutions.imageio.core.BasicAuthURI;
 import it.geosolutions.imageio.maskband.DatasetLayout;
 import it.geosolutions.imageio.utilities.ImageIOUtilities;
+import it.geosolutions.imageioimpl.plugins.cog.CogImageInputStreamSpi;
+import it.geosolutions.imageioimpl.plugins.cog.CogSourceSPIProvider;
 import it.geosolutions.imageioimpl.plugins.tiff.TIFFImageReaderSpi;
 import it.geosolutions.imageioimpl.plugins.tiff.TiffDatasetLayoutImpl;
 import it.geosolutions.jaiext.range.NoDataContainer;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.ColorModel;
 import java.awt.image.SampleModel;
@@ -66,6 +71,7 @@ import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageInputStreamSpi;
+import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
@@ -131,6 +137,8 @@ import org.opengis.referencing.operation.TransformException;
  */
 public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridCoverage2DReader {
 
+    private static final String DEFAULT_COVERAGE_NAME = "geotiff_coverage";
+
     /** Logger for the {@link GeoTiffReader} class. */
     private Logger LOGGER = org.geotools.util.logging.Logging.getLogger(GeoTiffReader.class);
 
@@ -147,8 +155,10 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
     static boolean OVERRIDE_INNER_CRS =
             Boolean.valueOf(System.getProperty(GeoTiffReader.OVERRIDE_CRS_SWITCH, "True"));
 
-    /** SPI for creating tiff readers in ImageIO tools */
-    private static final TIFFImageReaderSpi READER_SPI = new TIFFImageReaderSpi();
+    /** SPI for creating tiff readers in ImageIO tools when not using COG */
+    private static final TIFFImageReaderSpi TIFF_READER_SPI = new TIFFImageReaderSpi();
+
+    private ImageReaderSpi readerSpi;
 
     /** Adapter for the GeoTiff crs. */
     private GeoTiffMetadata2CRSAdapter gtcs;
@@ -177,7 +187,6 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
      * Creates a new instance of GeoTiffReader
      *
      * @param input the GeoTiff file
-     * @throws DataSourceException
      */
     public GeoTiffReader(Object input) throws DataSourceException {
         this(input, new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE));
@@ -188,7 +197,6 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
      *
      * @param input the GeoTiff file
      * @param uHints user-supplied hints TODO currently are unused
-     * @throws DataSourceException
      */
     public GeoTiffReader(Object input, Hints uHints) throws DataSourceException {
         super(input, uHints);
@@ -199,7 +207,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
         //
         // /////////////////////////////////////////////////////////////////////
         try {
-
+            readerSpi = TIFF_READER_SPI;
             // setting source
             if (input instanceof URL) {
                 final URL sourceURL = (URL) input;
@@ -216,7 +224,12 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             // /////////////////////////////////////////////////////////////////////
             if ((source instanceof InputStream) || (source instanceof ImageInputStream))
                 closeMe = false;
-            if (source instanceof ImageInputStream) inStream = (ImageInputStream) source;
+            if (source instanceof CogSourceSPIProvider) {
+                CogSourceSPIProvider readerInputObject = (CogSourceSPIProvider) input;
+                readerSpi = readerInputObject.getReaderSpi();
+                inStreamSPI = readerInputObject.getStreamSpi();
+                inStream = readerInputObject.getStream();
+            } else if (source instanceof ImageInputStream) inStream = (ImageInputStream) source;
             else {
 
                 inStreamSPI = ImageIOExt.getImageInputStreamSPI(source);
@@ -256,7 +269,8 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             // Coverage name
             //
             // /////////////////////////////////////////////////////////////////////
-            coverageName = source instanceof File ? ((File) source).getName() : "geotiff_coverage";
+
+            coverageName = extractCoverageName();
             final int dotIndex = coverageName.lastIndexOf('.');
             if (dotIndex != -1 && dotIndex != coverageName.length())
                 coverageName = coverageName.substring(0, dotIndex);
@@ -277,12 +291,22 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
         }
     }
 
-    /**
-     * Collect georeferencing information about this geotiff.
-     *
-     * @param hints
-     * @throws DataSourceException
-     */
+    private String extractCoverageName() {
+        if (source instanceof File) {
+            return ((File) source).getName();
+        } else if (source instanceof CogSourceSPIProvider) {
+            BasicAuthURI uri = ((CogSourceSPIProvider) source).getCogUri();
+            String path = uri.getUri().getPath();
+            int indexOf = path.lastIndexOf("/");
+            path = path.substring(indexOf + 1);
+            int extensionIndex = path.lastIndexOf(".");
+            String name = extensionIndex > 0 ? path.substring(0, extensionIndex) : path;
+            return name;
+        }
+        return DEFAULT_COVERAGE_NAME;
+    }
+
+    /** Collect georeferencing information about this geotiff. */
     private void getHRInfo(Hints hints) throws DataSourceException {
         ImageReader reader = null;
         ImageReader ovrReader = null;
@@ -293,7 +317,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             // Get a reader for this format
             //
             // //
-            reader = READER_SPI.createReaderInstance();
+            reader = readerSpi.createReaderInstance();
 
             // //
             //
@@ -369,6 +393,15 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                         new MaskOverviewProvider(
                                 dtLayout, new File(path.substring(0, path.length() - 4)));
                 hasMaskOvrProvider = true;
+            } else if (source instanceof CogSourceSPIProvider) {
+                CogSourceSPIProvider cogSourceProvider = (CogSourceSPIProvider) source;
+                maskOvrProvider =
+                        new MaskOverviewProvider(
+                                null,
+                                cogSourceProvider.getSourceUrl(),
+                                new MaskOverviewProvider.SpiHelper(cogSourceProvider),
+                                false);
+                hasMaskOvrProvider = true;
             }
 
             // //
@@ -420,7 +453,8 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                     crs = AbstractGridFormat.getDefaultCRS();
                 } else {
                     throw new DataSourceException(
-                            "Raster to Model Transformation is not available");
+                            "Raster to Model Transformation is not available for: "
+                                    + getSourceAsFile());
                 }
             }
 
@@ -455,7 +489,8 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                     // Setting the overview file
                     ovrSource = extOvrFile;
                     ovrInStreamSPI = ImageIOExt.getImageInputStreamSPI(extOvrFile);
-                    ovrReader = READER_SPI.createReaderInstance();
+
+                    ovrReader = TIFF_READER_SPI.createReaderInstance();
                     ovrStream =
                             ovrInStreamSPI.createInputStreamInstance(
                                     extOvrFile, ImageIO.getUseCache(), ImageIO.getCacheDirectory());
@@ -554,8 +589,8 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
         // Checking params
         //
         if (params != null) {
-            for (int i = 0; i < params.length; i++) {
-                final ParameterValue param = (ParameterValue) params[i];
+            for (GeneralParameterValue generalParameterValue : params) {
+                final ParameterValue param = (ParameterValue) generalParameterValue;
                 final ReferenceIdentifier name = param.getDescriptor().getName();
                 if (name.equals(AbstractGridFormat.READ_GRIDGEOMETRY2D.getName())) {
                     final GridGeometry2D gg = (GridGeometry2D) param.getValue();
@@ -627,19 +662,11 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             if (maskOvrProvider.isExternalOverview(imageChoice)) {
                 pbjRead.add(
                         maskOvrProvider
-                                .getExternalOverviewInputStreamSpi()
-                                .createInputStreamInstance(
-                                        maskOvrProvider.getOvrURL(),
-                                        ImageIO.getUseCache(),
-                                        ImageIO.getCacheDirectory()));
+                                .getSourceSpiProvider()
+                                .getCompatibleSourceProvider(maskOvrProvider.getOvrURL())
+                                .getStream());
             } else {
-                pbjRead.add(
-                        maskOvrProvider
-                                .getInputStreamSpi()
-                                .createInputStreamInstance(
-                                        maskOvrProvider.getFileURL(),
-                                        ImageIO.getUseCache(),
-                                        ImageIO.getCacheDirectory()));
+                pbjRead.add(maskOvrProvider.getSourceSpiProvider().getStream());
             }
             pbjRead.add(maskOvrProvider.getOverviewIndex(imageChoice));
         } else {
@@ -649,17 +676,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                                 ovrSource, ImageIO.getUseCache(), ImageIO.getCacheDirectory()));
                 pbjRead.add(imageChoice - extOvrImgChoice);
             } else {
-                if (inStream instanceof ImageInputStream && !closeMe) {
-                    pbjRead.add(inStream);
-                } else {
-                    pbjRead.add(
-                            inStreamSPI != null
-                                    ? inStreamSPI.createInputStreamInstance(
-                                            source,
-                                            ImageIO.getUseCache(),
-                                            ImageIO.getCacheDirectory())
-                                    : ImageIO.createImageInputStream(source));
-                }
+                pbjRead.add(getImageInputStream());
                 // Setting correct ImageChoice (taking into account overviews and masks)
                 int overviewImageIndex = dtLayout.getInternalOverviewImageIndex(imageChoice);
                 int index = overviewImageIndex >= 0 ? overviewImageIndex : 0;
@@ -672,12 +689,19 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
         pbjRead.add(null);
         pbjRead.add(null);
         pbjRead.add(readP);
-        pbjRead.add(READER_SPI.createReaderInstance());
+        pbjRead.add(readerSpi.createReaderInstance());
         PlanarImage coverageRaster =
                 JAI.create("ImageRead", pbjRead, newHints != null ? newHints : null);
 
         // applying rescale if needed
         if (rescalePixels) {
+            if (!Double.isNaN(noData)) {
+                // Force nodata settings since JAI ImageRead may lost that
+                // We have to make sure that noData pixels won't be rescaled
+                PlanarImage t = PlanarImage.wrapRenderedImage(coverageRaster);
+                t.setProperty(NoDataContainer.GC_NODATA, new NoDataContainer(noData));
+                coverageRaster = t;
+            }
             coverageRaster =
                     PlanarImage.wrapRenderedImage(
                             ImageUtilities.applyRescaling(
@@ -743,6 +767,19 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
         }
     }
 
+    private ImageInputStream getImageInputStream() throws IOException {
+        if (inStream instanceof ImageInputStream && !closeMe) {
+            return inStream;
+        } else if (inStreamSPI == null) {
+            return ImageIO.createImageInputStream(source);
+        } else if (inStreamSPI instanceof CogImageInputStreamSpi) {
+            return ((CogSourceSPIProvider) source).getStream();
+        } else {
+            return inStreamSPI.createInputStreamInstance(
+                    source, ImageIO.getUseCache(), ImageIO.getCacheDirectory());
+        }
+    }
+
     /**
      * General method for reading an input ROI Mask from a file
      *
@@ -769,10 +806,8 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             pb.add(null);
             pb.add(null);
             pb.add(readP);
-            pb.add(READER_SPI.createReaderInstance());
-            raster =
-                    JAI.create(
-                            "ImageRead", pb, newHints != null ? (RenderingHints) newHints : null);
+            pb.add(readerSpi.createReaderInstance());
+            raster = JAI.create("ImageRead", pb, newHints != null ? newHints : null);
         } catch (Exception e) {
             LOGGER.severe("Unable to read input Mask Band for coverage: " + coverageName);
         }
@@ -785,6 +820,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
      *
      * @return the metadata
      */
+    @SuppressWarnings("PMD.CloseResource") // conditional, might have to close the stream, or not
     public GeoTiffIIOMetadataDecoder getMetadata() {
         GeoTiffIIOMetadataDecoder metadata = null;
         ImageReader reader = null;
@@ -810,7 +846,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                 throw new IllegalArgumentException("No input stream for the provided source");
             }
             stream.mark();
-            reader = READER_SPI.createReaderInstance();
+            reader = readerSpi.createReaderInstance();
             reader.setInput(stream);
             final IIOMetadata iioMetadata = reader.getImageMetadata(0);
             metadata = new GeoTiffIIOMetadataDecoder(iioMetadata);
@@ -853,7 +889,6 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
      *     space.
      * @param roi Optional ROI used as Mask
      * @return a {@link GridCoverage}
-     * @throws IOException
      */
     protected final GridCoverage2D createCoverage(
             PlanarImage image, MathTransform raster2Model, ROI roi) throws IOException {
@@ -866,7 +901,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
         // setting bands names.
 
         Category noDataCategory = null;
-        final Map<String, Object> properties = new HashMap<String, Object>();
+        final Map<String, Object> properties = new HashMap<>();
         if (!Double.isNaN(noData)) {
             noDataCategory =
                     new Category(
@@ -882,7 +917,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             CoverageUtilities.setROIProperty(properties, roi);
         }
 
-        Set<String> bandNames = new HashSet<String>();
+        Set<String> bandNames = new HashSet<>();
         for (int i = 0; i < numBands; i++) {
             final ColorInterpretation colorInterpretation = TypeMap.getColorInterpretation(cm, i);
             if (colorInterpretation == null)
@@ -943,21 +978,12 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             if (prjFile.exists()) {
                 // it exists then we have top read it
                 PrjFileReader projReader = null;
-                FileInputStream instream = null;
-                try {
-                    instream = new FileInputStream(prjFile);
-                    final FileChannel channel = instream.getChannel();
+
+                try (FileInputStream instream = new FileInputStream(prjFile);
+                        FileChannel channel = instream.getChannel()) {
                     projReader = new PrjFileReader(channel);
                     crs = projReader.getCoordinateReferenceSystem();
-                } catch (FileNotFoundException e) {
-                    // warn about the error but proceed, it is not fatal
-                    // we have at least the default crs to use
-                    LOGGER.log(Level.INFO, e.getLocalizedMessage(), e);
-                } catch (IOException e) {
-                    // warn about the error but proceed, it is not fatal
-                    // we have at least the default crs to use
-                    LOGGER.log(Level.INFO, e.getLocalizedMessage(), e);
-                } catch (FactoryException e) {
+                } catch (FactoryException | IOException e) {
                     // warn about the error but proceed, it is not fatal
                     // we have at least the default crs to use
                     LOGGER.log(Level.INFO, e.getLocalizedMessage(), e);
@@ -965,15 +991,6 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                     if (projReader != null)
                         try {
                             projReader.close();
-                        } catch (IOException e) {
-                            // warn about the error but proceed, it is not fatal
-                            // we have at least the default crs to use
-                            LOGGER.log(Level.FINE, e.getLocalizedMessage(), e);
-                        }
-
-                    if (instream != null)
-                        try {
-                            instream.close();
                         } catch (IOException e) {
                             // warn about the error but proceed, it is not fatal
                             // we have at least the default crs to use

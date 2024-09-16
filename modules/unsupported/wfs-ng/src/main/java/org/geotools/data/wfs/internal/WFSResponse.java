@@ -21,8 +21,8 @@ import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.namespace.QName;
-import org.geotools.data.ows.HTTPResponse;
 import org.geotools.data.ows.Response;
+import org.geotools.http.HTTPResponse;
 import org.geotools.ows.ServiceException;
 import org.geotools.util.logging.Logging;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -50,10 +50,7 @@ public class WFSResponse extends Response {
 
     private QName remoteTypeName;
 
-    /**
-     * @throws IOException
-     * @throws ServiceException
-     */
+    /** */
     public WFSResponse(WFSRequest originatingRequest, final HTTPResponse httpResponse)
             throws ServiceException, IOException {
 

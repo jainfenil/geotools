@@ -17,7 +17,7 @@
  */
 package org.geotools.ysld.encode;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
@@ -40,7 +40,7 @@ import org.opengis.filter.expression.Literal;
  * @param <T> Class of the style object
  */
 public abstract class YsldEncodeHandler<T> implements Iterator<Object> {
-    Deque<Map<String, Object>> stack = new ArrayDeque<Map<String, Object>>();
+    Deque<Map<String, Object>> stack = new ArrayDeque<>();
 
     public YsldEncodeHandler() {
         reset();
@@ -105,13 +105,7 @@ public abstract class YsldEncodeHandler<T> implements Iterator<Object> {
         return this;
     }
 
-    /**
-     * Should be used to encode values parsed with Util.name
-     *
-     * @param key
-     * @param expr
-     * @return
-     */
+    /** Should be used to encode values parsed with Util.name */
     YsldEncodeHandler<T> putName(String key, Expression expr) {
         if (expr != null && expr != Expression.NIL) {
             put(key, toObjOrNull(expr, true));
@@ -182,12 +176,7 @@ public abstract class YsldEncodeHandler<T> implements Iterator<Object> {
         return obj;
     }
 
-    /**
-     * See {@link #toObjOrNull(Expression, boolean)}
-     *
-     * @param expr
-     * @return
-     */
+    /** See {@link #toObjOrNull(Expression, boolean)} */
     Object toObjOrNull(Expression expr) {
         return toObjOrNull(expr, false);
     }
@@ -222,7 +211,6 @@ public abstract class YsldEncodeHandler<T> implements Iterator<Object> {
      * was null
      *
      * @param expr Expression to encode
-     * @param isname
      * @return {@link String} or {@link Number} representation of expr, or null if expr is null.
      */
     Object toObjOrNull(Expression expr, boolean isname) {
@@ -293,7 +281,7 @@ public abstract class YsldEncodeHandler<T> implements Iterator<Object> {
     }
 
     Map<String, Object> newMap() {
-        return new LinkedHashMap<String, Object>();
+        return new LinkedHashMap<>();
     }
 
     boolean isNull(Expression expr) {

@@ -17,7 +17,9 @@
  */
 package org.geotools.coverageio.gdal.srp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -87,16 +89,16 @@ public final class SRPTest extends GDALTestCase {
     @Test
     public void testFile() throws Exception {
         final File file = TestData.file(this, fileName);
-        testSource(file);
+        checkSource(file);
     }
 
     @Test
     public void testPath() throws Exception {
         final File file = TestData.file(this, fileName);
-        testSource(file.getAbsolutePath());
+        checkSource(file.getAbsolutePath());
     }
 
-    public void testSource(Object source) throws IOException {
+    public void checkSource(Object source) throws IOException {
         if (!testingEnabled()) {
             return;
         }

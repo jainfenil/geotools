@@ -17,24 +17,38 @@
  */
 package org.geotools.data.mongodb;
 
-import static org.geotools.data.mongodb.MongoSchemaFileStore.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.geotools.data.mongodb.MongoSchemaFileStore.SUFFIX_json;
+import static org.geotools.data.mongodb.MongoSchemaFileStore.typeName;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.io.IOUtils;
+import org.geotools.data.mongodb.data.SchemaStoreDirectory;
+import org.geotools.data.mongodb.data.SchemaStoreDirectoryProvider;
 import org.geotools.feature.NameImpl;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 /** @author tkunicki@boundlessgeo.com */
 public class MongoSchemaFileStoreTest extends MongoSchemaStoreTest<MongoSchemaFileStore> {
 
-    Map<MongoSchemaFileStore, File> directories = new HashMap<MongoSchemaFileStore, File>();
+    Map<MongoSchemaFileStore, File> directories = new HashMap<>();
+
+    static SchemaStoreDirectoryProvider direcotryProvider;
 
     @Override
     MongoSchemaFileStore createUniqueStore() throws IOException {
@@ -74,7 +88,7 @@ public class MongoSchemaFileStoreTest extends MongoSchemaStoreTest<MongoSchemaFi
         File test = createUniqueTempDirectory();
         try {
             assertThat(test.exists(), is(equalTo(false)));
-            MongoSchemaStore mss = new MongoSchemaFileStore(test.toURI().toString());
+            new MongoSchemaFileStore(test.toURI().toString());
             assertThat(test.exists(), is(equalTo(true)));
             assertThat(test.isDirectory(), is(equalTo(true)));
         } finally {
@@ -87,7 +101,7 @@ public class MongoSchemaFileStoreTest extends MongoSchemaStoreTest<MongoSchemaFi
         File test = createUniqueTempDirectory();
         try {
             assertThat(test.exists(), is(equalTo(false)));
-            MongoSchemaStore mss = new MongoSchemaFileStore(test.toURI());
+            new MongoSchemaFileStore(test.toURI());
             assertThat(test.exists(), is(equalTo(true)));
             assertThat(test.isDirectory(), is(equalTo(true)));
         } finally {
@@ -96,11 +110,114 @@ public class MongoSchemaFileStoreTest extends MongoSchemaStoreTest<MongoSchemaFi
     }
 
     @Test
+    public void test_Constructor_URL() throws Exception {
+        final String mockFileURL = "https://mock.url.com/stations.json";
+
+        MockHTTPClient mockHttpClient = new MockHTTPClient();
+        byte[] responseBytes =
+                IOUtils.toByteArray(getClass().getResourceAsStream("stations-schema.json"));
+        MockHttpResponse mockResponse = new MockHttpResponse(responseBytes, "text/json");
+        mockHttpClient.expectGet(mockFileURL, mockResponse);
+        SchemaStoreDirectory directory = SchemaStoreDirectoryProvider.getLowestPriority();
+
+        File downloadedFile =
+                MongoUtil.downloadSchemaFile(
+                        "mockshema", new URL(mockFileURL), mockHttpClient, directory);
+
+        MongoSchemaStore mss = new MongoSchemaFileStore(downloadedFile.getParentFile().toURI());
+        assertEquals(1, mss.typeNames().size());
+        SimpleFeatureType type = mss.retrieveSchema(new NameImpl("stations"));
+        assertNotNull(type);
+        mss.deleteSchema(new NameImpl("stations"));
+        // cleanup
+        Files.walk(new File(directory.getDirectory(), "mockshema").toPath())
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
+    }
+
+    @Test
+    public void test_Constructor_ZIP_URL() throws Exception {
+        final String mockFileURL = "https://mock.url.com/schemas.zip";
+
+        MockHTTPClient mockHttpClient = new MockHTTPClient();
+        byte[] responseBytes = IOUtils.toByteArray(getClass().getResourceAsStream("schemas.zip"));
+        MockHttpResponse mockResponse = new MockHttpResponse(responseBytes, "application/zip");
+        mockHttpClient.expectGet(mockFileURL, mockResponse);
+        SchemaStoreDirectory directory = SchemaStoreDirectoryProvider.getLowestPriority();
+        File downloadedFile =
+                MongoUtil.downloadSchemaFile(
+                        "mockshema", new URL(mockFileURL), mockHttpClient, directory);
+        File extractedLocation =
+                MongoUtil.extractZipFile(downloadedFile.getParentFile(), downloadedFile);
+
+        MongoSchemaStore mss = new MongoSchemaFileStore(extractedLocation.toURI());
+        // retreive test
+        assertEquals(2, mss.typeNames().size());
+        SimpleFeatureType type = mss.retrieveSchema(new NameImpl("stations"));
+        assertNotNull(type);
+        SimpleFeatureType type2 = mss.retrieveSchema(new NameImpl("stations2"));
+        assertNotNull(type2);
+
+        // delete test
+        mss.deleteSchema(new NameImpl("stations2"));
+        assertEquals(1, mss.typeNames().size());
+
+        // store test
+        mss.storeSchema(type2);
+        assertEquals(2, mss.typeNames().size());
+        // cleanup
+        Files.walk(new File(directory.getDirectory(), "mockshema").toPath())
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
+    }
+
+    @Test
+    public void test_Constructor_ZIP_DIR_URL() throws Exception {
+        final String mockFileURL = "https://mock.url.com/schemasdir.zip";
+
+        MockHTTPClient mockHttpClient = new MockHTTPClient();
+        byte[] responseBytes =
+                IOUtils.toByteArray(getClass().getResourceAsStream("schemas_dir.zip"));
+        MockHttpResponse mockResponse = new MockHttpResponse(responseBytes, "application/zip");
+        mockHttpClient.expectGet(mockFileURL, mockResponse);
+        SchemaStoreDirectory directory = SchemaStoreDirectoryProvider.getLowestPriority();
+        File downloadedFile =
+                MongoUtil.downloadSchemaFile(
+                        "mockshema", new URL(mockFileURL), mockHttpClient, directory);
+        File extractedLocation =
+                MongoUtil.extractZipFile(downloadedFile.getParentFile(), downloadedFile);
+
+        MongoSchemaStore mss = new MongoSchemaFileStore(extractedLocation.toURI());
+        // retreive test
+        assertEquals(2, mss.typeNames().size());
+        SimpleFeatureType type = mss.retrieveSchema(new NameImpl("stations"));
+        assertNotNull(type);
+        SimpleFeatureType type2 = mss.retrieveSchema(new NameImpl("stations2"));
+        assertNotNull(type2);
+
+        // delete test
+        mss.deleteSchema(new NameImpl("stations2"));
+        assertEquals(1, mss.typeNames().size());
+
+        // store test
+        mss.storeSchema(type2);
+        assertEquals(2, mss.typeNames().size());
+
+        // cleanup
+        Files.walk(new File(directory.getDirectory(), "mockshema").toPath())
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
+    }
+
+    @Test
     public void test_Constructor_File() throws IOException {
         File test = createUniqueTempDirectory();
         try {
             assertThat(test.exists(), is(equalTo(false)));
-            MongoSchemaStore mss = new MongoSchemaFileStore(test);
+            new MongoSchemaFileStore(test);
             assertThat(test.exists(), is(equalTo(true)));
             assertThat(test.isDirectory(), is(equalTo(true)));
         } finally {

@@ -16,7 +16,15 @@
  */
 package org.geotools.renderer.lite;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FontFormatException;
+import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.HeadlessException;
+import java.awt.Panel;
+import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
@@ -221,14 +229,7 @@ public abstract class RendererBaseTest {
         }
     }
 
-    /**
-     * Utility to quickly render a set of vector data on top of a buffered image
-     *
-     * @param sources
-     * @param styles
-     * @return
-     * @throws Exception
-     */
+    /** Utility to quickly render a set of vector data on top of a buffered image */
     public static BufferedImage render(MapContent map) throws Exception {
         StreamingRenderer r = new StreamingRenderer();
         r.setMapContent(map);
@@ -236,14 +237,7 @@ public abstract class RendererBaseTest {
         return RendererBaseTest.showRender("testPointLabeling", r, 5000, map.getMaxBounds());
     }
 
-    /**
-     * Load a style from the test-data directory associated with the object.
-     *
-     * @param loader
-     * @param sldFilename
-     * @return
-     * @throws IOException
-     */
+    /** Load a style from the test-data directory associated with the object. */
     public static Style loadStyle(Object loader, String sldFilename) throws IOException {
         StyleFactory factory = CommonFactoryFinder.getStyleFactory(null);
 
@@ -254,14 +248,7 @@ public abstract class RendererBaseTest {
         return style;
     }
 
-    /**
-     * Load a Symbology Encoding style from the test-data directory associated with the object.
-     *
-     * @param loader
-     * @param sldFilename
-     * @return
-     * @throws IOException
-     */
+    /** Load a Symbology Encoding style from the test-data directory associated with the object. */
     protected static Style loadSEStyle(Object loader, String sldFilename) throws IOException {
         try {
             final java.net.URL surl = TestData.getResource(loader, sldFilename);
@@ -290,9 +277,9 @@ public abstract class RendererBaseTest {
                 }
 
                 if (styles != null) {
-                    for (int j = 0; j < styles.length; i++) {
-                        if (!(styles[j] instanceof NamedStyle)) {
-                            return styles[j];
+                    for (Style s : styles) {
+                        if (!(s instanceof NamedStyle)) {
+                            return s;
                         }
                     }
                 }
@@ -306,28 +293,14 @@ public abstract class RendererBaseTest {
         }
     }
 
-    /**
-     * Checks the pixel i/j has the specified color
-     *
-     * @param image
-     * @param i
-     * @param j
-     * @param color
-     */
+    /** Checks the pixel i/j has the specified color */
     public static void assertPixel(BufferedImage image, int i, int j, Color color) {
         Color actual = getPixelColor(image, i, j);
 
         Assert.assertEquals(color, actual);
     }
 
-    /**
-     * Checks the pixel i/j has the specified color
-     *
-     * @param image
-     * @param i
-     * @param j
-     * @param color
-     */
+    /** Checks the pixel i/j has the specified color */
     public static void assertPixel(BufferedImage image, int i, int j, Color color, int tolerance) {
         Color actual = getPixelColor(image, i, j);
 
@@ -336,15 +309,7 @@ public abstract class RendererBaseTest {
         Assert.assertTrue(Math.abs(color.getBlue() - actual.getBlue()) < tolerance);
     }
 
-    /**
-     * Gets a specific pixel color from the specified buffered image
-     *
-     * @param image
-     * @param i
-     * @param j
-     * @param color
-     * @return
-     */
+    /** Gets a specific pixel color from the specified buffered image */
     private static Color getPixelColor(BufferedImage image, int i, int j) {
         ColorModel cm = image.getColorModel();
         Raster raster = image.getRaster();

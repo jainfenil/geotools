@@ -49,10 +49,7 @@ public class GenericGeometryEncoder extends GeometryEncoder<Geometry> {
         this(encoder, "gml", GML.NAMESPACE);
     }
 
-    /**
-     * @param encoder
-     * @param gmlPrefix
-     */
+    /** */
     public GenericGeometryEncoder(Encoder encoder, String gmlPrefix, String gmlUri) {
         super(encoder);
         init(encoder, gmlPrefix, gmlUri);
@@ -87,7 +84,7 @@ public class GenericGeometryEncoder extends GeometryEncoder<Geometry> {
         } else if (geometry instanceof MultiLineString) {
             MultiLineStringEncoder multiLineString =
                     new MultiLineStringEncoder(encoder, gmlPrefix, gmlUri, true);
-            multiLineString.encode((MultiLineString) geometry, atts, handler, parentId);
+            multiLineString.encode(geometry, atts, handler, parentId);
         } else if (geometry instanceof MultiPoint) {
             MultiPointEncoder multiPoint = new MultiPointEncoder(encoder, gmlPrefix, gmlUri);
             multiPoint.encode((MultiPoint) geometry, atts, handler, parentId);

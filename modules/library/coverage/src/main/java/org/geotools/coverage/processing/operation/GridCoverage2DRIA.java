@@ -139,7 +139,6 @@ public class GridCoverage2DRIA extends GeometricOpImage {
      * @param nodata the nodata values to set for cells not covered by src but included in dst. All
      *     bands will use the related nodata value.
      * @param hints hints to use for the Rendering, Actually only ImageLayout is considered
-     * @param roi
      * @return an instance of Coverage2RenderedImageAdapter
      */
     public static GridCoverage2DRIA create(
@@ -212,7 +211,6 @@ public class GridCoverage2DRIA extends GeometricOpImage {
      * @param dst the provider of the final grid
      * @param nodata the nodata values to set for cells not covered by src but included in dst. All
      *     bands will use the related nodata value.
-     * @param roi
      * @return an instance of Coverage2RenderedImageAdapter
      */
     public static GridCoverage2DRIA create(
@@ -261,6 +259,7 @@ public class GridCoverage2DRIA extends GeometricOpImage {
                 hints);
     }
 
+    @SuppressWarnings("PMD.ReplaceVectorWithList")
     protected GridCoverage2DRIA(
             final GridCoverage2D src,
             final GridGeometry2D dst,
@@ -303,9 +302,7 @@ public class GridCoverage2DRIA extends GeometricOpImage {
 
             src2dstCRSTransform = CRS.findMathTransform(sourceCRS, targetCRS, true);
             dst2srcCRSTransform = src2dstCRSTransform.inverse();
-        } catch (FactoryException e) {
-            throw new IllegalArgumentException("Can't create a transform between CRS", e);
-        } catch (NoninvertibleTransformException e) {
+        } catch (FactoryException | NoninvertibleTransformException e) {
             throw new IllegalArgumentException("Can't create a transform between CRS", e);
         }
 
@@ -581,7 +578,6 @@ public class GridCoverage2DRIA extends GeometricOpImage {
         // If a ROI is present, then only the part contained inside the current tile bounds is
         // taken.
         if (hasROI) {
-            Rectangle srcRectExpanded = null;
             int x = (int) destRect.getMinX();
             int y = (int) destRect.getMinY();
             int w = (int) destRect.getWidth();
@@ -602,7 +598,7 @@ public class GridCoverage2DRIA extends GeometricOpImage {
                 maxX = xi > maxX ? xi : maxX;
                 maxY = yi > maxY ? yi : maxY;
             }
-            srcRectExpanded =
+            Rectangle srcRectExpanded =
                     new Rectangle(
                             (int) minX,
                             (int) minY,
@@ -1441,8 +1437,6 @@ public class GridCoverage2DRIA extends GeometricOpImage {
     /**
      * This method provides a lazy initialization of the image associated to the ROI. The method
      * uses the Double-checked locking in order to maintain thread-safety
-     *
-     * @return
      */
     private PlanarImage getImage() {
         if (roiImage == null) {
@@ -1561,12 +1555,11 @@ public class GridCoverage2DRIA extends GeometricOpImage {
                 GridCoverage2D input =
                         new GridCoverageFactory(GeoTools.getDefaultHints())
                                 .create(name, constantImage, op.src.getEnvelope());
-                PlanarImage roiImage = null;
 
                 // Creating warped roi by the same way (Warp, Interpolation, source ROI) we warped
                 // the
                 // input image.
-                roiImage = create(input, op.dst, new double[] {0d}, null, srcROI);
+                PlanarImage roiImage = create(input, op.dst, new double[] {0d}, null, srcROI);
 
                 ROI dstROI = new ROI(roiImage, 1);
 
@@ -1581,5 +1574,12 @@ public class GridCoverage2DRIA extends GeometricOpImage {
 
             return java.awt.Image.UndefinedProperty;
         }
+    }
+
+    @Override
+    // PlanarImage does not have generics, overrides this method
+    @SuppressWarnings({"unchecked", "PMD.ReplaceVectorWithList"})
+    public Vector<RenderedImage> getSources() {
+        return super.getSources();
     }
 }

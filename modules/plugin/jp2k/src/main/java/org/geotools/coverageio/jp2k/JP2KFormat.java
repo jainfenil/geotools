@@ -28,7 +28,6 @@ import javax.imageio.stream.ImageInputStream;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
-import org.geotools.data.DataSourceException;
 import org.geotools.parameter.DefaultParameterDescriptor;
 import org.geotools.parameter.DefaultParameterDescriptorGroup;
 import org.geotools.parameter.ParameterGroup;
@@ -65,7 +64,7 @@ public final class JP2KFormat extends AbstractGridFormat implements Format {
      * the use of the ImageReadMT operation of the ImageIO-Ext.
      */
     public static final DefaultParameterDescriptor<Boolean> USE_MULTITHREADING =
-            new DefaultParameterDescriptor<Boolean>(
+            new DefaultParameterDescriptor<>(
                     USE_MT,
                     Boolean.class,
                     new Boolean[] {Boolean.TRUE, Boolean.FALSE},
@@ -81,7 +80,7 @@ public final class JP2KFormat extends AbstractGridFormat implements Format {
 
     /** Sets the metadata information. */
     protected void setInfo() {
-        HashMap<String, String> info = new HashMap<String, String>();
+        HashMap<String, String> info = new HashMap<>();
         info.put("name", "JP2K (Direct) ");
         info.put("description", "JP2K (Direct) Coverage Format");
         info.put("vendor", "Geotools");
@@ -109,15 +108,7 @@ public final class JP2KFormat extends AbstractGridFormat implements Format {
     public AbstractGridCoverage2DReader getReader(Object source, Hints hints) {
         try {
             return new JP2KReader(source, hints);
-        } catch (MismatchedDimensionException e) {
-            if (LOGGER.isLoggable(Level.WARNING))
-                LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
-            return null;
-        } catch (DataSourceException e) {
-            if (LOGGER.isLoggable(Level.WARNING))
-                LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
-            return null;
-        } catch (IOException e) {
+        } catch (MismatchedDimensionException | IOException e) {
             if (LOGGER.isLoggable(Level.WARNING))
                 LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
             return null;
@@ -167,14 +158,12 @@ public final class JP2KFormat extends AbstractGridFormat implements Format {
     /** @see org.geotools.data.coverage.grid.AbstractGridFormat#accepts(java.lang.Object input) */
     @Override
     public boolean accepts(Object input, Hints hints) {
-        try {
-
-            // Directories aren't accepted
-            if (input != null && input instanceof File) {
-                final File directory = (File) input;
-                if (!directory.exists() || directory.isDirectory()) return false;
-            }
-            final ImageInputStream stream = ImageIO.createImageInputStream(input);
+        // Directories aren't accepted
+        if (input != null && input instanceof File) {
+            final File directory = (File) input;
+            if (!directory.exists() || directory.isDirectory()) return false;
+        }
+        try (ImageInputStream stream = ImageIO.createImageInputStream(input)) {
             if (spi == null) {
                 ImageReader reader = Utils.getReader(stream);
                 if (reader != null) spi = reader.getOriginatingProvider();

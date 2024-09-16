@@ -50,9 +50,9 @@ public class WPSFactory extends SingleProcessFactory {
 
     private String description;
 
-    private Map<String, Parameter<?>> parameterInfo = new TreeMap<String, Parameter<?>>();
+    private Map<String, Parameter<?>> parameterInfo = new TreeMap<>();
 
-    private Map<String, Parameter<?>> resultInfo = new TreeMap<String, Parameter<?>>();
+    private Map<String, Parameter<?>> resultInfo = new TreeMap<>();
 
     public WPSFactory(ProcessDescriptionType pdt, URL serverUrl) {
         this.pdt = pdt;
@@ -62,8 +62,6 @@ public class WPSFactory extends SingleProcessFactory {
 
     /**
      * Go through the ProcessDescriptionType object tree and set this flactory's values based on it.
-     *
-     * @param pdt
      */
     private void buildValuesFromProcessDescriptionType() {
         this.version = this.pdt.getProcessVersion();

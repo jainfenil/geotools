@@ -78,7 +78,6 @@ public class OptNode extends OptGraphable implements Node {
     /**
      * Not supported.
      *
-     * @throws UnsupportedOperationException
      * @see Node#remove(Edge)
      */
     @Override
@@ -89,10 +88,10 @@ public class OptNode extends OptGraphable implements Node {
     /** @see Node#getEdge(Node) */
     @Override
     public Edge getEdge(Node other) {
-        for (int i = 0; i < m_edges.length; i++) {
-            if (m_edges[i].getNodeA().equals(this) && m_edges[i].getNodeB().equals(other)
-                    || m_edges[i].getNodeB().equals(this) && m_edges[i].getNodeA().equals(other))
-                return (m_edges[i]);
+        for (Edge m_edge : m_edges) {
+            if (m_edge.getNodeA().equals(this) && m_edge.getNodeB().equals(other)
+                    || m_edge.getNodeB().equals(this) && m_edge.getNodeA().equals(other))
+                return m_edge;
         }
         return (null);
     }
@@ -101,10 +100,10 @@ public class OptNode extends OptGraphable implements Node {
     @Override
     public List<Edge> getEdges(Node other) {
         ArrayList<Edge> edges = new ArrayList<>();
-        for (int i = 0; i < m_edges.length; i++) {
-            if (m_edges[i].getNodeA().equals(this) && m_edges[i].getNodeB().equals(other)
-                    || m_edges[i].getNodeB().equals(this) && m_edges[i].getNodeA().equals(other))
-                edges.add(m_edges[i]);
+        for (Edge m_edge : m_edges) {
+            if (m_edge.getNodeA().equals(this) && m_edge.getNodeB().equals(other)
+                    || m_edge.getNodeB().equals(this) && m_edge.getNodeA().equals(other))
+                edges.add(m_edge);
         }
         return (edges);
     }
@@ -123,8 +122,8 @@ public class OptNode extends OptGraphable implements Node {
     public List<Edge> getEdges() {
         ArrayList<Edge> edges = new ArrayList<>();
 
-        for (int i = 0; i < m_edges.length; i++) {
-            edges.add(m_edges[i]);
+        for (Edge m_edge : m_edges) {
+            edges.add(m_edge);
         }
 
         return (edges);
@@ -160,8 +159,6 @@ public class OptNode extends OptGraphable implements Node {
      * written out upon serialization, they must be recreated upon deserialization.
      *
      * @param in Object input stream containing serialized objects.
-     * @throws IOException
-     * @throws ClassNotFoundException
      */
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
 
@@ -178,8 +175,6 @@ public class OptNode extends OptGraphable implements Node {
      * store its degree explicitly, it must be written to the output stream.
      *
      * @param out Object output stream containing serialized objects.
-     * @throws IOException
-     * @throws ClassNotFoundException
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
 
@@ -205,11 +200,7 @@ public class OptNode extends OptGraphable implements Node {
             m_node = node;
         }
 
-        /**
-         * Not supported.
-         *
-         * @throws UnsupportedOperationException
-         */
+        /** Not supported. */
         @Override
         public void remove() {
             throw new UnsupportedOperationException(getClass().getName() + "#remove()");

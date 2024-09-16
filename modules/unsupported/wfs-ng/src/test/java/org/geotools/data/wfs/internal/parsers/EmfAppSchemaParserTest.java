@@ -16,7 +16,7 @@
  */
 package org.geotools.data.wfs.internal.parsers;
 
-import static org.geotools.data.wfs.WFSTestData.*;
+import static org.geotools.data.wfs.WFSTestData.url;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
@@ -46,8 +46,6 @@ public class EmfAppSchemaParserTest {
 
     /**
      * Test method for {@link EmfAppSchemaParser#parse(javax.xml.namespace.QName, java.net.URL)}.
-     *
-     * @throws IOException
      */
     @Test
     public void testParseGeoServerSimpleFeatureType() throws IOException {
@@ -89,9 +87,8 @@ public class EmfAppSchemaParserTest {
         // setting expectedAttributeCount back to 10
         final int expectedAttributeCount = 10;
 
-        SimpleFeatureType ftype =
-                testParseDescribeSimpleFeatureType(
-                        featureTypeName, schemaLocation, expectedAttributeCount);
+        // SimpleFeatureType ftype =
+        testParseDescribeSimpleFeatureType(featureTypeName, schemaLocation, expectedAttributeCount);
         /*
         for (AttributeDescriptor descriptor : ftype.getAttributeDescriptors()) {
              System.out.print(descriptor.getName().getNamespaceURI());
@@ -111,11 +108,6 @@ public class EmfAppSchemaParserTest {
     }
 
     /**
-     * @param featureTypeName
-     * @param schemaLocation
-     * @param expectedAttributeCount
-     * @return
-     * @throws IOException
      * @see {@link EmfAppSchemaParser#parseSimpleFeatureType(Configuration, QName, URL,
      *     CoordinateReferenceSystem)}
      */
@@ -127,8 +119,7 @@ public class EmfAppSchemaParserTest {
 
         Configuration configuration = new WFSConfiguration();
 
-        SimpleFeatureType featureType;
-        featureType =
+        SimpleFeatureType featureType =
                 EmfAppSchemaParser.parseSimpleFeatureType(
                         configuration, featureTypeName, schemaLocation, crs);
 
@@ -136,7 +127,7 @@ public class EmfAppSchemaParserTest {
         assertSame(crs, featureType.getCoordinateReferenceSystem());
 
         List<AttributeDescriptor> attributes = featureType.getAttributeDescriptors();
-        List<String> names = new ArrayList<String>(attributes.size());
+        List<String> names = new ArrayList<>(attributes.size());
         for (AttributeDescriptor desc : attributes) {
             names.add(desc.getLocalName());
         }

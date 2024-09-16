@@ -16,7 +16,6 @@
  */
 package org.geotools.styling.css;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -102,8 +101,6 @@ public class CssParser extends BaseParser<Object> {
     /**
      * Returns the single instance of the CSS parser. The CSSParser should not be instantiated
      * directly, Parboiled needs to do it instead.
-     *
-     * @return
      */
     public static CssParser getInstance() {
         // we need to lazily create it, otherwise Parboiled won't be able to instrument the class
@@ -117,13 +114,10 @@ public class CssParser extends BaseParser<Object> {
     /**
      * Turns the CSS provided into a {@link Stylesheet} object, will throw a {@link
      * CSSParseException} in case of syntax errors
-     *
-     * @return
-     * @throws IOException
      */
     public static Stylesheet parse(String css) throws CSSParseException {
         CssParser parser = getInstance();
-        ParseRunner<Stylesheet> runner = new ReportingParseRunner<Stylesheet>(parser.StyleSheet());
+        ParseRunner<Stylesheet> runner = new ReportingParseRunner<>(parser.StyleSheet());
         ParsingResult<Stylesheet> result = runner.run(css);
         if (result.hasErrors()) {
             throw new CSSParseException(result.parseErrors);
@@ -167,7 +161,7 @@ public class CssParser extends BaseParser<Object> {
 
                     @Override
                     public boolean run(Context ctx) {
-                        List contents = (List) pop();
+                        List<?> contents = (List) pop();
                         Selector selector = (Selector) pop();
                         String comment = null;
                         if (!ctx.getValueStack().isEmpty() && peek() instanceof String) {
@@ -179,14 +173,22 @@ public class CssParser extends BaseParser<Object> {
                             }
                         }
 
-                        final Stream stream = contents.stream();
-                        Map<Boolean, List> splitContents =
-                                (Map<Boolean, List>)
-                                        stream.collect(
-                                                Collectors.partitioningBy(
-                                                        x -> x instanceof CssRule));
-                        List<Property> properties = splitContents.get(Boolean.FALSE);
-                        List<CssRule> subRules = splitContents.get(Boolean.TRUE);
+                        final Stream<?> stream = contents.stream();
+                        Map<Boolean, List<Object>> splitContents =
+                                stream.collect(
+                                        Collectors.partitioningBy(x -> x instanceof CssRule));
+                        List<Property> properties =
+                                splitContents
+                                        .get(Boolean.FALSE)
+                                        .stream()
+                                        .map(o -> (Property) o)
+                                        .collect(Collectors.toList());
+                        List<CssRule> subRules =
+                                splitContents
+                                        .get(Boolean.TRUE)
+                                        .stream()
+                                        .map(o -> (CssRule) o)
+                                        .collect(Collectors.toList());
 
                         final CssRule rule = new CssRule(selector, properties, comment);
                         rule.nestedRules = subRules;
@@ -266,7 +268,8 @@ public class CssParser extends BaseParser<Object> {
     }
 
     Rule ClassName() {
-        return Sequence(FirstOf("mark", "stroke", "fill", "symbol", "shield"), push(match()));
+        return Sequence(
+                FirstOf("mark", "stroke", "fill", "symbol", "shield", "background"), push(match()));
     }
 
     @SuppressSubnodes
@@ -350,6 +353,7 @@ public class CssParser extends BaseParser<Object> {
         return ZeroOrMore(FirstOf(WhiteSpace(), IgnoredComment()));
     }
 
+    @SuppressWarnings("unchecked")
     Rule Property() {
         return Sequence(
                 WhiteSpaceOrIgnoredComment(),
@@ -552,11 +556,7 @@ public class CssParser extends BaseParser<Object> {
                 push(new Value.Function("url", (Value) pop())));
     }
 
-    /**
-     * Very relaxed URL matcher, as we need to match also relative urls
-     *
-     * @return
-     */
+    /** Very relaxed URL matcher, as we need to match also relative urls */
     Rule URL() {
         return FirstOf(QuotedURL(), SimpleURL());
     }
@@ -609,9 +609,9 @@ public class CssParser extends BaseParser<Object> {
                                         String("ft"),
                                         String("%"),
                                         String("deg")))),
-                new Action() {
+                new Action<Value>() {
                     @Override
-                    public boolean run(Context ctx) {
+                    public boolean run(Context<Value> ctx) {
                         String match = match();
                         if (match.endsWith("k") || match.endsWith("M") || match.endsWith("G")) {
                             match = scaleValueToString(match);
@@ -634,9 +634,9 @@ public class CssParser extends BaseParser<Object> {
 
     Rule ECQLExpression() {
         return ECQL(
-                new Action() {
+                new Action<Value>() {
                     @Override
-                    public boolean run(Context ctx) {
+                    public boolean run(Context<Value> ctx) {
                         String expression = match();
                         expression = expandEnvironmentVariables(expression);
                         try {
@@ -730,9 +730,9 @@ public class CssParser extends BaseParser<Object> {
 
     Rule ECQLSelector() {
         return ECQL(
-                new Action() {
+                new Action<Data>() {
                     @Override
-                    public boolean run(Context ctx) {
+                    public boolean run(Context<Data> ctx) {
                         String expression = match();
                         expression = expandEnvironmentVariables(expression);
                         try {
@@ -914,15 +914,18 @@ public class CssParser extends BaseParser<Object> {
                 : String(string);
     }
 
+    @SuppressWarnings("unchecked")
     <T> T pop(Class<T> clazz) {
         return (T) pop();
     }
 
     <T> List<T> popAll(Class... classes) {
         ValueStack<Object> valueStack = getContext().getValueStack();
-        List<T> result = new ArrayList<T>();
+        List<T> result = new ArrayList<>();
         while (!valueStack.isEmpty() && isInstance(classes, valueStack.peek())) {
-            result.add((T) valueStack.pop());
+            @SuppressWarnings("unchecked")
+            T cast = (T) valueStack.pop();
+            result.add(cast);
         }
         if (!valueStack.isEmpty() && valueStack.peek() == MARKER) {
             valueStack.pop();
@@ -933,8 +936,8 @@ public class CssParser extends BaseParser<Object> {
     }
 
     private boolean isInstance(Class[] classes, Object peek) {
-        for (int i = 0; i < classes.length; i++) {
-            if (classes[i].isInstance(peek)) {
+        for (Class aClass : classes) {
+            if (aClass.isInstance(peek)) {
                 return true;
             }
         }

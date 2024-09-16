@@ -69,7 +69,7 @@ public class QueryCapabilities {
      * @return whether the FeatureType this query capabilities refers to can be natively sorted by
      *     the provided list of attribtue/order pairs
      */
-    public boolean supportsSorting(SortBy[] sortAttributes) {
+    public boolean supportsSorting(SortBy... sortAttributes) {
         return (sortAttributes == null) || (sortAttributes.length == 0);
     }
 
@@ -93,8 +93,6 @@ public class QueryCapabilities {
      * Boolean#TRUE} value, if the key/value pair is there an attempt to use the provided id will be
      * made, and the operation will fail of the key cannot be parsed into a valid storage
      * identifier.
-     *
-     * @return
      */
     public boolean isUseProvidedFIDSupported() {
         return false;

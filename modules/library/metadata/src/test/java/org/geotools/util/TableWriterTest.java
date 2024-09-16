@@ -16,11 +16,11 @@
  */
 package org.geotools.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import org.junit.*;
+import org.junit.Test;
 
 /**
  * Minimal testing for TableWriter class.
@@ -67,22 +67,22 @@ public final class TableWriterTest {
      */
     @Test
     public void testToStringWithoutFlush() throws IOException {
-        final TableWriter table = new TableWriter(null, " ");
-        table.write("Source Point");
-        table.write(':');
+        try (TableWriter table = new TableWriter(null, " ")) {
+            table.write("Source Point");
+            table.write(':');
 
-        table.nextColumn();
-        table.write("1.234");
+            table.nextColumn();
+            table.write("1.234");
 
-        table.nextLine();
-        table.write("Target Point");
-        table.write(':');
-        table.nextColumn();
-        table.write("2.345");
+            table.nextLine();
+            table.write("Target Point");
+            table.write(':');
+            table.nextColumn();
+            table.write("2.345");
 
-        assertEquals(
-                "Source Point: 1.234" + LINE_SEPARATOR + "Target Point: 2.345" + LINE_SEPARATOR,
-                table.toString());
-        table.close();
+            assertEquals(
+                    "Source Point: 1.234" + LINE_SEPARATOR + "Target Point: 2.345" + LINE_SEPARATOR,
+                    table.toString());
+        }
     }
 }

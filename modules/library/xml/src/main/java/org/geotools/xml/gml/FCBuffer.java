@@ -62,12 +62,7 @@ public class FCBuffer extends Thread implements FeatureReader<SimpleFeatureType,
         super("Feature Collection Buffer");
     }
 
-    /**
-     * @param document
-     * @param capacity
-     * @param timeout
-     * @param ft Nullable
-     */
+    /** @param ft Nullable */
     protected FCBuffer(URI document, int capacity, int timeout, SimpleFeatureType ft) {
         super("Feature Collection Buffer");
         features = new SimpleFeature[capacity];
@@ -141,8 +136,6 @@ public class FCBuffer extends Thread implements FeatureReader<SimpleFeatureType,
      * specified, using the specified buffer capacity.
      *
      * @param document URL to parse
-     * @param capacity
-     * @throws SAXException
      */
     public static FeatureReader<SimpleFeatureType, SimpleFeature> getFeatureReader(
             URI document, int capacity) throws SAXException {
@@ -315,10 +308,6 @@ public class FCBuffer extends Thread implements FeatureReader<SimpleFeatureType,
             DocumentFactory.getInstance(document, hints);
 
             // start parsing until buffer part full, then yield();
-        } catch (StopException e) {
-            exception = e;
-            state = STOP;
-            yield();
         } catch (SAXException e) {
             exception = e;
             state = STOP;

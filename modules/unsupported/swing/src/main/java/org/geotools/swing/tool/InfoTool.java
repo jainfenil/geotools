@@ -83,7 +83,7 @@ public class InfoTool extends CursorTool implements TextReporterListener {
         Toolkit tk = Toolkit.getDefaultToolkit();
         ImageIcon cursorIcon = new ImageIcon(getClass().getResource(CURSOR_IMAGE));
         cursor = tk.createCustomCursor(cursorIcon.getImage(), CURSOR_HOTSPOT, TOOL_TIP);
-        helperTable = new WeakHashMap<Layer, InfoToolHelper>();
+        helperTable = new WeakHashMap<>();
     }
 
     /**
@@ -111,7 +111,6 @@ public class InfoTool extends CursorTool implements TextReporterListener {
         int n = 0;
         for (Layer layer : content.layers()) {
             if (layer.isSelected()) {
-                InfoToolHelper helper = null;
 
                 String layerName = layer.getTitle();
                 if (layerName == null || layerName.length() == 0) {
@@ -121,7 +120,7 @@ public class InfoTool extends CursorTool implements TextReporterListener {
                     layerName = layer.getFeatureSource().getSchema().getName().getLocalPart();
                 }
 
-                helper = helperTable.get(layer);
+                InfoToolHelper helper = helperTable.get(layer);
                 if (helper == null) {
                     helper = InfoToolHelperLookup.getHelper(layer);
 

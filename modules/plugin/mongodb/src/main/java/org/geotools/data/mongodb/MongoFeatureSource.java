@@ -30,6 +30,7 @@ import org.geotools.data.DataUtilities;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FilteringFeatureReader;
 import org.geotools.data.Query;
+import org.geotools.data.QueryCapabilities;
 import org.geotools.data.ReTypeFeatureReader;
 import org.geotools.data.mongodb.complex.JsonSelectAllFunction;
 import org.geotools.data.mongodb.complex.JsonSelectFunction;
@@ -106,8 +107,7 @@ public class MongoFeatureSource extends ContentFeatureSource {
     @Override
     protected ReferencedEnvelope getBoundsInternal(Query query) throws IOException {
         // TODO: crs?
-        FeatureReader<SimpleFeatureType, SimpleFeature> r = getReader(query);
-        try {
+        try (FeatureReader<SimpleFeatureType, SimpleFeature> r = getReader(query)) {
             ReferencedEnvelope e = new ReferencedEnvelope();
             if (r.hasNext()) {
                 e.init(r.next().getBounds());
@@ -116,8 +116,6 @@ public class MongoFeatureSource extends ContentFeatureSource {
                 e.include(r.next().getBounds());
             }
             return e;
-        } finally {
-            r.close();
         }
     }
 
@@ -142,18 +140,18 @@ public class MongoFeatureSource extends ContentFeatureSource {
     }
 
     @Override
+    @SuppressWarnings("PMD.CloseResource") // r is re-assigned, but also wrapped
     protected FeatureReader<SimpleFeatureType, SimpleFeature> getReaderInternal(Query query)
             throws IOException {
 
-        List<Filter> postFilterList = new ArrayList<Filter>();
-        List<String> postFilterAttributes = new ArrayList<String>();
+        List<Filter> postFilterList = new ArrayList<>();
+        List<String> postFilterAttributes = new ArrayList<>();
+        @SuppressWarnings("PMD.CloseResource") // wrapped and returned
         DBCursor cursor = toCursor(query, postFilterList, postFilterAttributes);
         FeatureReader<SimpleFeatureType, SimpleFeature> r = new MongoFeatureReader(cursor, this);
 
         if (!postFilterList.isEmpty() && !isAll(postFilterList.get(0))) {
-            r =
-                    new FilteringFeatureReader<SimpleFeatureType, SimpleFeature>(
-                            r, postFilterList.get(0));
+            r = new FilteringFeatureReader<>(r, postFilterList.get(0));
 
             // check whether attributes not present in the original query have been
             // added to the set of retrieved attributes for the sake of
@@ -187,16 +185,17 @@ public class MongoFeatureSource extends ContentFeatureSource {
             SortBy sortBy = new SortByImpl(propertyName, SortOrder.ASCENDING);
 
             Query newQuery = new Query(query);
-            newQuery.setSortBy(new SortBy[] {sortBy});
+            newQuery.setSortBy(sortBy);
 
             // Sorting to get min only need to get one result
             newQuery.setMaxFeatures(1);
 
-            FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(newQuery);
-            if (reader.hasNext()) {
-                // Don't need to visit all features, retrieved the min value lets just tell the
-                // MinVisitor
-                minVisitor.setValue(propertyName.evaluate(reader.next()));
+            try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(newQuery)) {
+                if (reader.hasNext()) {
+                    // Don't need to visit all features, retrieved the min value lets just tell the
+                    // MinVisitor
+                    minVisitor.setValue(propertyName.evaluate(reader.next()));
+                }
             }
         } else if (visitor instanceof MaxVisitor) {
             MaxVisitor maxVisitor = (MaxVisitor) visitor;
@@ -209,16 +208,17 @@ public class MongoFeatureSource extends ContentFeatureSource {
             SortBy sortBy = new SortByImpl(propertyName, SortOrder.DESCENDING);
 
             Query newQuery = new Query(query);
-            newQuery.setSortBy(new SortBy[] {sortBy});
+            newQuery.setSortBy(sortBy);
 
             // Sorting to get max only need to get one result
             newQuery.setMaxFeatures(1);
 
-            FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(newQuery);
-            if (reader.hasNext()) {
-                // Don't need to visit all features, retrieved the min value lets just tell the
-                // MaxVisitor
-                maxVisitor.setValue(propertyName.evaluate(reader.next()));
+            try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(newQuery)) {
+                if (reader.hasNext()) {
+                    // Don't need to visit all features, retrieved the min value lets just tell the
+                    // MaxVisitor
+                    maxVisitor.setValue(propertyName.evaluate(reader.next()));
+                }
             }
         } else {
             return false;
@@ -304,9 +304,11 @@ public class MongoFeatureSource extends ContentFeatureSource {
         if (q.getSortBy() != null) {
             BasicDBObject orderBy = new BasicDBObject();
             for (SortBy sortBy : q.getSortBy()) {
-                String propName = sortBy.getPropertyName().getPropertyName();
-                String property = mapper.getPropertyPath(propName);
-                orderBy.append(property, sortBy.getSortOrder() == SortOrder.ASCENDING ? 1 : -1);
+                if (sortBy.getPropertyName() != null) {
+                    String propName = sortBy.getPropertyName().getPropertyName();
+                    String property = mapper.getPropertyPath(propName);
+                    orderBy.append(property, sortBy.getSortOrder() == SortOrder.ASCENDING ? 1 : -1);
+                }
             }
             c = c.sort(orderBy);
         }
@@ -387,5 +389,11 @@ public class MongoFeatureSource extends ContentFeatureSource {
                 };
         f.accept(splitter, null);
         return new Filter[] {splitter.getFilterPre(), splitter.getFilterPost()};
+    }
+
+    @Override
+    protected QueryCapabilities buildQueryCapabilities() {
+        if (queryCapabilities == null) return new MongoQueryCapabilities(this);
+        else return queryCapabilities;
     }
 }

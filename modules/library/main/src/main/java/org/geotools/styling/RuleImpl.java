@@ -52,7 +52,7 @@ public class RuleImpl implements org.geotools.styling.Rule, Cloneable {
     protected RuleImpl() {}
 
     /** Creates a new instance of DefaultRule */
-    protected RuleImpl(Symbolizer[] symbolizers) {
+    protected RuleImpl(Symbolizer... symbolizers) {
         this.symbolizers.addAll(Arrays.asList(symbolizers));
     }
 
@@ -78,7 +78,7 @@ public class RuleImpl implements org.geotools.styling.Rule, Cloneable {
 
     /** Copy constructor */
     public RuleImpl(Rule rule) {
-        this.symbolizers = new ArrayList<Symbolizer>();
+        this.symbolizers = new ArrayList<>();
         for (org.opengis.style.Symbolizer sym : rule.symbolizers()) {
             if (sym instanceof Symbolizer) {
                 this.symbolizers.add((Symbolizer) sym);
@@ -114,9 +114,7 @@ public class RuleImpl implements org.geotools.styling.Rule, Cloneable {
 
     public org.geotools.styling.Symbolizer[] getSymbolizers() {
 
-        final org.geotools.styling.Symbolizer[] ret;
-
-        ret = new org.geotools.styling.Symbolizer[symbolizers.size()];
+        final Symbolizer[] ret = new Symbolizer[symbolizers.size()];
         for (int i = 0, n = symbolizers.size(); i < n; i++) {
             ret[i] = symbolizers.get(i);
         }
@@ -223,7 +221,7 @@ public class RuleImpl implements org.geotools.styling.Rule, Cloneable {
             clone.hasElseFilter = hasElseFilter;
             clone.legend = legend;
 
-            clone.symbolizers = new ArrayList<Symbolizer>(symbolizers);
+            clone.symbolizers = new ArrayList<>(symbolizers);
 
             clone.maxScaleDenominator = maxScaleDenominator;
             clone.minScaleDenominator = minScaleDenominator;

@@ -66,13 +66,9 @@ public class ListFeatureCollection extends AbstractFeatureCollection
     /** Cached bounds */
     protected ReferencedEnvelope bounds = null;
 
-    /**
-     * Create a ListFeatureCollection for the provided schema An ArrayList is used internally.
-     *
-     * @param schema
-     */
+    /** Create a ListFeatureCollection for the provided schema An ArrayList is used internally. */
     public ListFeatureCollection(SimpleFeatureType schema) {
-        this(schema, new ArrayList<SimpleFeature>());
+        this(schema, new ArrayList<>());
     }
     /**
      * Create a ListFeatureCollection around the provided list. The contents of the list should all
@@ -83,9 +79,6 @@ public class ListFeatureCollection extends AbstractFeatureCollection
      * <p>The provided list is directly used for storage, most feature collection operations just
      * use a simple iterator so there is no performance advantaged to be gained over using an
      * ArrayList vs a LinkedList (other then for the size() method of course).
-     *
-     * @param schema
-     * @param list
      */
     public ListFeatureCollection(SimpleFeatureType schema, List<SimpleFeature> list) {
         super(schema);
@@ -98,13 +91,10 @@ public class ListFeatureCollection extends AbstractFeatureCollection
      * should not insert the same feature more then once.
      *
      * <p>The provided array is directly used with a {@link CopyOnWriteArrayList} for storage.
-     *
-     * @param schema
-     * @param list
      */
-    public ListFeatureCollection(SimpleFeatureType schema, SimpleFeature array[]) {
+    public ListFeatureCollection(SimpleFeatureType schema, SimpleFeature... array) {
         super(schema);
-        this.list = new CopyOnWriteArrayList<SimpleFeature>(array);
+        this.list = new CopyOnWriteArrayList<>(array);
     }
     /**
      * Create a ListFeatureCollection around the provided list. The contents of the list should all
@@ -115,9 +105,6 @@ public class ListFeatureCollection extends AbstractFeatureCollection
      * <p>The provided list is directly used for storage, most feature collection operations just
      * use a simple iterator so there is no performance advantaged to be gained over using an
      * ArrayList vs a LinkedList (other then for the size() method of course).
-     *
-     * @param schema
-     * @param list
      */
     public ListFeatureCollection(SimpleFeatureCollection copy) throws IOException {
         this(copy.getSchema());
@@ -166,11 +153,7 @@ public class ListFeatureCollection extends AbstractFeatureCollection
         }
         return bounds;
     }
-    /**
-     * Calculate bounds from features
-     *
-     * @return
-     */
+    /** Calculate bounds from features */
     protected ReferencedEnvelope calculateBounds() {
         ReferencedEnvelope extent =
                 ReferencedEnvelope.create(getSchema().getCoordinateReferenceSystem());
@@ -230,7 +213,7 @@ public class ListFeatureCollection extends AbstractFeatureCollection
     @Override
     public SimpleFeatureCollection sort(SortBy order) {
         Query subQuery = new Query(getSchema().getTypeName());
-        subQuery.setSortBy(new SortBy[] {order});
+        subQuery.setSortBy(order);
 
         CollectionFeatureSource temp = new CollectionFeatureSource(this);
         return temp.getFeatures(subQuery);

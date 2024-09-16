@@ -16,12 +16,16 @@
  */
 package org.geotools.gml3;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.custommonkey.xmlunit.SimpleNamespaceContext;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.geotools.xsd.Configuration;
 import org.geotools.xsd.test.XMLTestSupport;
+import org.junit.Before;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -72,10 +76,11 @@ import org.w3c.dom.NodeList;
 public abstract class GML3TestSupport extends XMLTestSupport {
 
     @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         super.setUp();
 
-        Map<String, String> namespaces = new HashMap<String, String>();
+        Map<String, String> namespaces = new HashMap<>();
         namespaces.put("xs", "http://www.w3.org/2001/XMLSchema");
         namespaces.put("xsd", "http://www.w3.org/2001/XMLSchema");
         namespaces.put("gml", "http://www.opengis.net/gml");
@@ -105,9 +110,6 @@ public abstract class GML3TestSupport extends XMLTestSupport {
     /**
      * Checks that a posList exists, has a string as content, and the string encodes nOrdinates
      * ordinates correctly (i.e. blank-separated).
-     *
-     * @param doc
-     * @param expectedNumOrdinates
      */
     private void checkOrdinates(Document doc, String ordTag, int expectedNumOrdinates) {
         NodeList nl = doc.getElementsByTagNameNS(GML.NAMESPACE, ordTag);
@@ -118,13 +120,7 @@ public abstract class GML3TestSupport extends XMLTestSupport {
         assertEquals(expectedNumOrdinates, ord.length);
     }
 
-    /**
-     * Checks that a given geometry element has an srsDimension attribute with an expected value
-     *
-     * @param doc
-     * @param tag
-     * @param expectedDim
-     */
+    /** Checks that a given geometry element has an srsDimension attribute with an expected value */
     protected void checkDimension(Document doc, String tag, int expectedDim) {
         NodeList lsNL = doc.getElementsByTagNameNS(GML.NAMESPACE, tag);
         Node geomNode = lsNL.item(0);
@@ -147,7 +143,6 @@ public abstract class GML3TestSupport extends XMLTestSupport {
     /**
      * Return the gml:id of a Node (must be an Element).
      *
-     * @param node
      * @return the gml:id
      */
     protected String getID(Node node) {

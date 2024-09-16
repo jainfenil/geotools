@@ -20,8 +20,7 @@ package org.geotools.data.solr;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import org.apache.commons.beanutils.BeanComparator;
-import org.apache.commons.collections.comparators.ComparatorChain;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -76,14 +74,13 @@ public class SolrDataStore extends ContentDataStore {
     private List<Name> nativeTypeNames;
 
     // Attributes present in SOLR schema
-    private ArrayList<SolrAttribute> solrAttributes = new ArrayList<SolrAttribute>();
+    private ArrayList<SolrAttribute> solrAttributes = new ArrayList<>();
 
     // SOLR uuid attributes
     private SolrAttribute pk = null;
 
     // Attributes configurations of the store entries
-    private Map<String, SolrLayerConfiguration> solrConfigurations =
-            new ConcurrentHashMap<String, SolrLayerConfiguration>();
+    private Map<String, SolrLayerConfiguration> solrConfigurations = new ConcurrentHashMap<>();
 
     HttpSolrClient solrServer;
 
@@ -152,7 +149,7 @@ public class SolrDataStore extends ContentDataStore {
      */
     public ArrayList<SolrAttribute> getSolrAttributes(String layerName) {
         if (solrAttributes.isEmpty()) {
-            solrAttributes = new ArrayList<SolrAttribute>();
+            solrAttributes = new ArrayList<>();
             try {
                 LukeRequest lq = new LukeRequest();
                 lq.setShowSchema(true);
@@ -162,7 +159,7 @@ public class SolrDataStore extends ContentDataStore {
                 lq.setShowSchema(false);
                 LukeResponse processField = lq.process(solrServer);
                 Map<String, FieldInfo> fis = processField.getFieldInfo();
-                SortedSet<String> keys = new TreeSet<String>(fis.keySet());
+                SortedSet<String> keys = new TreeSet<>(fis.keySet());
                 for (String k : keys) {
                     FieldInfo fieldInfo = fis.get(k);
                     String name = fieldInfo.getName();
@@ -201,15 +198,18 @@ public class SolrDataStore extends ContentDataStore {
                     }
                 }
                 // Reorder fields: empty after
-                List<BeanComparator> sortFields =
-                        Arrays.asList(new BeanComparator("empty"), new BeanComparator("name"));
-                ComparatorChain multiSort = new ComparatorChain(sortFields);
-                Collections.sort(solrAttributes, multiSort);
+                Comparator<SolrAttribute> sortFields = getEmptyComparator();
+                solrAttributes.sort(sortFields);
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
             }
         }
         return solrAttributes;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Comparator<SolrAttribute> getEmptyComparator() {
+        return new BeanComparator("empty").thenComparing(new BeanComparator("name"));
     }
 
     @Override
@@ -281,8 +281,8 @@ public class SolrDataStore extends ContentDataStore {
     }
 
     /**
-     * Gets the primary key attribute a type in this datastore.</br> If the key is not currently
-     * available a call to {@link #getSolrAttributes} is needed.
+     * Gets the primary key attribute a type in this datastore.<br>
+     * If the key is not currently available a call to {@link #getSolrAttributes} is needed.
      *
      * @param layerName the type to use to query the SOLR field {@link SolrDataStore#field}
      */
@@ -375,8 +375,6 @@ public class SolrDataStore extends ContentDataStore {
     /**
      * Create a group by field Solr query
      *
-     * @param featureType
-     * @param q
      * @param visitor UniqueVisitor with group settings
      * @return Solr query
      */
@@ -454,8 +452,8 @@ public class SolrDataStore extends ContentDataStore {
         String fqViewParamers = null;
         Hints hints = q.getHints();
         if (hints != null) {
-            Map<String, String> parameters =
-                    (Map<String, String>) hints.get(Hints.VIRTUAL_TABLE_PARAMETERS);
+            @SuppressWarnings("unchecked")
+            Map<String, String> parameters = (Map) hints.get(Hints.VIRTUAL_TABLE_PARAMETERS);
             if (parameters != null) {
                 for (String param : parameters.keySet()) {
                     // Accepts only q and fq query parameters

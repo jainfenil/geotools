@@ -40,11 +40,13 @@ public class VPFCovFeatureSource extends VPFFeatureSource {
         this.featureType = featureType;
     }
 
+    @Override
     protected FeatureReader<SimpleFeatureType, SimpleFeature> getReaderInternal(Query query)
             throws IOException {
         return new VPFFeatureReader(getState(), featureType);
     }
 
+    @Override
     protected int getCountInternal(Query query) throws IOException {
         return -1; // feature by feature scan required to count records
     }
@@ -53,20 +55,22 @@ public class VPFCovFeatureSource extends VPFFeatureSource {
      * Implementation that generates the total bounds (many file formats record this information in
      * the header)
      */
+    @Override
     protected ReferencedEnvelope getBoundsInternal(Query query) throws IOException {
         CoordinateReferenceSystem crs = this.featureType.getCoordinateReferenceSystem();
         ReferencedEnvelope bounds = null;
 
-        FeatureReader<SimpleFeatureType, SimpleFeature> rdr = this.getReader();
-        while (rdr.hasNext()) {
-            SimpleFeature feature = rdr.next();
+        try (FeatureReader<SimpleFeatureType, SimpleFeature> rdr = this.getReader()) {
+            while (rdr.hasNext()) {
+                SimpleFeature feature = rdr.next();
 
-            if (feature != null) {
+                if (feature != null) {
 
-                BoundingBox bb = feature.getBounds();
+                    BoundingBox bb = feature.getBounds();
 
-                if (bounds == null) bounds = new ReferencedEnvelope(bb);
-                else bounds.expandToInclude(ReferencedEnvelope.reference(bb));
+                    if (bounds == null) bounds = new ReferencedEnvelope(bb);
+                    else bounds.expandToInclude(ReferencedEnvelope.reference(bb));
+                }
             }
         }
 
@@ -77,6 +81,7 @@ public class VPFCovFeatureSource extends VPFFeatureSource {
         return bounds;
     }
 
+    @Override
     protected SimpleFeatureType buildFeatureType() throws IOException {
         return this.featureType;
     }

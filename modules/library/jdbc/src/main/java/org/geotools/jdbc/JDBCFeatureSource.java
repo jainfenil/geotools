@@ -89,7 +89,6 @@ public class JDBCFeatureSource extends ContentFeatureSource {
      * Copy existing feature source
      *
      * @param featureSource jdbc feature source
-     * @throws IOException
      */
     protected JDBCFeatureSource(JDBCFeatureSource featureSource) throws IOException {
         super(featureSource.entry, featureSource.query);
@@ -279,6 +278,9 @@ public class JDBCFeatureSource extends ContentFeatureSource {
                     ab.nillable(false);
                     ab.minOccurs(1);
                 }
+                if (column.restriction != null) {
+                    ab.addRestriction(column.restriction);
+                }
 
                 AttributeDescriptor att = null;
 
@@ -416,16 +418,16 @@ public class JDBCFeatureSource extends ContentFeatureSource {
                 // grab a reader
                 Query preQuery = new Query(query);
                 query.setFilter(preFilter);
-                FeatureReader<SimpleFeatureType, SimpleFeature> preReader = getReader(preQuery);
-                // wrap with post filter
-                FilteringFeatureReader reader = new FilteringFeatureReader(preReader, postFilter);
-                try {
-                    while (reader.hasNext()) {
-                        reader.next();
-                        count++;
+                try (FeatureReader<SimpleFeatureType, SimpleFeature> preReader =
+                        getReader(preQuery)) {
+                    // wrap with post filter
+                    try (FilteringFeatureReader<SimpleFeatureType, SimpleFeature> reader =
+                            new FilteringFeatureReader<>(preReader, postFilter)) {
+                        while (reader.hasNext()) {
+                            reader.next();
+                            count++;
+                        }
                     }
-                } finally {
-                    reader.close();
                 }
 
                 return count;
@@ -483,8 +485,7 @@ public class JDBCFeatureSource extends ContentFeatureSource {
                 // grab a reader
                 Query q = new Query(query);
                 q.setFilter(postFilter);
-                FeatureReader<SimpleFeatureType, SimpleFeature> i = getReader(q);
-                try {
+                try (FeatureReader<SimpleFeatureType, SimpleFeature> i = getReader(q)) {
                     if (i.hasNext()) {
                         SimpleFeature f = i.next();
                         bounds.init(f.getBounds());
@@ -494,8 +495,6 @@ public class JDBCFeatureSource extends ContentFeatureSource {
                             bounds.include(f.getBounds());
                         }
                     }
-                } finally {
-                    i.close();
                 }
 
                 return bounds;
@@ -628,9 +627,7 @@ public class JDBCFeatureSource extends ContentFeatureSource {
 
         // if post filter, wrap it
         if (postFilterRequired) {
-            reader =
-                    new FilteringFeatureReader<SimpleFeatureType, SimpleFeature>(
-                            reader, postFilter);
+            reader = new FilteringFeatureReader<>(reader, postFilter);
             if (!returnedSchema.equals(querySchema)) {
                 reader = new ReTypeFeatureReader(reader, returnedSchema);
             }
@@ -646,9 +643,7 @@ public class JDBCFeatureSource extends ContentFeatureSource {
 
             // max feature limit
             if (query.getMaxFeatures() >= 0 && query.getMaxFeatures() < Integer.MAX_VALUE) {
-                reader =
-                        new MaxFeatureReader<SimpleFeatureType, SimpleFeature>(
-                                reader, query.getMaxFeatures());
+                reader = new MaxFeatureReader<>(reader, query.getMaxFeatures());
             }
         }
 
@@ -672,8 +667,7 @@ public class JDBCFeatureSource extends ContentFeatureSource {
 
                 String[] extraAttributes = extractor.getAttributeNames();
                 if (extraAttributes != null && extraAttributes.length > 0) {
-                    List<String> allAttributes =
-                            new ArrayList<String>(Arrays.asList(propertyNames));
+                    List<String> allAttributes = new ArrayList<>(Arrays.asList(propertyNames));
                     for (String extraAttribute : extraAttributes) {
                         if (!allAttributes.contains(extraAttribute))
                             allAttributes.add(extraAttribute);
@@ -706,13 +700,7 @@ public class JDBCFeatureSource extends ContentFeatureSource {
         }
     }
 
-    /**
-     * Special case of nearest visitor, which can be computed by combining a min and a max visit
-     *
-     * @param query
-     * @param visitor
-     * @throws IOException
-     */
+    /** Special case of nearest visitor, which can be computed by combining a min and a max visit */
     private boolean handleNearestVisitor(Query query, FeatureVisitor visitor) throws IOException {
         NearestVisitor nearest = (NearestVisitor) visitor;
         Object targetValue = nearest.getValueToMatch();
@@ -765,20 +753,11 @@ public class JDBCFeatureSource extends ContentFeatureSource {
         return true;
     }
 
-    /**
-     * Computes the column metadata from a plain database table
-     *
-     * @param cx
-     * @param databaseSchema
-     * @param tableName
-     * @param dialect
-     * @return
-     * @throws SQLException
-     */
+    /** Computes the column metadata from a plain database table */
     List<ColumnMetadata> getColumnMetadata(
             Connection cx, String databaseSchema, String tableName, SQLDialect dialect)
             throws SQLException {
-        List<ColumnMetadata> result = new ArrayList<ColumnMetadata>();
+        List<ColumnMetadata> result = new ArrayList<>();
 
         DatabaseMetaData metaData = cx.getMetaData();
 
@@ -822,6 +801,7 @@ public class JDBCFeatureSource extends ContentFeatureSource {
                 column.sqlType = columns.getInt("DATA_TYPE");
                 column.nullable = "YES".equalsIgnoreCase(columns.getString("IS_NULLABLE"));
                 column.binding = dialect.getMapping(columns, cx);
+                column.restriction = dialect.getRestrictions(columns, cx);
 
                 // support for user defined types, allow the dialect to handle them
                 if (column.sqlType == Types.DISTINCT) {
@@ -837,24 +817,15 @@ public class JDBCFeatureSource extends ContentFeatureSource {
         return result;
     }
 
-    /**
-     * Computes the column metadata by running the virtual table query
-     *
-     * @param cx
-     * @param vtable
-     * @param dialect
-     * @return
-     * @throws SQLException
-     */
+    /** Computes the column metadata by running the virtual table query */
     static List<ColumnMetadata> getColumnMetadata(
             Connection cx, VirtualTable vtable, SQLDialect dialect, JDBCDataStore store)
             throws SQLException {
-        List<ColumnMetadata> result = new ArrayList<ColumnMetadata>();
+        List<ColumnMetadata> result = new ArrayList<>();
 
         Statement st = null;
         ResultSet rs = null;
         try {
-            String sql;
             // avoid actually running the query as it might be very expensive
             // and just grab the metadata instead
             StringBuffer sb = new StringBuffer();
@@ -864,7 +835,7 @@ public class JDBCFeatureSource extends ContentFeatureSource {
             dialect.encodeTableAlias("vtable", sb);
             // state we don't want rows, we just want to gather the results metadata
             sb.append(" where 1 = 0");
-            sql = sb.toString();
+            String sql = sb.toString();
 
             st = cx.createStatement();
 

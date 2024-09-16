@@ -18,6 +18,7 @@ package org.geotools.ows.wmts.map;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -42,6 +43,7 @@ import org.geotools.ows.wmts.WebMapTileServer;
 import org.geotools.ows.wmts.model.WMTSLayer;
 import org.geotools.ows.wmts.request.GetTileRequest;
 import org.geotools.referencing.CRS;
+import org.geotools.renderer.lite.RendererUtilities;
 import org.geotools.tile.Tile;
 import org.opengis.coverage.grid.Format;
 import org.opengis.geometry.Envelope;
@@ -106,12 +108,7 @@ public class WMTSCoverageReader extends AbstractGridCoverage2DReader {
 
     public final boolean debug = System.getProperty("wmts.debug") != null;
 
-    /**
-     * Builds a new WMS coverage reader
-     *
-     * @param server
-     * @param layer
-     */
+    /** Builds a new WMS coverage reader */
     public WMTSCoverageReader(WebMapTileServer server, Layer layer) {
         this.wmts = server;
 
@@ -295,25 +292,68 @@ public class WMTSCoverageReader extends AbstractGridCoverage2DReader {
                         new RuntimeException("TRACE!"));
             }
 
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
             getTileRequest().setCRS(gridEnvelope.getCoordinateReferenceSystem());
             Set<Tile> responses = wmts.issueRequest(getTileRequest());
-            double xscale = width / requestedEnvelope.getWidth();
-            double yscale = height / requestedEnvelope.getHeight();
+            if (responses.isEmpty()) {
+                if (LOGGER.isLoggable(Level.FINE))
+                    LOGGER.fine("Found 0 tiles in " + requestedEnvelope);
+                throw new RuntimeException("No tiles were found in requested extent");
+            }
+            AffineTransform at = null;
+            ReferencedEnvelope global = null;
+            for (Tile tile : responses) {
+                ReferencedEnvelope extent = tile.getExtent();
+                // ensure the extent has EAST_NORTH axis order because otherwise
+                // RendererUtilities.worldToScreenTransform will produce
+                // incorrect results:
+                extent = toEastNorthAxisOrder(extent);
 
-            double scale = Math.min(xscale, yscale);
+                if (global == null) {
+                    global = new ReferencedEnvelope(extent);
+                } else {
+                    global.expandToInclude(extent);
+                }
+                BufferedImage bi = tile.getBufferedImage();
+                if (at == null) {
+                    at =
+                            RendererUtilities.worldToScreenTransform(
+                                    extent, new Rectangle(bi.getWidth(), bi.getHeight()));
+                }
+            }
+            int imageWidth = (int) Math.round(global.getWidth() * at.getScaleX());
+            int imageHeight = (int) Math.abs(Math.round(global.getHeight() * at.getScaleY()));
+            BufferedImage image =
+                    new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
 
-            double xoff = requestedEnvelope.getMedian(0) * scale - width / 2;
-            double yoff = requestedEnvelope.getMedian(1) * scale + height / 2;
-            // C ould we use RenderUtilities here?
-            AffineTransform worldToScreen = new AffineTransform(scale, 0, 0, -scale, -xoff, yoff);
-            renderTiles(responses, image.createGraphics(), requestedEnvelope, worldToScreen);
+            AffineTransform targetTransform =
+                    RendererUtilities.worldToScreenTransform(
+                            global, new Rectangle(0, 0, imageWidth, imageHeight));
+            renderTiles(responses, image.createGraphics(), requestedEnvelope, targetTransform);
 
-            return gcf.create(layer.getTitle(), image, gridEnvelope);
-        } catch (ServiceException e) {
+            return gcf.create(layer.getTitle(), image, global);
+        } catch (ServiceException | FactoryException | TransformException e) {
             throw new IOException("GetMap failed", e);
         }
+    }
+
+    /**
+     * Checks if a referenced envelope has EAST_NORTH axis order and if not creates a copy with
+     * EAST_NORTH axis order.
+     *
+     * @param envelope The referenced envelope.
+     * @return The referenced envelope eith EAST_NORTH axis order.
+     * @throws FactoryException
+     * @throws TransformException
+     */
+    private ReferencedEnvelope toEastNorthAxisOrder(ReferencedEnvelope envelope)
+            throws FactoryException, TransformException {
+        CoordinateReferenceSystem crsExtent = envelope.getCoordinateReferenceSystem();
+        if (CRS.getAxisOrder(crsExtent) == CRS.AxisOrder.NORTH_EAST) {
+            String srsExtent = CRS.toSRS(crsExtent);
+            crsExtent = CRS.decode(srsExtent, true);
+            envelope = envelope.transform(crsExtent, false);
+        }
+        return envelope;
     }
 
     protected void renderTiles(
@@ -369,13 +409,12 @@ public class WMTSCoverageReader extends AbstractGridCoverage2DReader {
             if (LOGGER.isLoggable(Level.INFO)) LOGGER.info("couldn't draw " + tile.getId());
             return;
         }
+        int width = (int) Math.round(points[2] - points[0]);
+        int height = (int) Math.round(points[3] - points[1]);
+        if (width < 1) width = 1;
+        if (height < 1) height = 1;
         g2d.drawImage(
-                img,
-                (int) points[0],
-                (int) points[1],
-                (int) Math.ceil(points[2] - points[0]),
-                (int) Math.ceil(points[3] - points[1]),
-                null);
+                img, (int) Math.round(points[0]), (int) Math.round(points[1]), width, height, null);
     }
 
     protected BufferedImage getTileImage(Tile tile) {
@@ -390,12 +429,6 @@ public class WMTSCoverageReader extends AbstractGridCoverage2DReader {
     /**
      * Sets up a map request with the provided parameters, making sure it is compatible with the
      * layers own native SRS list
-     *
-     * @param bbox
-     * @param width
-     * @param height
-     * @return
-     * @throws IOException
      */
     ReferencedEnvelope initTileRequest(ReferencedEnvelope bbox, int width, int height, String time)
             throws IOException {
@@ -451,6 +484,7 @@ public class WMTSCoverageReader extends AbstractGridCoverage2DReader {
         tileRequest.setRequestedBBox(gridEnvelope); // should be
         // requestEnvelope?
         tileRequest.setRequestedTime(time);
+        tileRequest.setFormat(format);
 
         try {
             this.requestCRS = CRS.decode(requestSrs);
@@ -469,11 +503,7 @@ public class WMTSCoverageReader extends AbstractGridCoverage2DReader {
         return null;
     }
 
-    /**
-     * Returns the layer bounds
-     *
-     * @return
-     */
+    /** Returns the layer bounds */
     public void updateBounds() {
         if (LOGGER.isLoggable(Level.FINER)) LOGGER.entering("WMTSCoverage", "updatingBounds");
         GeneralEnvelope envelope = layer.getEnvelope(requestCRS);
@@ -484,12 +514,7 @@ public class WMTSCoverageReader extends AbstractGridCoverage2DReader {
         this.originalEnvelope = new GeneralEnvelope(result);
     }
 
-    /**
-     * Converts a {@link Envelope} into a {@link ReferencedEnvelope}
-     *
-     * @param envelope
-     * @return
-     */
+    /** Converts a {@link Envelope} into a {@link ReferencedEnvelope} */
     ReferencedEnvelope reference(Envelope envelope) {
         ReferencedEnvelope env = new ReferencedEnvelope(envelope.getCoordinateReferenceSystem());
         env.expandToInclude(envelope.getMinimum(0), envelope.getMinimum(1));

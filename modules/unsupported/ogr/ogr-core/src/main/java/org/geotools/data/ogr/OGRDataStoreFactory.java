@@ -16,6 +16,7 @@
  */
 package org.geotools.data.ogr;
 
+import java.awt.RenderingHints;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
@@ -127,8 +128,7 @@ public abstract class OGRDataStoreFactory implements DataStoreFactorySpi {
 
     protected abstract OGR createOGR();
 
-    public boolean canProcess(Map params) {
-        boolean accept = false;
+    public boolean canProcess(Map<String, ?> params) {
         String ogrName = null;
         String ogrDriver = null;
         try {
@@ -142,31 +142,28 @@ public abstract class OGRDataStoreFactory implements DataStoreFactorySpi {
             // yes, I am eating this
         }
 
-        accept = canProcess(ogrName, ogrDriver);
+        boolean accept = canProcess(ogrName, ogrDriver);
         return accept;
     }
 
-    public DataStore createDataStore(Map params) throws IOException {
+    public DataStore createDataStore(Map<String, ?> params) throws IOException {
         return createNewDataStore(params);
     }
 
-    /**
-     * Not implemented yet.
-     *
-     * @param params
-     * @throws IOException
-     * @throws UnsupportedOperationException
-     */
-    public DataStore createNewDataStore(Map params) throws IOException {
-
-        DataStore ds;
+    /** Not implemented yet. */
+    public DataStore createNewDataStore(Map<String, ?> params) throws IOException {
 
         String ogrName = (String) OGR_NAME.lookUp(params);
         String ogrDriver = (String) OGR_DRIVER_NAME.lookUp(params);
         URI namespace = (URI) NAMESPACEP.lookUp(params);
         OGR ogr = createOGR();
-        OGRDataSourcePool dataSourcePool = new OGRDataSourcePool(ogr, ogrName, ogrDriver, params);
-        ds = new OGRDataStore(ogrName, ogrDriver, namespace, ogr, dataSourcePool);
+        DataStore ds =
+                new OGRDataStore(
+                        ogrName,
+                        ogrDriver,
+                        namespace,
+                        ogr,
+                        new OGRDataSourcePool(ogr, ogrName, ogrDriver, params));
 
         return ds;
     }
@@ -249,10 +246,6 @@ public abstract class OGRDataStoreFactory implements DataStoreFactorySpi {
     /**
      * Assume we can process an ogrName if the ogrName exists and can be opened, or if the specified
      * driver does exist.
-     *
-     * @param ogrName
-     * @param driverName
-     * @return
      */
     public boolean canProcess(String ogrName, String driverName) {
         OGR ogr = createOGR();
@@ -286,7 +279,7 @@ public abstract class OGRDataStoreFactory implements DataStoreFactorySpi {
         OGR ogr = createOGR();
 
         int count = ogr.GetDriverCount();
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         for (int i = 0; i < count; i++) {
             Object driver = ogr.GetDriver(i);
             String name = ogr.DriverGetName(driver);
@@ -296,7 +289,7 @@ public abstract class OGRDataStoreFactory implements DataStoreFactorySpi {
         return result;
     }
 
-    public Map getImplementationHints() {
-        return Collections.EMPTY_MAP;
+    public Map<RenderingHints.Key, ?> getImplementationHints() {
+        return Collections.emptyMap();
     }
 }

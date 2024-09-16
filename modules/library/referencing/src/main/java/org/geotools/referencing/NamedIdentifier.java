@@ -69,6 +69,7 @@ import org.opengis.util.ScopedName;
  * @version $Id$
  * @author Martin Desruisseaux (IRD)
  */
+@SuppressWarnings("ComparableType") // comparable of different type than implementation
 public class NamedIdentifier
         implements ReferenceIdentifier, GenericName, Comparable<GenericName>, Serializable {
     /** Serial number for interoperability with different versions. */
@@ -215,7 +216,7 @@ public class NamedIdentifier
      */
     private static Map<String, ?> toMap(
             final Citation authority, final String code, final String version) {
-        final Map<String, Object> properties = new HashMap<String, Object>(4);
+        final Map<String, Object> properties = new HashMap<>(4);
         if (authority != null) properties.put(AUTHORITY_KEY, authority);
         if (code != null) properties.put(CODE_KEY, code);
         if (version != null) properties.put(VERSION_KEY, version);
@@ -474,7 +475,7 @@ public class NamedIdentifier
         GenericName scope;
         synchronized (NamedIdentifier.class) {
             if (SCOPES == null) {
-                SCOPES = new WeakValueHashMap<CharSequence, GenericName>();
+                SCOPES = new WeakValueHashMap<>();
             }
             scope = SCOPES.get(title);
             if (scope == null) {
@@ -582,9 +583,10 @@ public class NamedIdentifier
      * element in this list is like a directory name in a file path name. The length of this
      * sequence is the generic name depth.
      */
+    @SuppressWarnings("unchecked")
     public List<LocalName> getParsedNames() {
         // TODO: temporary hack to be removed after GeoAPI update.
-        return (List) getName().getParsedNames();
+        return (List<LocalName>) getName().getParsedNames();
     }
 
     /**

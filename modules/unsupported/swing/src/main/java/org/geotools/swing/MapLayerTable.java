@@ -189,7 +189,7 @@ public class MapLayerTable extends JPanel {
      * and registers a mouse listener.
      */
     private void initComponents() {
-        listModel = new DnDListModel<Layer>();
+        listModel = new DnDListModel<>();
         list =
                 new DnDList<Layer>(listModel) {
                     private static final long serialVersionUID = 1289744440656016412L;
@@ -269,9 +269,8 @@ public class MapLayerTable extends JPanel {
 
         JPanel btnPanel = new JPanel();
         Icon showIcon = MapLayerTableCellRenderer.LayerControlItem.VISIBLE.getIcon();
-        JButton btn = null;
 
-        btn = new JButton(showIcon);
+        JButton btn = new JButton(showIcon);
         btn.setToolTipText(SHOW_ALL_LAYERS);
         btn.addActionListener(
                 new ActionListener() {
@@ -485,7 +484,7 @@ public class MapLayerTable extends JPanel {
 
         void connectToMapPane(MapPane newMapPane) {
             if (newMapPane != null) {
-                paneRef = new WeakReference<MapPane>(newMapPane);
+                paneRef = new WeakReference<>(newMapPane);
                 newMapPane.addMapPaneListener(this);
 
                 disconnectFromMapContent();
@@ -506,7 +505,7 @@ public class MapLayerTable extends JPanel {
 
         void connectToMapContent(MapContent newMapContent) {
             if (newMapContent != null) {
-                contentRef = new WeakReference<MapContent>(newMapContent);
+                contentRef = new WeakReference<>(newMapContent);
                 newMapContent.addMapLayerListListener(this);
 
                 for (Layer layer : newMapContent.layers()) {

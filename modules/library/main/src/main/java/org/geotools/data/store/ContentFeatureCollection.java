@@ -177,14 +177,14 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
             // ops, we have to compute the results by hand. Let's load just the
             // geometry attributes though
             Query q = new Query(query);
-            List<String> geometries = new ArrayList<String>();
+            List<String> geometries = new ArrayList<>();
             for (AttributeDescriptor ad : getSchema().getAttributeDescriptors()) {
                 if (ad instanceof GeometryDescriptor) {
                     geometries.add(ad.getLocalName());
                 }
             }
             // no geometries, no bounds
-            if (geometries.size() == 0) {
+            if (geometries.isEmpty()) {
                 return new ReferencedEnvelope();
             } else {
                 q.setPropertyNames(geometries);
@@ -272,9 +272,6 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
      * collection just to get the size of the collection. The result is indicative, just an
      * heuristic to quickly compare attributes in order to find a suitably small one, it's not meant
      * to be the actual size of an attribute in bytes.
-     *
-     * @param ad
-     * @return
      */
     int size(AttributeDescriptor ad) {
         Class<?> binding = ad.getType().getBinding();
@@ -308,11 +305,8 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
         }
 
         try {
-            FeatureReader<?, ?> fr = featureSource.getReader(notEmptyQuery);
-            try {
+            try (FeatureReader<?, ?> fr = featureSource.getReader(notEmptyQuery)) {
                 return !fr.hasNext();
-            } finally {
-                fr.close();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -328,7 +322,7 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
 
     public SimpleFeatureCollection sort(org.opengis.filter.sort.SortBy sort) {
         Query query = new Query();
-        query.setSortBy(new org.opengis.filter.sort.SortBy[] {sort});
+        query.setSortBy(sort);
 
         query = DataUtilities.mixQueries(this.query, query, null);
         return new ContentFeatureCollection(featureSource, query);
@@ -359,9 +353,7 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
      */
     public boolean contains(Object o) {
         // TODO: base this on reader
-        SimpleFeatureIterator e = null;
-        try {
-            e = this.features();
+        try (SimpleFeatureIterator e = this.features()) {
             if (o == null) {
                 while (e.hasNext()) {
                     if (e.next() == null) {
@@ -376,10 +368,6 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
                 }
             }
             return false;
-        } finally {
-            if (e != null) {
-                e.close();
-            }
         }
     }
     /**
@@ -443,18 +431,12 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
     public Object[] toArray() {
         // code based on AbstractFeatureCollection
         // TODO: base this on reader
-        ArrayList<SimpleFeature> array = new ArrayList<SimpleFeature>();
-        FeatureIterator<SimpleFeature> e = null;
-        try {
-            e = features();
+        ArrayList<SimpleFeature> array = new ArrayList<>();
+        try (FeatureIterator<SimpleFeature> e = features()) {
             while (e.hasNext()) {
                 array.add(e.next());
             }
             return array.toArray(new SimpleFeature[array.size()]);
-        } finally {
-            if (e != null) {
-                e.close();
-            }
         }
     }
 
@@ -467,8 +449,7 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
                             java.lang.reflect.Array.newInstance(
                                     array.getClass().getComponentType(), size);
         }
-        FeatureIterator<SimpleFeature> it = features();
-        try {
+        try (FeatureIterator<SimpleFeature> it = features()) {
             Object[] result = array;
             for (int i = 0; it.hasNext() && i < size; i++) {
                 result[i] = it.next();
@@ -477,10 +458,6 @@ public class ContentFeatureCollection implements SimpleFeatureCollection {
                 array[size] = null;
             }
             return array;
-        } finally {
-            if (it != null) {
-                it.close();
-            }
         }
     }
 

@@ -84,7 +84,7 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
     private int steps = 100;
 
     /** Map of constrains - parameter name as key and its required value */
-    private Map<String, Double> valueConstrain = new HashMap<String, Double>();
+    private Map<String, Double> valueConstrain = new HashMap<>();
 
     /** Affine transformation for approximate values */
     private final AffineTransform2D affineTrans;
@@ -107,10 +107,6 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
      *
      * @param vectors GCPs
      * @param affineTrans approximate affine transformation
-     * @throws MismatchedSizeException
-     * @throws MismatchedDimensionException
-     * @throws MismatchedReferenceSystemException
-     * @throws FactoryException
      */
     public AdvancedAffineBuilder(final List<MappedPosition> vectors, AffineTransform2D affineTrans)
             throws IllegalArgumentException, MismatchedDimensionException,
@@ -251,7 +247,6 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
      * Ask for dx matrix with default number of iterations and precision constrain.
      *
      * @return dx matrix
-     * @throws FactoryException
      */
     private GeneralMatrix getDxMatrix() throws FactoryException {
         return getDxMatrix(dif, steps);
@@ -263,7 +258,6 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
      * @param tolerance tolerance for iteration.
      * @param maxSteps max steps of iteration
      * @return dx matrix
-     * @throws FactoryException
      */
     private GeneralMatrix getDxMatrix(double tolerance, int maxSteps) throws FactoryException {
         /** Matrix of new calculated coefficients */
@@ -436,8 +430,6 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
     /**
      * Joins A <sup>T</sup> matrix with L
      *
-     * @param ATl
-     * @param U
      * @return matrix constructs from ATl and U
      */
     private GeneralMatrix createAU(GeneralMatrix ATl, GeneralMatrix U) {
@@ -452,8 +444,6 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
     /**
      * Joins A matrix with B. result is: (A B ) (B 0 )
      *
-     * @param ATA
-     * @param B
      * @return matrix constructs from ATA and B
      */
     private GeneralMatrix createAB(GeneralMatrix ATA, GeneralMatrix B) {
@@ -480,7 +470,6 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
      * Calculates coefficients of Projective transformation matrix from geometric parameters.
      *
      * @return Projective Matrix
-     * @throws FactoryException
      */
     protected GeneralMatrix getProjectiveMatrix() throws FactoryException {
         GeneralMatrix M = new GeneralMatrix(3, 3);
@@ -488,13 +477,13 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
         /** Runs calculation of parameter values */
         double[] param = getDxMatrix().getElements()[0];
 
-        /** calcuates matrix coefficients form geometric coefficients */
+        /** calculates matrix coefficients from geometric coefficients */
         double a11 = sx * Math.cos(phix);
         double a12 = -sy * Math.sin(phiy);
         double a21 = sx * Math.sin(phix);
         double a22 = sy * Math.cos(phiy);
 
-        /** Fill the metrix */
+        /** Fill the matrix */
         double[] m0 = {a11, a12, param[4]};
         double[] m1 = {a21, a22, param[5]};
         double[] m2 = {0, 0, 1};
@@ -507,7 +496,7 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
 
     @Override
     protected MathTransform computeMathTransform() throws FactoryException {
-        if (valueConstrain.size() == 0) {
+        if (valueConstrain.isEmpty()) {
             return affineTrans;
         }
 
@@ -523,11 +512,7 @@ public class AdvancedAffineBuilder extends MathTransformBuilder {
         return dif;
     }
 
-    /**
-     * Sets difference that is required between steps in iteration.
-     *
-     * @param dif
-     */
+    /** Sets difference that is required between steps in iteration. */
     public void setMaxIterationDifference(double dif) {
         this.dif = dif;
     }

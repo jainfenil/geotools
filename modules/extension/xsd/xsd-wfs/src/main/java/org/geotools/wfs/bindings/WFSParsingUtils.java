@@ -43,21 +43,19 @@ public class WFSParsingUtils {
     public static EObject FeatureCollectionType_parse(
             EObject fct, ElementInstance instance, Node node) {
 
-        SimpleFeatureCollection fc = null;
-
         // gml:featureMembers
-        fc = (SimpleFeatureCollection) node.getChildValue(FeatureCollection.class);
+        SimpleFeatureCollection fc =
+                (SimpleFeatureCollection) node.getChildValue(FeatureCollection.class);
         if (fc == null) {
             fc = new DefaultFeatureCollection(null, null);
         }
 
         // check for an array
-        SimpleFeature[] featureMembers =
-                (SimpleFeature[]) node.getChildValue(SimpleFeature[].class);
+        SimpleFeature[] featureMembers = node.getChildValue(SimpleFeature[].class);
         if (featureMembers != null) {
             Collection<SimpleFeature> collection = DataUtilities.collectionCast(fc);
-            for (int i = 0; i < featureMembers.length; i++) {
-                collection.add(featureMembers[i]);
+            for (SimpleFeature featureMember : featureMembers) {
+                collection.add(featureMember);
             }
         } else {
             Collection<SimpleFeature> collection = DataUtilities.collectionCast(fc);
@@ -129,7 +127,7 @@ public class WFSParsingUtils {
             }
 
             // create new feature collections
-            List<FeatureCollectionType> members = new ArrayList(features.size());
+            List<FeatureCollectionType> members = new ArrayList<>(features.size());
             for (Iterator<FeatureCollection> it = features.iterator(); it.hasNext(); ) {
                 FeatureCollection featureCollection = it.next();
 
@@ -162,6 +160,7 @@ public class WFSParsingUtils {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public static List<FeatureCollection> features(EObject obj) {
         return (List)
                 (EMFUtils.has(obj, "feature")

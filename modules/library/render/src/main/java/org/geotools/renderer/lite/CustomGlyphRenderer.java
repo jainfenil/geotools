@@ -19,11 +19,11 @@ package org.geotools.renderer.lite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.styling.ExternalGraphic;
@@ -64,7 +64,7 @@ public class CustomGlyphRenderer implements GlyphRenderer {
     }
 
     public List getFormats() {
-        Vector ret = new Vector();
+        List<String> ret = new ArrayList<>();
         ret.add("image/hack");
         return ret;
     }
@@ -82,14 +82,7 @@ public class CustomGlyphRenderer implements GlyphRenderer {
         list = gpl;
     }
 
-    /**
-     * djb -- addd "height" which is ignored as per API change
-     *
-     * @param graphic
-     * @param eg
-     * @param feature
-     * @param height
-     */
+    /** djb -- addd "height" which is ignored as per API change */
     public BufferedImage render(Graphic graphic, ExternalGraphic eg, Object feature, int height) {
         Map props = eg.getCustomProperties();
         Set propNames = props.keySet();
@@ -184,11 +177,6 @@ public class CustomGlyphRenderer implements GlyphRenderer {
             wedgeColor = Color.decode((String) e.evaluate(feature));
         }
 
-        int circleCenterX, circleCenterY, imageHeight, imageWidth;
-
-        BufferedImage image;
-        Graphics2D imageGraphic;
-
         // calculate maximum value of barHeight + barUncertainty & use that instead of "barHeight +
         // barUncertainty"
         Expression tempExp = (Expression) list.getPropertyValue("bar height");
@@ -228,19 +216,20 @@ public class CustomGlyphRenderer implements GlyphRenderer {
         //            }
         //        }
 
-        circleCenterX = Math.max(pointerLength, radius);
-        circleCenterY = Math.max(maxBarHeight, Math.max(pointerLength, radius));
+        int circleCenterX = Math.max(pointerLength, radius);
+        int circleCenterY = Math.max(maxBarHeight, Math.max(pointerLength, radius));
 
-        imageHeight =
+        int imageHeight =
                 Math.max(
                         radius * 2,
                         Math.max(
                                 radius + pointerLength,
                                 Math.max(radius + maxBarHeight, pointerLength + maxBarHeight)));
-        imageWidth = Math.max(radius * 2, pointerLength * 2);
-        image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+        int imageWidth = Math.max(radius * 2, pointerLength * 2);
+        BufferedImage image =
+                new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
         pointerLength = Math.max(pointerLength, radius);
-        imageGraphic = image.createGraphics();
+        Graphics2D imageGraphic = image.createGraphics();
         imageGraphic.setColor(circleColor);
         imageGraphic.fillOval(
                 circleCenterX - radius, circleCenterY - radius, radius * 2, radius * 2);

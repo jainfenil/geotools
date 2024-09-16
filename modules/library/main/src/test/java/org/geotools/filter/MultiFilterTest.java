@@ -48,13 +48,12 @@ public class MultiFilterTest {
 
     @Test
     public void testFactoryAndGetter() {
-        MultiValuedFilter filter;
         Expression expr1 = fac.property("foo");
         Expression expr2 = fac.property("bar");
         Expression expr3 = fac.property("noo");
 
         // test default is MatchAction.ANY
-        filter = fac.bbox(expr1, new ReferencedEnvelope());
+        MultiValuedFilter filter = fac.bbox(expr1, new ReferencedEnvelope());
         assertEquals(filter.getMatchAction(), MatchAction.ANY);
         filter = fac.beyond(expr1, expr2, 0.1, "");
         assertEquals(filter.getMatchAction(), MatchAction.ANY);
@@ -142,8 +141,7 @@ public class MultiFilterTest {
 
     @Test
     public void testCompareStringOperators_Any() {
-        Filter filter;
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
 
         list.add("foo-1");
         list.add("foo-2");
@@ -154,7 +152,7 @@ public class MultiFilterTest {
 
         Expression empty = new LiteralExpressionImpl(new ArrayList<String>());
 
-        filter = fac.equals(e, new LiteralExpressionImpl("foo-2"));
+        Filter filter = fac.equals(e, new LiteralExpressionImpl("foo-2"));
         assertTrue(filter.evaluate(null));
 
         filter = fac.equals(new LiteralExpressionImpl("foo-1"), e);
@@ -192,7 +190,7 @@ public class MultiFilterTest {
 
         // testing collection with collection comparison
 
-        List<String> list2 = new ArrayList<String>();
+        List<String> list2 = new ArrayList<>();
 
         list2.add("foo-4");
         list2.add("foo-5");
@@ -212,7 +210,7 @@ public class MultiFilterTest {
         filter = fac.notEqual(e, new LiteralExpressionImpl(list2));
         assertTrue(filter.evaluate(null));
 
-        list2 = new ArrayList<String>();
+        list2 = new ArrayList<>();
         list2.add("foo-1");
         list2.add("foo-2");
         list2.add("foo-3");
@@ -222,7 +220,7 @@ public class MultiFilterTest {
         assertTrue(filter.evaluate(null));
 
         // testing non equals
-        list = new ArrayList<String>();
+        list = new ArrayList<>();
         list.add("foo-1");
         list.add("foo-1");
         list.add("foo-1");
@@ -231,7 +229,7 @@ public class MultiFilterTest {
         filter = fac.notEqual(e, new LiteralExpressionImpl("foo-1"));
         assertFalse(filter.evaluate(null));
 
-        list2 = new ArrayList<String>();
+        list2 = new ArrayList<>();
         list2.add("foo-1");
         list2.add("foo-1");
 
@@ -241,14 +239,13 @@ public class MultiFilterTest {
 
     @Test
     public void testCompareStringOperators_All() {
-        Filter filter;
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
 
         list.add("foo-1");
         list.add("foo-2");
         list.add("foo-3");
 
-        List<String> list2 = new ArrayList<String>();
+        List<String> list2 = new ArrayList<>();
 
         list2.add("fOo-2");
         list2.add("foO-2");
@@ -257,7 +254,7 @@ public class MultiFilterTest {
         Expression e1 = new LiteralExpressionImpl(list);
         Expression e2 = new LiteralExpressionImpl(list2);
 
-        filter = fac.equal(e1, new LiteralExpressionImpl("foo-2"), false, MatchAction.ALL);
+        Filter filter = fac.equal(e1, new LiteralExpressionImpl("foo-2"), false, MatchAction.ALL);
         assertFalse(filter.evaluate(null));
 
         filter = fac.equal(new LiteralExpressionImpl("foo-2"), e2, false, MatchAction.ALL);
@@ -278,14 +275,13 @@ public class MultiFilterTest {
 
     @Test
     public void testCompareStringOperators_One() {
-        Filter filter;
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
 
         list.add("foo-1");
         list.add("foo-2");
         list.add("foo-3");
 
-        List<String> list2 = new ArrayList<String>();
+        List<String> list2 = new ArrayList<>();
 
         list2.add("Foo-1");
         list2.add("fOo-2");
@@ -295,7 +291,7 @@ public class MultiFilterTest {
         Expression e1 = new LiteralExpressionImpl(list);
         Expression e2 = new LiteralExpressionImpl(list2);
 
-        filter = fac.equal(e1, new LiteralExpressionImpl("foo-2"), false, MatchAction.ONE);
+        Filter filter = fac.equal(e1, new LiteralExpressionImpl("foo-2"), false, MatchAction.ONE);
         assertTrue(filter.evaluate(null));
 
         filter = fac.equal(new LiteralExpressionImpl("foo-2"), e2, false, MatchAction.ONE);
@@ -316,8 +312,7 @@ public class MultiFilterTest {
 
     @Test
     public void testCompareNumberOperators_Any() {
-        Filter filter;
-        List<Double> list = new ArrayList<Double>();
+        List<Double> list = new ArrayList<>();
 
         list.add(35.2);
         list.add(202.3);
@@ -328,7 +323,7 @@ public class MultiFilterTest {
 
         Expression empty = new LiteralExpressionImpl(new ArrayList<String>());
 
-        filter = fac.equals(e, new LiteralExpressionImpl(201.7));
+        Filter filter = fac.equals(e, new LiteralExpressionImpl(201.7));
         assertTrue(filter.evaluate(null));
 
         filter = fac.equals(new LiteralExpressionImpl(202.3), e);
@@ -421,14 +416,13 @@ public class MultiFilterTest {
 
     @Test
     public void testCompareNumberOperators_All() {
-        Filter filter;
-        List<Double> list = new ArrayList<Double>();
+        List<Double> list = new ArrayList<>();
         list.add(35.2);
         list.add(202.3);
         list.add(201.7);
         list.add(10000.5);
 
-        List<Double> list2 = new ArrayList<Double>();
+        List<Double> list2 = new ArrayList<>();
         list2.add(35.2);
         list2.add(35.2);
         list2.add(35.2);
@@ -436,7 +430,7 @@ public class MultiFilterTest {
         Expression e1 = new LiteralExpressionImpl(list);
         Expression e2 = new LiteralExpressionImpl(list2);
 
-        filter = fac.equal(e1, new LiteralExpressionImpl(35.2), false, MatchAction.ALL);
+        Filter filter = fac.equal(e1, new LiteralExpressionImpl(35.2), false, MatchAction.ALL);
         assertFalse(filter.evaluate(null));
 
         filter = fac.equal(new LiteralExpressionImpl(35.2), e2, false, MatchAction.ALL);
@@ -515,14 +509,13 @@ public class MultiFilterTest {
 
     @Test
     public void testCompareNumberOperators_One() {
-        Filter filter;
-        List<Double> list = new ArrayList<Double>();
+        List<Double> list = new ArrayList<>();
         list.add(35.2);
         list.add(202.3);
         list.add(201.7);
         list.add(10000.5);
 
-        List<Double> list2 = new ArrayList<Double>();
+        List<Double> list2 = new ArrayList<>();
         list2.add(35.2);
         list2.add(35.2);
         list2.add(202.3);
@@ -530,7 +523,7 @@ public class MultiFilterTest {
         Expression e1 = new LiteralExpressionImpl(list);
         Expression e2 = new LiteralExpressionImpl(list2);
 
-        filter = fac.equal(e1, new LiteralExpressionImpl(35.2), false, MatchAction.ONE);
+        Filter filter = fac.equal(e1, new LiteralExpressionImpl(35.2), false, MatchAction.ONE);
         assertTrue(filter.evaluate(null));
 
         filter = fac.equal(new LiteralExpressionImpl(35.2), e2, false, MatchAction.ONE);
@@ -609,7 +602,6 @@ public class MultiFilterTest {
 
     @Test
     public void testGeometries_Any() {
-        Filter filter;
         GeometryFactory gf = new GeometryFactory(new PrecisionModel());
 
         Coordinate[] coords1 = {
@@ -651,10 +643,11 @@ public class MultiFilterTest {
                 };
         Polygon geom4 = gf.createPolygon(gf.createLinearRing(coords4), new LinearRing[0]);
 
-        List<Geometry> list = new ArrayList<Geometry>();
+        List<Geometry> list = new ArrayList<>();
         list.add(geom4);
 
-        filter = fac.overlaps(new LiteralExpressionImpl(list), new LiteralExpressionImpl(geom1));
+        Filter filter =
+                fac.overlaps(new LiteralExpressionImpl(list), new LiteralExpressionImpl(geom1));
         assertFalse(filter.evaluate(null));
         filter = fac.overlaps(new LiteralExpressionImpl(geom1), new LiteralExpressionImpl(list));
         assertFalse(filter.evaluate(null));
@@ -682,11 +675,11 @@ public class MultiFilterTest {
         assertTrue(filter.evaluate(null));
 
         // comparing lists with lists
-        list = new ArrayList<Geometry>();
+        list = new ArrayList<>();
         list.add(geom3);
         list.add(geom2);
 
-        List<Geometry> list2 = new ArrayList<Geometry>();
+        List<Geometry> list2 = new ArrayList<>();
         list2.add(geom1);
         list2.add(geom2);
 
@@ -698,7 +691,6 @@ public class MultiFilterTest {
 
     @Test
     public void testGeometries_One() {
-        Filter filter;
         GeometryFactory gf = new GeometryFactory(new PrecisionModel());
 
         Coordinate[] coords1 = {
@@ -740,10 +732,10 @@ public class MultiFilterTest {
                 };
         Polygon geom4 = gf.createPolygon(gf.createLinearRing(coords4), new LinearRing[0]);
 
-        List<Geometry> list = new ArrayList<Geometry>();
+        List<Geometry> list = new ArrayList<>();
         list.add(geom4);
 
-        filter =
+        Filter filter =
                 fac.equal(
                         new LiteralExpressionImpl(list),
                         new LiteralExpressionImpl(geom4),
@@ -819,7 +811,6 @@ public class MultiFilterTest {
 
     @Test
     public void testGeometries_All() {
-        Filter filter;
         GeometryFactory gf = new GeometryFactory(new PrecisionModel());
 
         Coordinate[] coords1 = {
@@ -861,10 +852,10 @@ public class MultiFilterTest {
                 };
         Polygon geom4 = gf.createPolygon(gf.createLinearRing(coords4), new LinearRing[0]);
 
-        List<Geometry> list = new ArrayList<Geometry>();
+        List<Geometry> list = new ArrayList<>();
         list.add(geom4);
 
-        filter =
+        Filter filter =
                 fac.equal(
                         new LiteralExpressionImpl(list),
                         new LiteralExpressionImpl(geom4),

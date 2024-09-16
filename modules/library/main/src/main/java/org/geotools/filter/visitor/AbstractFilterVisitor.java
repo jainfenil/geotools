@@ -16,7 +16,6 @@
  */
 package org.geotools.filter.visitor;
 
-import java.util.Iterator;
 import org.opengis.filter.And;
 import org.opengis.filter.BinaryComparisonOperator;
 import org.opengis.filter.BinaryLogicOperator;
@@ -96,8 +95,6 @@ public class AbstractFilterVisitor implements FilterVisitor {
      * Constructs the filter visitor with an expression visitor.
      *
      * <p>Using this constructor allows expressions of a filter to be visited as well.
-     *
-     * @param expressionVisitor
      */
     public AbstractFilterVisitor(ExpressionVisitor expressionVisitor) {
         this.expressionVisitor = expressionVisitor;
@@ -281,8 +278,7 @@ public class AbstractFilterVisitor implements FilterVisitor {
     /** Visits elements of filter.getChildren(). */
     protected Object visit(BinaryLogicOperator filter, Object data) {
         if (filter.getChildren() != null) {
-            for (Iterator<Filter> i = filter.getChildren().iterator(); i.hasNext(); ) {
-                Filter child = i.next();
+            for (Filter child : filter.getChildren()) {
                 child.accept(this, data);
             }
         }

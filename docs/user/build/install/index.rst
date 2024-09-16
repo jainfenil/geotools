@@ -7,7 +7,6 @@ Install Build Tools
    jdk
    mvn
    git
-   ojdbc
    sphinx
 
 Download Links
@@ -50,10 +49,6 @@ The following optional downloads provide increased functionality or performance:
 
   * http://java.net/projects/imageio-ext/downloads
 
-* Oracle (Optional):
-    
-  * Obtain an ojdbc jar from Oracle or your Oracle installation
-
 * DB2 (Optional)
 
   DB2 Jdbc Driver
@@ -64,7 +59,7 @@ The following optional downloads provide increased functionality or performance:
   
   * http://www-01.ibm.com/software/data/db2/express/download.html
 
-* ArcSDE (Optional):
-  
-  Not available for download - Included on CD
+
+
+
 

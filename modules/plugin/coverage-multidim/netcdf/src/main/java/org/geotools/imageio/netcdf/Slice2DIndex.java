@@ -88,8 +88,8 @@ public class Slice2DIndex {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        for (int i = 0; i < index.length; i++) {
-            result = prime * result + index[i];
+        for (int j : index) {
+            result = prime * result + j;
         }
         result = prime * result + ((variableName == null) ? 0 : variableName.hashCode());
         return result;
@@ -170,7 +170,6 @@ public class Slice2DIndex {
          *
          * @param imageIndex the imageIndex to look for.
          * @return the {@link Slice2DIndex} for the picked image.
-         * @throws IOException
          */
         public synchronized Slice2DIndex getSlice2DIndex(int imageIndex) throws IOException {
             // Synchronized these access due to the RAF usage.
@@ -218,13 +217,10 @@ public class Slice2DIndex {
          *
          * @param file the file to write to.
          * @param indexList the list of {@link Slice2DIndex} to dump to file.
-         * @throws IOException
          */
         public static void writeIndexFile(File file, List<Slice2DIndex> indexList)
                 throws IOException {
-            RandomAccessFile raf = null;
-            try {
-                raf = new RandomAccessFile(file, "rw");
+            try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
                 int size = indexList.size();
                 // write number of records
                 raf.writeInt(size);
@@ -255,11 +251,6 @@ public class Slice2DIndex {
                 }
                 // add also the data end position
                 raf.writeLong(dataEnd);
-
-            } finally {
-                if (raf != null) {
-                    raf.close();
-                }
             }
         }
 

@@ -1,6 +1,6 @@
 package org.geotools.data.directory;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -42,9 +42,7 @@ public class DirectoryTestSupport {
             if (f.isDirectory()) {
                 deleteDirectory(f);
             } else {
-                if (!f.delete()) {
-                    // System.out.println("Couldn't delete " + f.getAbsolutePath());
-                }
+                f.delete();
             }
         }
         directory.delete();

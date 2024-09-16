@@ -15,7 +15,6 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-
 package org.geotools.data.wfs.online;
 
 import static org.junit.Assert.assertEquals;
@@ -67,6 +66,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+/** Online tests only run if {@link #SERVER_URL} can be reached. */
 public abstract class AbstractWfsDataStoreOnlineTest {
 
     private static final Logger LOGGER = Logging.getLogger(AbstractWfsDataStoreOnlineTest.class);
@@ -75,6 +75,7 @@ public abstract class AbstractWfsDataStoreOnlineTest {
 
     private final String SERVER_URL;
 
+    /** Check for availability only once: true, false, or null for unknown. */
     protected static Boolean serviceAvailable = null;
 
     /** The DataStore under test, static so we create it only once */
@@ -154,7 +155,7 @@ public abstract class AbstractWfsDataStoreOnlineTest {
         if (wfs == null && serviceAvailable.booleanValue()) {
             LOGGER.info("Creating test datastore for " + SERVER_URL);
 
-            Map<String, Serializable> params = new HashMap<String, Serializable>();
+            Map<String, Serializable> params = new HashMap<>();
             params.put(WFSDataStoreFactory.URL.key, SERVER_URL);
             params.put(WFSDataStoreFactory.GML_COMPATIBLE_TYPENAMES.key, true);
             params.put(WFSDataStoreFactory.AXIS_ORDER.key, axisOrder);
@@ -172,8 +173,7 @@ public abstract class AbstractWfsDataStoreOnlineTest {
             return;
         }
 
-        SimpleFeatureSource featureSource;
-        featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
+        SimpleFeatureSource featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
 
         assertNotNull(featureSource);
 
@@ -193,8 +193,7 @@ public abstract class AbstractWfsDataStoreOnlineTest {
             return;
         }
 
-        SimpleFeatureSource featureSource;
-        featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
+        SimpleFeatureSource featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
         assertNotNull(featureSource);
 
         ReferencedEnvelope infoBounds = featureSource.getInfo().getBounds();
@@ -225,8 +224,7 @@ public abstract class AbstractWfsDataStoreOnlineTest {
             return;
         }
 
-        SimpleFeatureSource featureSource;
-        featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
+        SimpleFeatureSource featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
         assertNotNull(featureSource);
 
         assertEquals(featureCount, featureSource.getCount(Query.ALL));
@@ -235,8 +233,6 @@ public abstract class AbstractWfsDataStoreOnlineTest {
     /**
      * Performs a FeatureSource.getCount(Query) with the constructor provided fid filter if the
      * filter is not null.
-     *
-     * @throws IOException
      */
     @Test
     public void testFeatureSourceGetCountFilter() throws IOException {
@@ -252,8 +248,7 @@ public abstract class AbstractWfsDataStoreOnlineTest {
                 return;
             }
 
-            SimpleFeatureSource featureSource;
-            featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
+            SimpleFeatureSource featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
             assertNotNull(featureSource);
 
             Query query = new Query(featureSource.getInfo().getName());
@@ -275,26 +270,22 @@ public abstract class AbstractWfsDataStoreOnlineTest {
             return;
         }
 
-        SimpleFeatureSource featureSource;
-        featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
+        SimpleFeatureSource featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
         assertNotNull(featureSource);
 
-        SimpleFeatureCollection features;
-        features = featureSource.getFeatures();
+        SimpleFeatureCollection features = featureSource.getFeatures();
         assertNotNull(features);
 
         SimpleFeatureType schema = features.getSchema();
         assertNotNull(schema);
 
-        SimpleFeatureIterator iterator = features.features();
-        assertNotNull(iterator);
-        try {
+        try (SimpleFeatureIterator iterator = features.features()) {
+            assertNotNull(iterator);
+
             assertTrue(iterator.hasNext());
             SimpleFeature next = iterator.next();
             assertNotNull(next);
             assertNotNull(next.getDefaultGeometry());
-        } finally {
-            iterator.close();
         }
     }
 
@@ -311,30 +302,24 @@ public abstract class AbstractWfsDataStoreOnlineTest {
             return;
         }
 
-        SimpleFeatureSource featureSource;
-        featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
+        SimpleFeatureSource featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
         assertNotNull(featureSource);
 
         Query query = new Query(testType.FEATURETYPENAME);
         query.setFilter(spatialFilter);
 
-        SimpleFeatureCollection features;
-        features = featureSource.getFeatures(query);
+        SimpleFeatureCollection features = featureSource.getFeatures(query);
         assertNotNull(features);
 
         SimpleFeatureType schema = features.getSchema();
         assertNotNull(schema);
 
-        SimpleFeatureIterator iterator = features.features();
-        assertNotNull(iterator);
-        try {
+        try (SimpleFeatureIterator iterator = features.features()) {
             assertTrue(iterator.hasNext());
             SimpleFeature next = iterator.next();
             assertNotNull(next);
             assertNotNull(next.getDefaultGeometry());
             assertFalse(iterator.hasNext());
-        } finally {
-            iterator.close();
         }
     }
 
@@ -350,8 +335,7 @@ public abstract class AbstractWfsDataStoreOnlineTest {
         List<String> typeNames = Arrays.asList(types);
         assertTrue(typeNames.contains(testType.FEATURETYPENAME));
 
-        for (int i = 0; i < types.length; i++) {
-            String typeName = types[i];
+        for (String typeName : types) {
             SimpleFeatureType type = wfs.getSchema(typeName);
             type.getTypeName();
             type.getName().getNamespaceURI();
@@ -367,13 +351,10 @@ public abstract class AbstractWfsDataStoreOnlineTest {
             features = source.getFeatures(query);
             features.size();
 
-            SimpleFeatureIterator iterator = features.features();
-            try {
+            try (SimpleFeatureIterator iterator = features.features()) {
                 while (iterator.hasNext()) {
                     iterator.next();
                 }
-            } finally {
-                iterator.close();
             }
         }
 
@@ -413,13 +394,10 @@ public abstract class AbstractWfsDataStoreOnlineTest {
         features = source.getFeatures(query);
         features.size();
 
-        SimpleFeatureIterator iterator = features.features();
-        try {
+        try (SimpleFeatureIterator iterator = features.features()) {
             while (iterator.hasNext()) {
                 iterator.next();
             }
-        } finally {
-            iterator.close();
         }
     }
 
@@ -432,17 +410,24 @@ public abstract class AbstractWfsDataStoreOnlineTest {
         final SimpleFeatureType ft = wfs.getSchema(testType.FEATURETYPENAME);
         SimpleFeatureSource featureSource = wfs.getFeatureSource(testType.FEATURETYPENAME);
         final ReferencedEnvelope bounds = featureSource.getBounds();
-
         String srsName = CRS.toSRS(bounds.getCoordinateReferenceSystem());
 
         final BBOX bbox =
-                ff.bbox(
-                        "the_geom",
-                        bounds.getMinX(),
-                        bounds.getMinY(),
-                        bounds.getMaxX(),
-                        bounds.getMaxY(),
-                        srsName);
+                AxisOrder.EAST_NORTH == CRS.getAxisOrder(bounds.getCoordinateReferenceSystem())
+                        ? ff.bbox(
+                                "the_geom",
+                                bounds.getMinX(),
+                                bounds.getMinY(),
+                                bounds.getMaxX(),
+                                bounds.getMaxY(),
+                                srsName)
+                        : ff.bbox(
+                                "the_geom",
+                                bounds.getMinY(),
+                                bounds.getMinX(),
+                                bounds.getMaxY(),
+                                bounds.getMaxX(),
+                                srsName);
 
         /** This one does not implement the deprecated geotools filter interfaces */
         final BBOX strictBBox =
@@ -480,16 +465,21 @@ public abstract class AbstractWfsDataStoreOnlineTest {
                 };
 
         final Query query = new Query(ft.getTypeName());
-        query.setPropertyNames(new String[] {"the_geom"});
+        query.setPropertyNames("the_geom");
         query.setFilter(strictBBox);
+        query.setHandle("testDataStoreSupportsPlainBBOXInterface");
 
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader;
+        try (FeatureReader<SimpleFeatureType, SimpleFeature> reader =
+                wfs.getFeatureReader(query, Transaction.AUTO_COMMIT)) {
+            assertNotNull(reader);
+            assertTrue(reader.hasNext());
+        }
 
-        reader = wfs.getFeatureReader(query, Transaction.AUTO_COMMIT);
-        assertNotNull(reader);
-
-        reader = wfs.getFeatureReader(query, Transaction.AUTO_COMMIT);
-        assertNotNull(reader);
+        try (FeatureReader<SimpleFeatureType, SimpleFeature> reader =
+                wfs.getFeatureReader(query, Transaction.AUTO_COMMIT)) {
+            assertNotNull(reader);
+            assertTrue(reader.hasNext());
+        }
     }
 
     @Test
@@ -530,15 +520,14 @@ public abstract class AbstractWfsDataStoreOnlineTest {
                         null);
 
         final Query query = new Query(ft.getTypeName());
-        query.setPropertyNames(new String[] {"the_geom"});
+        query.setPropertyNames("the_geom");
         query.setFilter(lonLatFilter);
         query.setCoordinateSystem(wgs84LonLat);
 
         final int expectedCount = wfs.getFeatureSource(query.getTypeName()).getFeatures().size();
 
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader;
-
-        reader = wfs.getFeatureReader(query, Transaction.AUTO_COMMIT);
+        FeatureReader<SimpleFeatureType, SimpleFeature> reader =
+                wfs.getFeatureReader(query, Transaction.AUTO_COMMIT);
         try {
             assertTrue(reader.hasNext());
             int count = 0;

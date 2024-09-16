@@ -154,7 +154,7 @@ public class LineFormat extends Format {
      * @throws IllegalArgumentException if {@code formats} is null or an element of {@code format}
      *     is null.
      */
-    public LineFormat(final Format[] formats) throws IllegalArgumentException {
+    public LineFormat(final Format... formats) throws IllegalArgumentException {
         this.data = new Object[formats.length];
         this.format = new Format[formats.length];
         this.limits = new int[formats.length + 1];
@@ -331,11 +331,12 @@ public class LineFormat extends Format {
      * @return The value as a {@link Number}.
      * @throws ParseException if the value can not be converted to a {@link Number}.
      */
+    @SuppressWarnings("unchecked")
     private Number getNumber(final int index) throws ParseException {
         Exception error = null;
         if (data[index] instanceof Comparable) {
             try {
-                return ClassChanger.toNumber((Comparable) data[index]);
+                return ClassChanger.toNumber((Comparable<Number>) data[index]);
             } catch (ClassNotFoundException exception) {
                 error = exception;
             }

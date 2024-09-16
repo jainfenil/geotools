@@ -87,14 +87,10 @@ public class WFSContentDataAccess implements DataAccess<FeatureType, Feature> {
         this.namespaceURI = namespaceURI;
     }
 
-    /**
-     * The WFS capabilities document.
-     *
-     * @param capabilities
-     */
+    /** The WFS capabilities document. */
     public WFSContentDataAccess(final WFSClient client) {
         this.client = client;
-        this.names = new ConcurrentHashMap<Name, QName>();
+        this.names = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -124,7 +120,7 @@ public class WFSContentDataAccess implements DataAccess<FeatureType, Feature> {
         // implemented in WFSContentDataStore, uses client to
         // 'getRemoteTypeNames()'.
         Set<QName> remoteTypeNames = client.getRemoteTypeNames();
-        List<Name> namesList = new ArrayList<Name>(remoteTypeNames.size());
+        List<Name> namesList = new ArrayList<>(remoteTypeNames.size());
         for (QName remoteTypeName : remoteTypeNames) {
             Name typeName = new NameImpl(remoteTypeName);
             namesList.add(typeName);
@@ -139,7 +135,6 @@ public class WFSContentDataAccess implements DataAccess<FeatureType, Feature> {
      *
      * @param localTypeName The local type name whose QName equivalent you'd like.
      * @return The QName that corresponds to the Name you passed in.
-     * @throws IOException
      */
     public QName getRemoteTypeName(Name localTypeName) throws IOException {
         if (names.isEmpty()) {

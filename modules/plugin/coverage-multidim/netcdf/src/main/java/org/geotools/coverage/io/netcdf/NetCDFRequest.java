@@ -76,11 +76,7 @@ class NetCDFRequest extends CoverageReadRequest {
 
     String name = null;
 
-    /**
-     * Build a new {@code CoverageRequest} given a set of input parameters.
-     *
-     * @throws IOException
-     */
+    /** Build a new {@code CoverageRequest} given a set of input parameters. */
     public NetCDFRequest(NetCDFSource source, CoverageReadRequest request) throws IOException {
         this.source = source;
         this.originalRequest = request;
@@ -106,9 +102,6 @@ class NetCDFRequest extends CoverageReadRequest {
 
     /**
      * Initialize coverage input properties by collecting them from a {@link CoverageSourceWrapper}
-     *
-     * @param wrapper
-     * @throws IOException
      */
     private void initInputCoverageProperties() throws IOException {
         VariableAdapter.UnidataSpatialDomain spatialDomain =
@@ -137,11 +130,7 @@ class NetCDFRequest extends CoverageReadRequest {
         ReferencedEnvelope wgs84Envelope = new ReferencedEnvelope(bbox);
         try {
             wgs84Envelope = wgs84Envelope.transform(DefaultGeographicCRS.WGS84, true);
-        } catch (TransformException e) {
-            IOException ioe = new IOException();
-            ioe.initCause(e);
-            throw ioe;
-        } catch (FactoryException e) {
+        } catch (TransformException | FactoryException e) {
             IOException ioe = new IOException();
             ioe.initCause(e);
             throw ioe;
@@ -239,7 +228,7 @@ class NetCDFRequest extends CoverageReadRequest {
                     && NetCDFUtilities.getParameterBehaviour(NetCDFUtilities.ELEVATION_DIM)
                             == ParameterBehaviour.DO_NOTHING) {
                 if (verticalExtent != null) {
-                    verticalSubset = new HashSet<NumberRange<Double>>(verticalExtent);
+                    verticalSubset = new HashSet<>(verticalExtent);
                 }
                 request.setVerticalSubset(verticalSubset);
             } else {
@@ -263,7 +252,7 @@ class NetCDFRequest extends CoverageReadRequest {
                             minimumDistance = distance;
                         }
                     }
-                    verticalSubset = new HashSet<NumberRange<Double>>(1);
+                    verticalSubset = new HashSet<>(1);
                     verticalSubset.add(nearestEnvelope);
                     request.setVerticalSubset(verticalSubset);
                 }

@@ -22,11 +22,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.geotools.data.DataAccess;
 import org.geotools.data.DataAccessFinder;
@@ -102,11 +104,7 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
     /** App-schema mapping file extract. */
     private static AppSchemaDataAccessDTO config;
 
-    /**
-     * Test registering and unregistering all data accesses works.
-     *
-     * @throws Exception
-     */
+    /** Test registering and unregistering all data accesses works. */
     @Test
     public void testRegisterAndUnregisterDataAccess() throws Exception {
         loadDataAccesses();
@@ -128,8 +126,6 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
     /**
      * Test that asking for a nonexistent type causes an excception to be thrown with the correct
      * number of type names in the detail message.
-     *
-     * @throws Exception
      */
     @Test
     public void testThrowDataSourceException() throws Exception {
@@ -146,14 +142,10 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
                 "Expected a DataSourceException to have been thrown and handled", handledException);
     }
 
-    /**
-     * Load all data accesses
-     *
-     * @throws Exception
-     */
+    /** Load all data accesses */
     public static void loadDataAccesses() throws Exception {
         /** Load Mapped Feature data access */
-        Map dsParams = new HashMap();
+        Map<String, Serializable> dsParams = new HashMap<>();
         URL url =
                 AppSchemaDataAccessRegistryTest.class.getResource(
                         schemaBase + "MappedFeaturePropertyfile.xml");
@@ -192,8 +184,7 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
         final String SOURCE_ID = "MappedFeature";
         final String MAPPING_FILE = "MappedFeaturePropertyfile";
 
-        HashSet mappings = new HashSet();
-        Map dsParams = new HashMap();
+        Map<String, Serializable> dsParams = new HashMap<>();
         URL url = AppSchemaDataAccessRegistryTest.class.getResource(schemaBase);
         assertNotNull(url);
         final SourceDataStore ds = new SourceDataStore();
@@ -202,7 +193,7 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
         ds.setParams(dsParams);
         config = new AppSchemaDataAccessDTO();
         config.setSourceDataStores(
-                new ArrayList() {
+                new ArrayList<SourceDataStore>() {
                     {
                         add(ds);
                     }
@@ -241,7 +232,6 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
      * @param dataAccess The app schema data access to check
      * @param typeName Feature type
      * @param isNonFeature true if the type is non feature
-     * @throws IOException
      */
     private void checkRegisteredDataAccess(
             AppSchemaDataAccess dataAccess, Name typeName, boolean isNonFeature)
@@ -249,14 +239,13 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
         FeatureTypeMapping mapping = AppSchemaDataAccessRegistry.getMappingByName(typeName);
         assertNotNull(mapping);
         // compare with the supplied data access
-        assertEquals(dataAccess.getMappingByName(typeName).equals(mapping), true);
+        assertTrue(dataAccess.getMappingByName(typeName).equals(mapping));
         if (isNonFeature) {
             assertTrue(mapping.getTargetFeature().getType() instanceof NonFeatureTypeProxy);
         }
 
         // should return a simple feature source
-        FeatureSource<FeatureType, Feature> source =
-                AppSchemaDataAccessRegistry.getMappingByName(typeName).getSource();
+        FeatureSource source = AppSchemaDataAccessRegistry.getMappingByName(typeName).getSource();
         assertNotNull(source);
         assertEquals(mapping.getSource(), source);
 
@@ -265,7 +254,7 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
                 DataAccessRegistry.getFeatureSource(typeName);
         assertNotNull(mappedSource);
         // compare with the supplied data access
-        assertTrue(mappedSource.getDataStore().equals(dataAccess));
+        assertEquals(mappedSource.getDataStore(), dataAccess);
     }
 
     /**
@@ -273,13 +262,12 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
      *
      * @param dataAccess The data access
      * @param typeName The feature type name
-     * @throws IOException
      */
     private void unregister(DataAccess dataAccess, Name typeName) throws IOException {
         dataAccess.dispose();
         boolean notFound = false;
         try {
-            FeatureTypeMapping mapping = AppSchemaDataAccessRegistry.getMappingByElement(typeName);
+            AppSchemaDataAccessRegistry.getMappingByElement(typeName);
         } catch (DataSourceException e) {
             notFound = true;
             assertTrue(e.getMessage().startsWith("Feature type " + typeName + " not found"));
@@ -290,7 +278,7 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
         }
         notFound = false;
         try {
-            FeatureSource source = AppSchemaDataAccessRegistry.getSimpleFeatureSource(typeName);
+            AppSchemaDataAccessRegistry.getSimpleFeatureSource(typeName);
         } catch (DataSourceException e) {
             notFound = true;
             assertTrue(e.getMessage().startsWith("Feature type " + typeName + " not found"));
@@ -304,14 +292,12 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
     /**
      * Fail scenarios for breaking uniqueness of FeatureTypeMapping key (mappingName or
      * targetElement).
-     *
-     * @throws IOException
      */
     @Test
     public void testDuplicateKey() throws IOException {
         boolean threwException = false;
         /** Test duplicate mappingName */
-        HashSet mappings = new HashSet();
+        Set<TypeMapping> mappings = new HashSet<>();
         TypeMapping duplicate = new TypeMapping();
         duplicate.setMappingName(dtoMappingName.getMappingName());
         duplicate.setSourceDataStore(dtoMappingName.getSourceDataStore());
@@ -321,8 +307,8 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
         mappings.add(duplicate);
         config.setTypeMappings(mappings);
         try {
-            AppSchemaDataAccess da =
-                    new AppSchemaDataAccess(AppSchemaDataAccessConfigurator.buildMappings(config));
+
+            new AppSchemaDataAccess(AppSchemaDataAccessConfigurator.buildMappings(config));
         } catch (DataSourceException e) {
             assertTrue(
                     e.getMessage()
@@ -345,8 +331,7 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
         // make sure the above operation didn't fail
         assertTrue(config.getTypeMappings().containsAll(mappings));
         try {
-            AppSchemaDataAccess da =
-                    new AppSchemaDataAccess(AppSchemaDataAccessConfigurator.buildMappings(config));
+            new AppSchemaDataAccess(AppSchemaDataAccessConfigurator.buildMappings(config));
         } catch (DataSourceException e) {
             assertTrue(
                     e.getMessage()
@@ -367,8 +352,7 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
         config.setTypeMappings(mappings);
         assertTrue(config.getTypeMappings().containsAll(mappings));
         try {
-            AppSchemaDataAccess da =
-                    new AppSchemaDataAccess(AppSchemaDataAccessConfigurator.buildMappings(config));
+            new AppSchemaDataAccess(AppSchemaDataAccessConfigurator.buildMappings(config));
         } catch (DataSourceException e) {
             assertTrue(
                     e.getMessage()
@@ -382,14 +366,11 @@ public class AppSchemaDataAccessRegistryTest extends AppSchemaTestSupport {
     /**
      * Success scenarios for keeping uniqueness of FeatureTypeMapping key (mappingName or
      * targetElement).
-     *
-     * @throws IOException
-     * @throws IOException
      */
     @Test
     public void testUniqueKey() throws IOException {
         /** When mappingName are present in both mappings, and they're unique */
-        HashSet mappings = new HashSet();
+        Set<TypeMapping> mappings = new HashSet<>();
         TypeMapping duplicate = new TypeMapping();
         duplicate.setMappingName(dtoMappingName.getTargetElementName());
         duplicate.setSourceDataStore(dtoMappingName.getSourceDataStore());

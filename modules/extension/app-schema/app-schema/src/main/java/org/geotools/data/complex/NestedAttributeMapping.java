@@ -61,10 +61,10 @@ public class NestedAttributeMapping extends AttributeMapping {
             org.geotools.util.logging.Logging.getLogger(NestedAttributeMapping.class);
 
     /** Input feature source of the nested features */
-    private FeatureSource<FeatureType, Feature> source;
+    private FeatureSource<? extends FeatureType, ? extends Feature> source;
 
     /** Mapped feature source of the nested features */
-    private FeatureSource<FeatureType, Feature> mappingSource;
+    private FeatureSource<? extends FeatureType, ? extends Feature> mappingSource;
 
     /** Name of the nested features element */
     protected final Expression nestedFeatureType;
@@ -88,15 +88,8 @@ public class NestedAttributeMapping extends AttributeMapping {
     /**
      * Sole constructor
      *
-     * @param idExpression
-     * @param parentExpression
-     * @param targetXPath
-     * @param targetNodeInstance
-     * @param isMultiValued
-     * @param clientProperties
      * @param sourceElement parent feature element type
      * @param sourcePath XPath link to nested feature
-     * @throws IOException
      */
     public NestedAttributeMapping(
             Expression idExpression,
@@ -134,10 +127,7 @@ public class NestedAttributeMapping extends AttributeMapping {
     /**
      * Get matching input features that are stored in this mapping using a supplied link value.
      *
-     * @param foreignKeyValue
      * @return The matching input feature
-     * @throws IOException
-     * @throws IOException
      */
     public List<Feature> getInputFeatures(
             Object caller,
@@ -162,7 +152,7 @@ public class NestedAttributeMapping extends AttributeMapping {
             if (featureTypeName == null || !(featureTypeName instanceof Name)) {
                 // this could be legitimate, for some null values polymorphism use case
                 // or that it's set to be xlink:href
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
             FeatureTypeMapping featureTypeMapping =
                     AppSchemaDataAccessRegistry.getMappingByName((Name) featureTypeName);
@@ -171,7 +161,7 @@ public class NestedAttributeMapping extends AttributeMapping {
                         "FeatureTypeMapping for '"
                                 + featureTypeName
                                 + "' not found when evaluating filter!");
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
 
             nestedIdExpression = featureTypeMapping.getFeatureIdExpression();
@@ -183,7 +173,7 @@ public class NestedAttributeMapping extends AttributeMapping {
                         "Feature source for '"
                                 + featureTypeName
                                 + "' not found when evaluating filter");
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
 
             AttributeMapping mapping = getMapping(featureTypeMapping);
@@ -201,7 +191,7 @@ public class NestedAttributeMapping extends AttributeMapping {
                 nestedTargetXPath.get(nestedTargetXPath.size() - 1).getName().getLocalPart())) {
             List<AttributeMapping> mappings =
                     featureTypeMapping.getAttributeMappingsIgnoreIndex(this.nestedTargetXPath);
-            if (mappings.size() < 1) {
+            if (mappings.isEmpty()) {
                 throw new IllegalArgumentException(
                         "Mapping is missing for: '" + this.nestedTargetXPath + "'!");
             }
@@ -223,26 +213,26 @@ public class NestedAttributeMapping extends AttributeMapping {
      * @param isMultiple true if the table is denormalised and multiple values are possible for the
      *     same id
      * @return list of built features
-     * @throws IOException
      */
     private List<Feature> getFilteredFeatures(Object foreignKeyValue, boolean isMultiple)
             throws IOException {
         if (nestedSourceExpression == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
-        ArrayList<Feature> matchingFeatures = new ArrayList<Feature>();
+        ArrayList<Feature> matchingFeatures = new ArrayList<>();
 
         Filter filter =
                 filterFac.equals(this.nestedSourceExpression, filterFac.literal(foreignKeyValue));
 
         // get all the nested features based on the link values
-        FeatureCollection<FeatureType, Feature> fCollection = source.getFeatures(filter);
+        FeatureCollection<? extends FeatureType, ? extends Feature> fCollection =
+                source.getFeatures(filter);
         Filter matchingIdFilter = null;
 
-        try (FeatureIterator<Feature> it = fCollection.features()) {
+        try (FeatureIterator<? extends Feature> it = fCollection.features()) {
             if (nestedIdExpression.equals(Expression.NIL)) {
-                HashSet<FeatureId> featureIds = new HashSet<FeatureId>();
+                HashSet<FeatureId> featureIds = new HashSet<>();
                 while (it.hasNext()) {
                     Feature f = it.next();
                     matchingFeatures.add(f);
@@ -256,7 +246,7 @@ public class NestedAttributeMapping extends AttributeMapping {
                     matchingIdFilter = filterFac.id(featureIds);
                 }
             } else {
-                HashSet<String> featureIds = new HashSet<String>();
+                HashSet<String> featureIds = new HashSet<>();
                 while (it.hasNext()) {
                     Feature f = it.next();
                     matchingFeatures.add(f);
@@ -268,7 +258,7 @@ public class NestedAttributeMapping extends AttributeMapping {
 
                 // Find features of the same id from denormalised view
                 if (!featureIds.isEmpty()) {
-                    List<Filter> idFilters = new ArrayList<Filter>(featureIds.size());
+                    List<Filter> idFilters = new ArrayList<>(featureIds.size());
                     for (String id : featureIds) {
                         idFilters.add(filterFac.equals(nestedIdExpression, filterFac.literal(id)));
                     }
@@ -282,7 +272,7 @@ public class NestedAttributeMapping extends AttributeMapping {
 
             if (fCollection.size() > matchingFeatures.size()) {
                 // there are rows of same id from denormalised view
-                try (FeatureIterator<Feature> it = fCollection.features()) {
+                try (FeatureIterator<? extends Feature> it = fCollection.features()) {
                     matchingFeatures.clear();
                     while (it.hasNext()) {
                         matchingFeatures.add(it.next());
@@ -297,10 +287,7 @@ public class NestedAttributeMapping extends AttributeMapping {
     /**
      * Get matching input features that are stored in this mapping using a supplied link value.
      *
-     * @param foreignKeyValue
      * @return The matching input feature
-     * @throws IOException
-     * @throws IOException
      */
     public List<Feature> getInputFeatures(Object foreignKeyValue, FeatureTypeMapping fMapping)
             throws IOException {
@@ -320,7 +307,7 @@ public class NestedAttributeMapping extends AttributeMapping {
                             "Feature source for '"
                                     + fMapping.getTargetFeature().getName()
                                     + "' not found when evaluating filter");
-                    return Collections.EMPTY_LIST;
+                    return Collections.emptyList();
                 }
 
                 nestedIdExpression = fMapping.getFeatureIdExpression();
@@ -342,10 +329,8 @@ public class NestedAttributeMapping extends AttributeMapping {
     /**
      * Get the maching built features that are stored in this mapping using a supplied link value
      *
-     * @param foreignKeyValue
      * @param reprojection Reprojected CRS or null
      * @return The matching simple features
-     * @throws IOException
      */
     public List<Feature> getFeatures(
             Object foreignKeyValue,
@@ -369,11 +354,9 @@ public class NestedAttributeMapping extends AttributeMapping {
     /**
      * Get the maching built features that are stored in this mapping using a supplied link value
      *
-     * @param foreignKeyValue
      * @param reprojection Reprojected CRS or null
      * @param selectedProperties list of properties to get
      * @return The matching simple features
-     * @throws IOException
      */
     public List<Feature> getFeatures(
             Object source,
@@ -388,7 +371,7 @@ public class NestedAttributeMapping extends AttributeMapping {
             throws IOException {
 
         if (foreignKeyValue == null) {
-            return Collections.<Feature>emptyList();
+            return Collections.emptyList();
         }
 
         if (isSameSource()) {
@@ -398,7 +381,7 @@ public class NestedAttributeMapping extends AttributeMapping {
                     "Link field is missing from feature chaining mapping!");
         }
 
-        FeatureSource<FeatureType, Feature> fSource = getMappingSource(feature);
+        FeatureSource<? extends FeatureType, ? extends Feature> fSource = getMappingSource(feature);
         if (fSource == null) {
             return null;
         }
@@ -406,13 +389,12 @@ public class NestedAttributeMapping extends AttributeMapping {
         Query query = new Query();
         query.setCoordinateSystemReproject(reprojection);
 
-        Filter filter;
         PropertyName propertyName = filterFac.property(this.nestedTargetXPath.toString());
-        filter = filterFac.equals(propertyName, filterFac.literal(foreignKeyValue));
+        Filter filter = filterFac.equals(propertyName, filterFac.literal(foreignKeyValue));
         query.setFilter(filter);
 
         if (selectedProperties != null && !selectedProperties.isEmpty()) {
-            selectedProperties = new ArrayList<PropertyName>(selectedProperties);
+            selectedProperties = new ArrayList<>(selectedProperties);
             selectedProperties.add(propertyName);
         }
 
@@ -431,12 +413,13 @@ public class NestedAttributeMapping extends AttributeMapping {
 
         query.setProperties(selectedProperties);
 
-        ArrayList<Feature> matchingFeatures = new ArrayList<Feature>();
+        ArrayList<Feature> matchingFeatures = new ArrayList<>();
 
         // get all the mapped nested features based on the link values
-        FeatureCollection<FeatureType, Feature> fCollection = fSource.getFeatures(query);
+        FeatureCollection<? extends FeatureType, ? extends Feature> fCollection =
+                fSource.getFeatures(query);
         if (fCollection instanceof MappingFeatureCollection) {
-            try (FeatureIterator<Feature> iterator = fCollection.features()) {
+            try (FeatureIterator<? extends Feature> iterator = fCollection.features()) {
                 while (iterator.hasNext()) {
                     matchingFeatures.add(iterator.next());
                 }
@@ -446,8 +429,8 @@ public class NestedAttributeMapping extends AttributeMapping {
         return matchingFeatures;
     }
 
-    protected FeatureSource<FeatureType, Feature> getMappingSource(Object feature)
-            throws IOException {
+    protected FeatureSource<? extends FeatureType, ? extends Feature> getMappingSource(
+            Object feature) throws IOException {
 
         if (mappingSource == null || isConditional) {
             // initiate if null, or evaluate a new one if the targetElement is a function
@@ -498,7 +481,7 @@ public class NestedAttributeMapping extends AttributeMapping {
     }
 
     public FeatureTypeMapping getFeatureTypeMapping(Feature feature) throws IOException {
-        FeatureSource<FeatureType, Feature> fSource = getMappingSource(feature);
+        FeatureSource<? extends FeatureType, ? extends Feature> fSource = getMappingSource(feature);
         if (fSource == null) {
             return null;
         }

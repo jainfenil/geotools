@@ -19,7 +19,6 @@ package org.geotools.data.solr;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -117,9 +116,7 @@ public class SolrFeatureSource extends ContentFeatureSource {
                             getSchema(), store.getSolrServer(), q, this.getDataStore());
             // if post filter, wrap it
             if (postFilter != null && postFilter != Filter.INCLUDE) {
-                reader =
-                        new FilteringFeatureReader<SimpleFeatureType, SimpleFeature>(
-                                reader, postFilter);
+                reader = new FilteringFeatureReader<>(reader, postFilter);
             }
             try {
                 if (reader.hasNext()) {
@@ -149,14 +146,11 @@ public class SolrFeatureSource extends ContentFeatureSource {
             Filter postFilter = split[1];
             if (postFilter != null && postFilter != Filter.INCLUDE) {
                 // grab a reader
-                FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(query);
-                try {
+                try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(query)) {
                     while (reader.hasNext()) {
                         reader.next();
                         count++;
                     }
-                } finally {
-                    reader.close();
                 }
                 return count;
             } else {
@@ -166,6 +160,7 @@ public class SolrFeatureSource extends ContentFeatureSource {
                 if (store.getLogger().isLoggable(Level.FINE)) {
                     store.getLogger().log(Level.FINE, q.toString());
                 }
+                @SuppressWarnings("PMD.CloseResource") // not managed here
                 HttpSolrClient server = store.getSolrServer();
                 QueryResponse rsp = server.query(q);
                 count =
@@ -215,9 +210,7 @@ public class SolrFeatureSource extends ContentFeatureSource {
             }
             reader = new SolrFeatureReader(querySchema, store.getSolrServer(), q, store);
             if (postFilter != null && postFilter != Filter.INCLUDE) {
-                reader =
-                        new FilteringFeatureReader<SimpleFeatureType, SimpleFeature>(
-                                reader, postFilter);
+                reader = new FilteringFeatureReader<>(reader, postFilter);
                 if (!returnedSchema.equals(querySchema))
                     reader = new ReTypeFeatureReader(reader, returnedSchema);
             }
@@ -234,10 +227,8 @@ public class SolrFeatureSource extends ContentFeatureSource {
     /**
      * Returns a List with distinct-unique values
      *
-     * @param query
      * @param visitor with unique field setting
      * @return List with distinct unique values
-     * @throws IOException
      */
     protected List<String> getUniqueScalarList(Query query, UniqueVisitor visitor)
             throws IOException {
@@ -252,6 +243,7 @@ public class SolrFeatureSource extends ContentFeatureSource {
             preQuery.setStartIndex(visitor.getStartIndex());
             preQuery.setMaxFeatures(visitor.getMaxFeatures());
 
+            @SuppressWarnings("PMD.CloseResource") // not managed here
             HttpSolrClient solrServer = store.getSolrServer();
             SolrQuery q = store.selectUniqueValues(getSchema(), preQuery, visitor);
             QueryResponse rsp = solrServer.query(q);
@@ -389,8 +381,7 @@ public class SolrFeatureSource extends ContentFeatureSource {
 
                 String[] extraAttributes = extractor.getAttributeNames();
                 if (extraAttributes != null && extraAttributes.length > 0) {
-                    List<String> allAttributes =
-                            new ArrayList<String>(Arrays.asList(propertyNames));
+                    List<String> allAttributes = new ArrayList<>(Arrays.asList(propertyNames));
                     for (String extraAttribute : extraAttributes) {
                         if (!allAttributes.contains(extraAttribute))
                             allAttributes.add(extraAttribute);
@@ -491,27 +482,22 @@ public class SolrFeatureSource extends ContentFeatureSource {
         }
 
         Query newQuery = new Query(query);
-        newQuery.setSortBy(new SortBy[] {sortBy});
+        newQuery.setSortBy(sortBy);
 
         // We set up the sortBy where we only need a single value instead of the
         // entire collection.
         newQuery.setMaxFeatures(1);
 
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(newQuery);
-        while (reader.hasNext()) {
-            visitor.visit(reader.next());
+        try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = getReader(newQuery)) {
+            while (reader.hasNext()) {
+                visitor.visit(reader.next());
+            }
         }
 
         return true;
     }
 
-    /**
-     * Process UniqueVisitor with group on solr query
-     *
-     * @param query
-     * @param visitor
-     * @throws IOException
-     */
+    /** Process UniqueVisitor with group on solr query */
     private void handleUniqueVisitor(Query query, UniqueVisitor visitor) throws IOException {
         visitor.setValue(getUniqueScalarList(query, visitor));
     }

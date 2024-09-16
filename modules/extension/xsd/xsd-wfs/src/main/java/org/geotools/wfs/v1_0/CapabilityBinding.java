@@ -53,9 +53,8 @@ public class CapabilityBinding extends AbstractComplexEMFBinding {
 
         Node request = node.getChild("Request");
 
-        OperationType operation;
-
-        operation = getCapabilities(request.getChild("GetCapabilities"), ows10Factory);
+        OperationType operation =
+                getCapabilities(request.getChild("GetCapabilities"), ows10Factory);
         addOperation(om, operation);
 
         operation = dft(request.getChild("DescribeFeatureType"), ows10Factory);
@@ -133,7 +132,7 @@ public class CapabilityBinding extends AbstractComplexEMFBinding {
             return Collections.emptyList();
         }
         List<Node> children = node.getChildren();
-        List<String> names = new ArrayList<String>(children.size());
+        List<String> names = new ArrayList<>(children.size());
         for (Node child : children) {
             InstanceComponent component = child.getComponent();
             String paramValue = component.getName();

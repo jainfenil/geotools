@@ -31,7 +31,7 @@ public class AppSchemaValidatorTest {
 
     /** Test that validation succeeds for a known-valid XML instance document. */
     @Test
-    public void validateErMineralOccurrence() {
+    public void validateErMineralOccurrence() throws IOException {
         AppSchemaValidator.validateResource("/test-data/er_MineralOccurrence.xml", null);
     }
 
@@ -61,7 +61,7 @@ public class AppSchemaValidatorTest {
      * WFS 2.0 specification.
      */
     @Test
-    public void validateWfs20Example01() {
+    public void validateWfs20Example01() throws IOException {
         AppSchemaValidator.validateResource("/test-data/Example01.xml", null);
     }
 
@@ -94,13 +94,9 @@ public class AppSchemaValidatorTest {
      * Test support for testing {@link AppSchemaValidator#validate(String)}. This method converts
      * reads a classpath resource into a string (using the default platform encoding) before
      * applying string schema validation.
-     *
-     * @param name
      */
     public static void validateResourceAsString(String name) {
-        InputStream input = null;
-        try {
-            input = AppSchemaValidatorTest.class.getResourceAsStream(name);
+        try (InputStream input = AppSchemaValidatorTest.class.getResourceAsStream(name)) {
             byte[] bytes = new byte[input.available()];
             int count = input.read(bytes);
             Assert.assertEquals("Unexpected read underrun", bytes.length, count);
@@ -108,14 +104,6 @@ public class AppSchemaValidatorTest {
             AppSchemaValidator.validate(xml, null);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    // we tried
-                }
-            }
         }
     }
 

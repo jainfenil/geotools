@@ -62,19 +62,18 @@ public class MeteoMarkFactory implements MarkFactory {
      */
     public static final String ARROWHEAD_BASE_KEY = "ab";
 
-    protected static final Map<String, Shape> WELLKNOWN_SHAPES = new HashMap<String, Shape>();
+    protected static final Map<String, Shape> WELLKNOWN_SHAPES = new HashMap<>();
 
     static {
         GeneralPath gp = new GeneralPath();
 
         gp = new GeneralPath();
-        ExplicitBoundsShape bnd = null;
 
         gp.moveTo(-0.145f, 0.000f);
         gp.lineTo(0.000f, 0.175f);
         gp.lineTo(0.105f, 0.000f);
         gp.closePath();
-        bnd = new ExplicitBoundsShape(gp);
+        ExplicitBoundsShape bnd = new ExplicitBoundsShape(gp);
         bnd.setBounds(new Rectangle2D.Double(-0.5, -0.5, 0.5, 0.5));
         WELLKNOWN_SHAPES.put("triangle", bnd);
 

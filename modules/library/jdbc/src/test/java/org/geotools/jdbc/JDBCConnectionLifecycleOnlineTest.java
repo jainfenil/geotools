@@ -29,6 +29,7 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 
+@SuppressWarnings("PMD.JUnit4TestShouldUseTestAnnotation") // not yet a JUnit4 test
 public abstract class JDBCConnectionLifecycleOnlineTest extends JDBCTestSupport {
 
     protected MockListener mockListener = new MockListener();
@@ -40,11 +41,7 @@ public abstract class JDBCConnectionLifecycleOnlineTest extends JDBCTestSupport 
         featureStore = (JDBCFeatureStore) dataStore.getFeatureSource(tname("ft1"));
     }
 
-    /**
-     * Check null encoding is working properly
-     *
-     * @throws IOException
-     */
+    /** Check null encoding is working properly */
     public void testListenerCalled() throws IOException {
         dataStore.getConnectionLifecycleListeners().add(mockListener);
 

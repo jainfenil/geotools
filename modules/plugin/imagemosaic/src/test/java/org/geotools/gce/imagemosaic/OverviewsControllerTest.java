@@ -28,7 +28,6 @@ import java.util.logging.Logger;
 import javax.imageio.ImageReadParam;
 import javax.imageio.spi.ImageReaderSpi;
 import junit.framework.JUnit4TestAdapter;
-import junit.textui.TestRunner;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
@@ -36,7 +35,6 @@ import org.geotools.coverage.grid.io.DecimationPolicy;
 import org.geotools.coverage.grid.io.GridFormatFinder;
 import org.geotools.coverage.grid.io.OverviewPolicy;
 import org.geotools.coverage.grid.io.UnknownFormat;
-import org.geotools.coverage.grid.io.footprint.MultiLevelROI;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -164,11 +162,6 @@ public class OverviewsControllerTest extends Assert {
      *
      * <p>world_a.tif => Pixel Size = (0.833333333333333,-0.833333333333333); 4 overviews
      * world_b.tif => Pixel Size = (1.406250000000000,-1.406250000000000); 2 overviews
-     *
-     * @throws IOException
-     * @throws MismatchedDimensionException
-     * @throws FactoryException
-     * @throws TransformException
      */
     @Test
     public void testHeterogeneousGranules()
@@ -187,7 +180,7 @@ public class OverviewsControllerTest extends Assert {
         final Hints hints = new Hints(Hints.DEFAULT_COORDINATE_REFERENCE_SYSTEM, WGS84);
         hints.put(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, true);
         final AbstractGridFormat format =
-                (AbstractGridFormat) GridFormatFinder.findFormat(heterogeneousGranulesURL, hints);
+                GridFormatFinder.findFormat(heterogeneousGranulesURL, hints);
         Assert.assertNotNull(format);
         Assert.assertFalse("UknownFormat", format instanceof UnknownFormat);
 
@@ -219,7 +212,7 @@ public class OverviewsControllerTest extends Assert {
                         null,
                         spi,
                         null,
-                        (MultiLevelROI) null,
+                        null,
                         -1,
                         true,
                         false,
@@ -231,7 +224,7 @@ public class OverviewsControllerTest extends Assert {
                         null,
                         spi,
                         null,
-                        (MultiLevelROI) null,
+                        null,
                         -1,
                         true,
                         false,
@@ -317,23 +310,13 @@ public class OverviewsControllerTest extends Assert {
         reader.dispose();
     }
 
-    /** @param args */
-    public static void main(String[] args) {
-        TestRunner.run(OverviewsControllerTest.suite());
-    }
-
     @Before
     public void setUp() throws Exception {
         // remove generated file
         cleanUp();
     }
 
-    /**
-     * Cleaning up the generated files (shape and properties so that we recreate them).
-     *
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
+    /** Cleaning up the generated files (shape and properties so that we recreate them). */
     private void cleanUp() throws FileNotFoundException, IOException {
         File dir = TestData.file(this, "heterogeneous/");
         File[] files =

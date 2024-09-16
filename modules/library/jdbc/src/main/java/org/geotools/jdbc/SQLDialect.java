@@ -31,21 +31,29 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.data.Join.Type;
 import org.geotools.data.Query;
+import org.geotools.feature.visitor.AverageVisitor;
 import org.geotools.feature.visitor.CountVisitor;
+import org.geotools.feature.visitor.FeatureAttributeVisitor;
 import org.geotools.feature.visitor.MaxVisitor;
 import org.geotools.feature.visitor.MinVisitor;
+import org.geotools.feature.visitor.StandardDeviationVisitor;
 import org.geotools.feature.visitor.SumVisitor;
 import org.geotools.feature.visitor.UniqueVisitor;
 import org.geotools.filter.FilterCapabilities;
 import org.geotools.filter.function.InFunction;
+import org.geotools.filter.visitor.ExpressionTypeVisitor;
 import org.geotools.filter.visitor.PostPreProcessFilterSplittingVisitor;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
+import org.geotools.util.Converters;
 import org.geotools.util.factory.Hints;
 import org.geotools.util.logging.Logging;
 import org.locationtech.jts.geom.Envelope;
@@ -65,6 +73,7 @@ import org.opengis.filter.PropertyIsLike;
 import org.opengis.filter.PropertyIsNull;
 import org.opengis.filter.expression.Add;
 import org.opengis.filter.expression.Divide;
+import org.opengis.filter.expression.Expression;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.Multiply;
 import org.opengis.filter.expression.PropertyName;
@@ -236,6 +245,17 @@ public abstract class SQLDialect {
     }
 
     /**
+     * Allows the dialect to setup restrictions for attribute at hand
+     *
+     * @param columnMetaData The column metadata
+     * @param cx The connection used to retrieve the metadata
+     * @return The restriction, or null if no restriction applies
+     */
+    public Filter getRestrictions(ResultSet columnMetaData, Connection cx) throws SQLException {
+        return null;
+    }
+
+    /**
      * Handles the mapping for a user defined type.
      *
      * <p>This method is called after {@link #getMapping(ResultSet, Connection)} but before the rest
@@ -359,14 +379,12 @@ public abstract class SQLDialect {
      *
      * <ul>
      *   <li>{@link UniqueVisitor} -> "unique"
-     *   <li>
      *   <li>{@link CountVisitor} -> "count"
-     *   <li>
      *   <li>{@link MaxVisitor} -> "max"
-     *   <li>
      *   <li>{@link MinVisitor} -> "min"
-     *   <li>
      *   <li>{@link SumVisitor} -> "sum"
+     *   <li>{@link AverageVisitor} -> "avg"
+     *   <li>{@link StandardDeviationVisitor} -> "stddev_pop"
      *   <li>
      * </ul>
      *
@@ -374,12 +392,14 @@ public abstract class SQLDialect {
      */
     public void registerAggregateFunctions(
             Map<Class<? extends FeatureVisitor>, String> aggregates) {
-        // register the well known
+        // register the well known functions, from the SQL standard
         aggregates.put(UniqueVisitor.class, "distinct");
         aggregates.put(CountVisitor.class, "count");
         aggregates.put(MinVisitor.class, "min");
         aggregates.put(MaxVisitor.class, "max");
         aggregates.put(SumVisitor.class, "sum");
+        aggregates.put(AverageVisitor.class, "avg");
+        aggregates.put(StandardDeviationVisitor.class, "stddev_pop");
     }
 
     /**
@@ -432,19 +452,42 @@ public abstract class SQLDialect {
     }
 
     /**
+     * Surrounds a name with the SQL escape string.
+     *
+     * <p>If the name contains the SQL escape string, the SQL escape string is duplicated.
+     */
+    public String escapeName(String name) {
+        String nameEscape = getNameEscape();
+        if (nameEscape.isEmpty()) return name;
+        StringBuilder sb = new StringBuilder();
+        sb.append(nameEscape);
+        int offset = 0;
+        int escapeOffset;
+        while ((escapeOffset = name.indexOf(nameEscape, offset)) != -1) {
+            sb.append(name.substring(offset, escapeOffset));
+            sb.append(nameEscape);
+            sb.append(nameEscape);
+            offset = escapeOffset + nameEscape.length();
+        }
+        sb.append(name.substring(offset));
+        sb.append(nameEscape);
+        return sb.toString();
+    }
+
+    /**
      * Encodes the name of a column in an SQL statement.
      *
-     * <p>This method wraps <tt>raw</tt> in the character provided by {@link #getNameEscape()}.
-     * Subclasses usually don't override this method and instead override {@link #getNameEscape()}.
+     * <p>This method escapes <tt>raw</tt> using method {@link #escapeName(String)}. Subclasses
+     * usually don't override this method and instead override {@link #getNameEscape()}.
      *
      * <p>The <tt>prefix</tt> parameter may be <code>null</code> so subclasses that do override must
      * handle that case.
      */
     public void encodeColumnName(String prefix, String raw, StringBuffer sql) {
         if (prefix != null) {
-            sql.append(ne()).append(prefix).append(ne()).append(".");
+            sql.append(escapeName(prefix)).append(".");
         }
-        sql.append(ne()).append(raw).append(ne());
+        sql.append(escapeName(raw));
     }
 
     /**
@@ -458,9 +501,6 @@ public abstract class SQLDialect {
      *   <li>The provided attribute (<tt>att</tt>) contains some additional restrictions that can be
      *       encoded in the type, ex: field length
      * </ul>
-     *
-     * @param sqlTypeName
-     * @param sql
      */
     public void encodeColumnType(String sqlTypeName, StringBuffer sql) {
         sql.append(sqlTypeName);
@@ -497,21 +537,21 @@ public abstract class SQLDialect {
     /**
      * Encodes the name of a table in an SQL statement.
      *
-     * <p>This method wraps <tt>raw</tt> in the character provided by {@link #getNameEscape()}.
-     * Subclasses usually dont override this method and instead override {@link #getNameEscape()}.
+     * <p>This method escapes <tt>raw</tt> using method {@link #escapeName(String)}. Subclasses
+     * usually dont override this method and instead override {@link #getNameEscape()}.
      */
     public void encodeTableName(String raw, StringBuffer sql) {
-        sql.append(ne()).append(raw).append(ne());
+        sql.append(escapeName(raw));
     }
 
     /**
      * Encodes the name of a schema in an SQL statement.
      *
-     * <p>This method wraps <tt>raw</tt> in the character provided by {@link #getNameEscape()}.
-     * Subclasses usually dont override this method and instead override {@link #getNameEscape()}.
+     * <p>This method escapes <tt>raw</tt> using method {@link #escapeName(String)}. Subclasses
+     * usually dont override this method and instead override {@link #getNameEscape()}.
      */
     public void encodeSchemaName(String raw, StringBuffer sql) {
-        sql.append(ne()).append(raw).append(ne());
+        sql.append(escapeName(raw));
     }
 
     /**
@@ -581,9 +621,6 @@ public abstract class SQLDialect {
      *
      * <p>Most overrides will try out to decode the official EPSG code first, and fall back on the
      * custom database definition otherwise
-     *
-     * @param srid
-     * @return
      */
     public CoordinateReferenceSystem createCRS(int srid, Connection cx) throws SQLException {
         try {
@@ -608,7 +645,6 @@ public abstract class SQLDialect {
      * @param schema The database schema, if any, or null
      * @param featureType The feature type containing the geometry columns whose bounds need to
      *     computed. Mind, it may be retyped and thus contain less geometry columns than the table
-     * @param cx
      * @return a list of referenced envelopes (some of which may be null or empty)
      */
     public List<ReferencedEnvelope> getOptimizedBounds(
@@ -622,8 +658,6 @@ public abstract class SQLDialect {
      *
      * <p>This method must also be sure to properly encode the name of the column with the {@link
      * #encodeColumnName(String, StringBuffer)} function.
-     *
-     * @param tableName
      */
     public abstract void encodeGeometryEnvelope(
             String tableName, String geometryColumn, StringBuffer sql);
@@ -1042,8 +1076,6 @@ public abstract class SQLDialect {
     /**
      * Returns true if this dialect can encode both {@linkplain Query#getStartIndex()} and
      * {@linkplain Query#getMaxFeatures()} into native SQL.
-     *
-     * @return
      */
     public boolean isLimitOffsetSupported() {
         return false;
@@ -1051,9 +1083,6 @@ public abstract class SQLDialect {
 
     /**
      * Returns true if this dialect supports sorting together with the given aggregation function.
-     *
-     * @param function
-     * @return
      */
     public boolean isAggregatedSortSupported(String function) {
         return false;
@@ -1067,10 +1096,6 @@ public abstract class SQLDialect {
     /**
      * Alters the query provided so that limit and offset are natively dealt with. This might mean
      * simply appending some extra directive to the query, or wrapping it into a bigger one.
-     *
-     * @param sql
-     * @param limit
-     * @param offset
      */
     public void applyLimitOffset(StringBuffer sql, int limit, int offset) {
         throw new UnsupportedOperationException(
@@ -1083,8 +1108,6 @@ public abstract class SQLDialect {
      * <p>possible hints (but not limited to)
      *
      * <p>{@link Hints#GEOMETRY_GENERALIZATION} {@link Hints#GEOMETRY_SIMPLIFICATION}
-     *
-     * @param hints
      */
     protected void addSupportedHints(Set<Hints.Key> hints) {}
 
@@ -1131,16 +1154,11 @@ public abstract class SQLDialect {
      * Performs the class "create [unique] indexName on tableName(att1, att2, ..., attN)" call.
      *
      * <p>Subclasses can override to handle special indexes (like spatial ones) and/or the hints
-     *
-     * @param schema
-     * @param index
-     * @throws SQLException
      */
     public void createIndex(
             Connection cx, SimpleFeatureType schema, String databaseSchema, Index index)
             throws SQLException {
         StringBuffer sql = new StringBuffer();
-        String escape = getNameEscape();
         sql.append("CREATE ");
         if (index.isUnique()) {
             sql.append("UNIQUE ");
@@ -1150,15 +1168,15 @@ public abstract class SQLDialect {
             encodeSchemaName(databaseSchema, sql);
             sql.append(".");
         }
-        sql.append(escape).append(index.getIndexName()).append(escape);
+        sql.append(escapeName(index.getIndexName()));
         sql.append(" ON ");
         if (databaseSchema != null) {
             encodeSchemaName(databaseSchema, sql);
             sql.append(".");
         }
-        sql.append(escape).append(index.getTypeName()).append(escape).append("(");
+        sql.append(escapeName(index.getTypeName())).append("(");
         for (String attribute : index.getAttributes()) {
-            sql.append(escape).append(attribute).append(escape).append(", ");
+            sql.append(escapeName(attribute)).append(", ");
         }
         sql.setLength(sql.length() - 2);
         sql.append(")");
@@ -1176,26 +1194,17 @@ public abstract class SQLDialect {
         }
     }
 
-    /**
-     * Drop the index. Subclasses can override to handle extra syntax or db specific situations
-     *
-     * @param cx
-     * @param schema
-     * @param databaseSchema
-     * @param indexName
-     * @throws SQLException
-     */
+    /** Drop the index. Subclasses can override to handle extra syntax or db specific situations */
     public void dropIndex(
             Connection cx, SimpleFeatureType schema, String databaseSchema, String indexName)
             throws SQLException {
         StringBuffer sql = new StringBuffer();
-        String escape = getNameEscape();
         sql.append("DROP INDEX ");
         if (supportsSchemaForIndex() && databaseSchema != null) {
             encodeSchemaName(databaseSchema, sql);
             sql.append(".");
         }
-        sql.append(escape).append(indexName).append(escape);
+        sql.append(escapeName(indexName));
 
         Statement st = null;
         try {
@@ -1213,12 +1222,6 @@ public abstract class SQLDialect {
     /**
      * Returns the list of indexes for a certain table. Subclasses can override to add support for
      * db specific hints
-     *
-     * @param cx
-     * @param databaseSchema
-     * @param typeName
-     * @return
-     * @throws SQLException
      */
     public List<Index> getIndexes(Connection cx, String databaseSchema, String typeName)
             throws SQLException {
@@ -1227,7 +1230,7 @@ public abstract class SQLDialect {
         try {
             indexInfo = md.getIndexInfo(cx.getCatalog(), databaseSchema, typeName, false, true);
 
-            Map<String, Index> indexes = new LinkedHashMap<String, Index>();
+            Map<String, Index> indexes = new LinkedHashMap<>();
             while (indexInfo.next()) {
                 short type = indexInfo.getShort("TYPE");
                 if (type != DatabaseMetaData.tableIndexStatistic) {
@@ -1244,7 +1247,7 @@ public abstract class SQLDialect {
                 }
             }
 
-            return new ArrayList<Index>(indexes.values());
+            return new ArrayList<>(indexes.values());
         } finally {
             dataStore.closeSafe(indexInfo);
         }
@@ -1253,10 +1256,6 @@ public abstract class SQLDialect {
     /**
      * Used to apply search hints on the fully generated SQL (complete of select, from, where, sort,
      * limit/offset)
-     *
-     * @param sql
-     * @param featureType
-     * @param query
      */
     public void handleSelectHints(StringBuffer sql, SimpleFeatureType featureType, Query query) {
         // nothing to do
@@ -1271,9 +1270,6 @@ public abstract class SQLDialect {
      * Splits the filter into two parts, an encodable one, and a non encodable one. The default
      * implementation uses the filter capabilities to split the filter, subclasses can implement
      * their own logic if need be.
-     *
-     * @param original
-     * @return
      */
     public Filter[] splitFilter(Filter filter, SimpleFeatureType schema) {
         PostPreProcessFilterSplittingVisitor splitter =
@@ -1308,5 +1304,81 @@ public abstract class SQLDialect {
      */
     public boolean canSimplifyPoints() {
         return false;
+    }
+
+    /**
+     * Returns the list of aggregation output types for the given visitor and feature type (or an
+     * empty Optional if could not determine it)
+     */
+    protected Optional<List<Class>> getResultTypes(
+            FeatureVisitor visitor, SimpleFeatureType featureType) {
+        if (!(visitor instanceof FeatureAttributeVisitor)) {
+            return Optional.empty();
+        }
+
+        FeatureAttributeVisitor fav = (FeatureAttributeVisitor) visitor;
+        List<Expression> expressions = fav.getExpressions();
+        if (expressions == null || expressions.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Class> inputTypes = new ArrayList<>();
+        for (Expression ex : expressions) {
+            ExpressionTypeVisitor etv = new ExpressionTypeVisitor(featureType);
+            Class expressionType = (Class) ex.accept(etv, null);
+            if (expressionType == null) {
+                return Optional.empty();
+            }
+
+            inputTypes.add(expressionType);
+        }
+
+        return fav.getResultType(inputTypes);
+    }
+
+    /**
+     * Returns a converter used to transform the results of an aggregation, for the given visitor
+     * and feature type. The default implementation returns an identify function, databases with
+     * type system limitations can use it to convert the result to the desired type. Implementations
+     * overriding this method might use {@link #getResultTypes(FeatureVisitor, SimpleFeatureType)}
+     * to compute the expected result type of the aggregation expressions.
+     *
+     * @param visitor
+     * @param featureType
+     * @return
+     */
+    public Function<Object, Object> getAggregateConverter(
+            FeatureVisitor visitor, SimpleFeatureType featureType) {
+        return Function.identity();
+    }
+
+    /**
+     * Gives an opportunity to the dialect to do its own custom type mapping, based on the full
+     * description of the attribute. Defaults to return <code>null</code>, subclasses can override
+     *
+     * @param ad The attribute descriptor
+     * @return A SQL type from {@link Types}, or null if customization is needed
+     */
+    public Integer getSQLType(AttributeDescriptor ad) {
+        return null;
+    }
+
+    /**
+     * Returns true if the attribute in question is an array. By default comparers the {@link
+     * JDBCDataStore#JDBC_NATIVE_TYPE} stored in the attribute user data with {@link Types#ARRAY},
+     * but subclasses can override to use a different approach.
+     */
+    public boolean isArray(AttributeDescriptor att) {
+        Integer nativeType = (Integer) att.getUserData().get(JDBCDataStore.JDBC_NATIVE_TYPE);
+        return Objects.equals(Types.ARRAY, nativeType);
+    }
+
+    /**
+     * Convertes the given value to the target type. The default implementation uses converters to
+     * match the attribute descriptor binding, subclasses can override.
+     */
+    public Object convertValue(Object value, AttributeDescriptor ad) {
+        Class<?> binding = ad.getType().getBinding();
+        return Converters.convert(value, binding);
     }
 }

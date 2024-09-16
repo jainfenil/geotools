@@ -16,21 +16,24 @@
  */
 package org.geotools.util.factory;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.RenderingHints;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import javax.media.jai.JAI;
 import org.apache.commons.logging.LogFactory;
 import org.geotools.util.NullEntityResolver;
 import org.geotools.util.PreventLocalEntityResolver;
 import org.geotools.util.Version;
-import org.junit.*;
-import org.locationtech.jts.geom.Geometry;
+import org.junit.Test;
 import org.opengis.filter.Filter;
 import org.xml.sax.EntityResolver;
 
@@ -58,7 +61,7 @@ public final class GeoToolsTest {
         final Hints hints = new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE);
         assertFalse(hints.isEmpty());
 
-        Map<RenderingHints.Key, Object> map = new HashMap<RenderingHints.Key, Object>();
+        Map<RenderingHints.Key, Object> map = new HashMap<>();
         assertNull(map.put(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.FALSE));
         map = Collections.unmodifiableMap(map);
         assertFalse(map.isEmpty());
@@ -114,7 +117,6 @@ public final class GeoToolsTest {
         // this should always be generated during a maven or ide build
         Manifest metadata = GeoTools.getManifest(GeoTools.class);
         assertFalse("manifest metadata", metadata.getMainAttributes().isEmpty());
-        Attributes attributes = metadata.getAttributes("Project-Version");
         assertEquals(
                 GeoTools.getVersion().toString(),
                 metadata.getMainAttributes().getValue("Project-Version"));
@@ -133,10 +135,10 @@ public final class GeoToolsTest {
     /** Test version lookup */
     @Test
     public void testVersion() {
-        String location;
 
-        location =
-                "jar:file:/Users/jody/.m2/repository/org.locationtech/jts/1.14/jts-1.14.jar!/org.locationtech/jts/geom/Geometry.class";
+        String location =
+                "jar:file:/Users/jody/.m2/repository/org.locationtech/jts/1.14/jts-1.14"
+                        + ".jar!/org.locationtech/jts/geom/Geometry.class";
         assertEquals("1.14", GeoTools.jarVersion(location));
 
         location =
@@ -161,10 +163,6 @@ public final class GeoToolsTest {
         version = GeoTools.getVersion(LogFactory.class);
         assertNotNull(version);
         assertEquals("1.1.1", version.toString());
-
-        version = GeoTools.getVersion(Geometry.class);
-        assertNotNull(version);
-        assertTrue(version.toString().startsWith("1.16"));
     }
     /** Tests the use of system properties. */
     @Test
@@ -207,9 +205,8 @@ public final class GeoToolsTest {
     public void testEntityResolver() {
 
         // confirm instantiate works
-        EntityResolver resolver;
 
-        resolver =
+        EntityResolver resolver =
                 GeoTools.instantiate(
                         "org.geotools.util.factory.PlaceholderEntityResolver",
                         EntityResolver.class,

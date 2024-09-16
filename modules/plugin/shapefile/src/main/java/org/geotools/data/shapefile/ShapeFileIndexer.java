@@ -134,10 +134,6 @@ class ShapeFileIndexer implements FileWriter {
      *
      * @param verbose enable/disable printing of dots every 500 indexed records
      * @return The number of indexed records (or zero)
-     * @throws MalformedURLException
-     * @throws IOException
-     * @throws TreeException
-     * @throws LockTimeoutException
      */
     public int index(boolean verbose, ProgressListener listener)
             throws MalformedURLException, IOException, TreeException, StoreException,
@@ -208,13 +204,12 @@ class ShapeFileIndexer implements FileWriter {
         }
 
         IndexFile shpIndex = new IndexFile(shpFiles, false);
-        QuadTree tree = null;
         int cnt = 0;
         int numRecs = shpIndex.getRecordCount();
         ShapefileHeader header = reader.getHeader();
         Envelope bounds = new Envelope(header.minX(), header.maxX(), header.minY(), header.maxY());
 
-        tree = new QuadTree(numRecs, max, bounds, shpIndex);
+        QuadTree tree = new QuadTree(numRecs, max, bounds, shpIndex);
         try {
             Record rec = null;
 
@@ -312,8 +307,7 @@ class ShapeFileIndexer implements FileWriter {
             Envelope bounds = new Envelope();
             if (node.getNumShapeIds() > 0) {
                 int[] shapeIds = node.getShapesId();
-                for (int i = 0; i < shapeIds.length; i++) {
-                    final int shapeId = shapeIds[i];
+                for (final int shapeId : shapeIds) {
                     int offset = index.getOffsetInBytes(shapeId);
                     reader.goTo(offset);
                     Record rec = reader.nextRecord();
@@ -355,10 +349,10 @@ class ShapeFileIndexer implements FileWriter {
     }
 
     private void printStats(QuadTree tree) throws StoreException {
-        Map<Integer, Integer> stats = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> stats = new HashMap<>();
         gatherStats(tree.getRoot(), stats);
 
-        List<Integer> nums = new ArrayList<Integer>(stats.keySet());
+        List<Integer> nums = new ArrayList<>(stats.keySet());
         Collections.sort(nums);
         LOGGER.log(Level.FINE, "Index statistics");
         for (Integer num : nums) {
@@ -379,11 +373,7 @@ class ShapeFileIndexer implements FileWriter {
         }
     }
 
-    /**
-     * For quad tree this is the max depth. I don't know what it is for RTree
-     *
-     * @param i
-     */
+    /** For quad tree this is the max depth. I don't know what it is for RTree */
     public void setMax(int i) {
         max = i;
     }

@@ -34,6 +34,7 @@ import static org.geotools.data.wfs.WFSDataStoreFactory.TRY_GZIP;
 import static org.geotools.data.wfs.WFSDataStoreFactory.USERNAME;
 import static org.geotools.data.wfs.WFSDataStoreFactory.USE_HTTP_CONNECTION_POOLING;
 import static org.geotools.data.wfs.WFSDataStoreFactory.WFS_STRATEGY;
+import static org.geotools.data.wfs.impl.WFSDataAccessFactory.MAX_CONNECTION_POOL_SIZE;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -85,6 +86,8 @@ public class WFSConfig {
 
     protected boolean useHttpConnectionPooling;
 
+    protected int maxConnectionPoolSize;
+
     protected EntityResolver entityResolver;
 
     public static enum PreferredHttpMethod {
@@ -111,13 +114,14 @@ public class WFSConfig {
         gmlCompatibleTypenames = (Boolean) GML_COMPATIBLE_TYPENAMES.getDefaultValue();
         entityResolver = (EntityResolver) ENTITY_RESOLVER.getDefaultValue();
         useHttpConnectionPooling = (Boolean) USE_HTTP_CONNECTION_POOLING.getDefaultValue();
+        maxConnectionPoolSize = (Integer) MAX_CONNECTION_POOL_SIZE.getDefaultValue();
     }
 
     public static WFSConfig fromParams(Map<?, ?> params) throws IOException {
 
         WFSConfig config = new WFSConfig();
 
-        Boolean preferPost = (Boolean) PROTOCOL.lookUp(params);
+        Boolean preferPost = PROTOCOL.lookUp(params);
 
         if (preferPost == null) {
             config.preferredMethod = PreferredHttpMethod.AUTO;
@@ -128,26 +132,26 @@ public class WFSConfig {
                             : PreferredHttpMethod.HTTP_GET;
         }
 
-        config.user = (String) USERNAME.lookUp(params);
-        config.pass = (String) PASSWORD.lookUp(params);
-        config.timeoutMillis = (Integer) TIMEOUT.lookUp(params);
-        config.buffer = (Integer) BUFFER_SIZE.lookUp(params);
-        config.tryGZIP = (Boolean) TRY_GZIP.lookUp(params);
-        config.lenient = (Boolean) LENIENT.lookUp(params);
+        config.user = USERNAME.lookUp(params);
+        config.pass = PASSWORD.lookUp(params);
+        config.timeoutMillis = TIMEOUT.lookUp(params);
+        config.buffer = BUFFER_SIZE.lookUp(params);
+        config.tryGZIP = TRY_GZIP.lookUp(params);
+        config.lenient = LENIENT.lookUp(params);
 
-        String encoding = (String) ENCODING.lookUp(params);
+        String encoding = ENCODING.lookUp(params);
         config.defaultEncoding = Charset.forName(encoding);
 
-        config.maxFeatures = (Integer) MAXFEATURES.lookUp(params);
-        config.wfsStrategy = (String) WFS_STRATEGY.lookUp(params);
-        config.filterCompliance = (Integer) FILTER_COMPLIANCE.lookUp(params);
-        config.namespaceOverride = (String) NAMESPACE.lookUp(params);
-        config.outputformatOverride = (String) OUTPUTFORMAT.lookUp(params);
-        config.axisOrder = (String) AXIS_ORDER.lookUp(params);
+        config.maxFeatures = MAXFEATURES.lookUp(params);
+        config.wfsStrategy = WFS_STRATEGY.lookUp(params);
+        config.filterCompliance = FILTER_COMPLIANCE.lookUp(params);
+        config.namespaceOverride = NAMESPACE.lookUp(params);
+        config.outputformatOverride = OUTPUTFORMAT.lookUp(params);
+        config.axisOrder = AXIS_ORDER.lookUp(params);
         config.axisOrderFilter =
-                (String) AXIS_ORDER_FILTER.lookUp(params) == null
-                        ? (String) AXIS_ORDER.lookUp(params)
-                        : (String) AXIS_ORDER_FILTER.lookUp(params);
+                AXIS_ORDER_FILTER.lookUp(params) == null
+                        ? AXIS_ORDER.lookUp(params)
+                        : AXIS_ORDER_FILTER.lookUp(params);
 
         config.gmlCompatibleTypenames =
                 GML_COMPATIBLE_TYPENAMES.lookUp(params) == null
@@ -155,6 +159,7 @@ public class WFSConfig {
                         : GML_COMPATIBLE_TYPENAMES.lookUp(params);
         config.entityResolver = ENTITY_RESOLVER.lookUp(params);
         config.useHttpConnectionPooling = USE_HTTP_CONNECTION_POOLING.lookUp(params);
+        config.maxConnectionPoolSize = MAX_CONNECTION_POOL_SIZE.lookUp(params);
         return config;
     }
 
@@ -243,11 +248,7 @@ public class WFSConfig {
         return gmlCompatibleTypenames;
     }
 
-    /**
-     * Returns the entity resolved to be used for XML parses
-     *
-     * @return
-     */
+    /** Returns the entity resolved to be used for XML parses */
     public EntityResolver getEntityResolver() {
         return entityResolver;
     }
@@ -258,12 +259,16 @@ public class WFSConfig {
     }
 
     /**
+     * @return the size of the connection pool, if {@link #isUseHttpConnectionPooling()} is <code>
+     *     true</code>
+     */
+    public int getMaxConnectionPoolSize() {
+        return maxConnectionPoolSize;
+    }
+
+    /**
      * Checks if axis flipping is needed comparing axis order requested for the DataStore with query
      * crs.
-     *
-     * @param axisOrder
-     * @param coordinateSystem
-     * @return
      */
     public static boolean invertAxisNeeded(String axisOrder, CoordinateReferenceSystem crs) {
         CRS.AxisOrder requestedAxis = CRS.getAxisOrder(crs);

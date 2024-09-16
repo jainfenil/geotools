@@ -51,6 +51,8 @@ class LabelSplitter {
     /** Splits a string on spaces between words, keeping the spaces attached to the */
     private static final Pattern WORD_SPLITTER = Pattern.compile("(?<=\\s)(?=\\S)");
 
+    private static final Pattern NEWLINE_SPLITTER = Pattern.compile("\\n");
+
     public List<LineInfo> layout(LabelCacheItem labelItem, Graphics2D graphics) {
         String text = labelItem.getLabel();
         Font[] fonts = labelItem.getTextStyle().getFonts();
@@ -71,9 +73,9 @@ class LabelSplitter {
         }
 
         // first split along the newlines
-        String[] splitted = text.split("\\n");
+        String[] splitted = NEWLINE_SPLITTER.split(text);
 
-        List<LineInfo> lines = new ArrayList<LineInfo>();
+        List<LineInfo> lines = new ArrayList<>();
         if (labelItem.getAutoWrap() <= 0) {
             // no need for auto-wrapping, we already have the proper split
             for (String line : splitted) {
@@ -98,12 +100,12 @@ class LabelSplitter {
             // some extra objects
 
             // setup the attributes
-            Map<TextAttribute, Object> map = new HashMap<TextAttribute, Object>();
+            Map<TextAttribute, Object> map = new HashMap<>();
             map.put(TextAttribute.FONT, fonts[0]);
 
             // accumulate the lines
-            for (int i = 0; i < splitted.length; i++) {
-                String lineText = checkForEmptyLine(splitted[i]);
+            for (String s : splitted) {
+                String lineText = checkForEmptyLine(s);
 
                 // build the line break iterator that will split lines at word
                 // boundaries when the wrapping length is exceeded
@@ -150,10 +152,12 @@ class LabelSplitter {
                     int lastLineRange = lineRanges.size() - 1;
                     int currentLineRange = 0;
                     for (FontRange range : lineRanges) {
-                        String extracted =
-                                lineText.substring(
-                                        Math.max(prevPosition, range.startChar),
-                                        Math.min(newPosition, range.endChar));
+                        int start = Math.max(prevPosition, range.startChar);
+                        int end = Math.min(newPosition, range.endChar);
+                        String extracted = lineText.substring(start, end);
+                        if (extracted.isEmpty()) {
+                            continue;
+                        }
                         if (currentLineRange == 0 && currentLineRange == lastLineRange) {
                             // single string, remote trailing and leading
                             extracted = extracted.trim();
@@ -165,6 +169,10 @@ class LabelSplitter {
                             extracted = extracted.replaceAll("\\s+$", "");
                         }
                         currentLineRange++;
+                        AttributedCharacterIterator subIter =
+                                attributed.getIterator(null, start, end);
+                        graphics.setFont(range.font);
+                        layout = new TextLayout(subIter, graphics.getFontRenderContext());
                         List<LineComponent> components =
                                 buildLineComponents(
                                         extracted, range.font, labelItem, graphics, layout);
@@ -254,7 +262,7 @@ class LabelSplitter {
     private AttributedString buildAttributedLine(String line, List<FontRange> ranges) {
         if (ranges.size() == 1) {
             // create a uniform attribute AttributedString
-            Map<TextAttribute, Object> map = new HashMap<TextAttribute, Object>();
+            Map<TextAttribute, Object> map = new HashMap<>();
             map.put(TextAttribute.FONT, ranges.get(0).font);
             AttributedString as = new AttributedString(line, map);
             return as;
@@ -271,9 +279,6 @@ class LabelSplitter {
 
     /**
      * Fix for GEOT-4789: a label line cannot be empty, to avoid exceptions in layout and measuring.
-     *
-     * @param line
-     * @return
      */
     private String checkForEmptyLine(String line) {
         if (line == null || line.equals("")) {
@@ -282,13 +287,7 @@ class LabelSplitter {
         return line;
     }
 
-    /**
-     * Turns a string into the corresponding {@link GlyphVector}
-     *
-     * @param label
-     * @param item
-     * @return
-     */
+    /** Turns a string into the corresponding {@link GlyphVector} */
     GlyphVector layoutSentence(String label, LabelCacheItem item, Graphics2D graphics, Font font) {
         final char[] chars = label.toCharArray();
         final int length = label.length();
@@ -362,8 +361,7 @@ class LabelSplitter {
                 boolean foundFont = false;
                 while (start < chars.length && !foundFont) {
                     char curr = chars[start];
-                    for (int i = 0; i < fonts.length; i++) {
-                        Font font = fonts[i];
+                    for (Font font : fonts) {
                         if (font.canDisplay(curr)) {
                             foundFont = true;
                             result.add(new FontRange(text, base, start, fonts[0]));

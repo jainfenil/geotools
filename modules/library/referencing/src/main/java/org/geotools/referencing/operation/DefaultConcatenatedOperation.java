@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,8 @@ public class DefaultConcatenatedOperation extends AbstractCoordinateOperation
      * @param name The operation name.
      * @param operations The sequence of operations.
      */
-    public DefaultConcatenatedOperation(final String name, final CoordinateOperation[] operations) {
+    public DefaultConcatenatedOperation(
+            final String name, final CoordinateOperation... operations) {
         this(Collections.singletonMap(NAME_KEY, name), operations);
     }
 
@@ -83,7 +83,7 @@ public class DefaultConcatenatedOperation extends AbstractCoordinateOperation
      * @param operations The sequence of operations.
      */
     public DefaultConcatenatedOperation(
-            final Map<String, ?> properties, final CoordinateOperation[] operations) {
+            final Map<String, ?> properties, final CoordinateOperation... operations) {
         this(properties, new ArrayList<>(operations.length), operations);
     }
 
@@ -112,7 +112,7 @@ public class DefaultConcatenatedOperation extends AbstractCoordinateOperation
     private DefaultConcatenatedOperation(
             final Map<String, ?> properties,
             final ArrayList<SingleOperation> list,
-            final CoordinateOperation[] operations) {
+            final CoordinateOperation... operations) {
         this(properties, expand(operations, list), list);
     }
 
@@ -267,14 +267,14 @@ public class DefaultConcatenatedOperation extends AbstractCoordinateOperation
                     Collection<PositionalAccuracy> candidates = op.getCoordinateOperationAccuracy();
                     if (candidates != null && !candidates.isEmpty()) {
                         if (accuracy == null) {
-                            accuracy = new LinkedHashSet<PositionalAccuracy>();
+                            accuracy = new LinkedHashSet<>();
                         }
                         accuracy.addAll(candidates);
                     }
                 }
             }
             if (accuracy != null) {
-                final Map<String, Object> merged = new HashMap<String, Object>(properties);
+                final Map<String, Object> merged = new HashMap<>(properties);
                 merged.put(
                         COORDINATE_OPERATION_ACCURACY_KEY,
                         accuracy.toArray(new PositionalAccuracy[accuracy.size()]));
@@ -322,8 +322,8 @@ public class DefaultConcatenatedOperation extends AbstractCoordinateOperation
     @Override
     protected String formatWKT(final Formatter formatter) {
         final String label = super.formatWKT(formatter);
-        for (final Iterator it = operations.iterator(); it.hasNext(); ) {
-            formatter.append((CoordinateOperation) it.next());
+        for (SingleOperation operation : operations) {
+            formatter.append((CoordinateOperation) operation);
         }
         return label;
     }

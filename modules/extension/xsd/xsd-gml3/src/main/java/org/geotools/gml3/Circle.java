@@ -75,11 +75,6 @@ public class Circle {
      * bounds to this method that do not represent a square. If this is the case, we must force the
      * bounding rectangle to be a square. To this end, we check the box and set the side of the box
      * to the larger dimension of the rectangle
-     *
-     * @param xLeft
-     * @param yUpper
-     * @param xRight
-     * @param yLower
      */
     public Circle(double xLeft, double yUpper, double xRight, double yLower) {
         double side = Math.min(Math.abs(xRight - xLeft), Math.abs(yLower - yUpper));
@@ -91,10 +86,6 @@ public class Circle {
     /**
      * Three point method of circle construction. All three points must be on the circumference of
      * the circle.
-     *
-     * @param point1
-     * @param point2
-     * @param point3
      */
     public Circle(Coordinate point1, Coordinate point2, Coordinate point3) {
         initThreePointCircle(point1, point2, point3);
@@ -103,13 +94,6 @@ public class Circle {
     /**
      * Three point method of circle construction. All three points must be on the circumference of
      * the circle.
-     *
-     * @param x1
-     * @param y1
-     * @param x2
-     * @param y2
-     * @param x3
-     * @param y3
      */
     public Circle(double x1, double y1, double x2, double y2, double x3, double y3) {
         this(new Coordinate(x1, y1), new Coordinate(x2, y2), new Coordinate(x3, y3));
@@ -137,17 +121,15 @@ public class Circle {
      * @param p3 A point on the desired circle
      */
     private void initThreePointCircle(Coordinate p1, Coordinate p2, Coordinate p3) {
-        double a13, b13, c13;
-        double a23, b23, c23;
         double x = 0., y = 0., rad = 0.;
 
         // begin pre-calculations for linear system reduction
-        a13 = 2 * (p1.x - p3.x);
-        b13 = 2 * (p1.y - p3.y);
-        c13 = (p1.y * p1.y - p3.y * p3.y) + (p1.x * p1.x - p3.x * p3.x);
-        a23 = 2 * (p2.x - p3.x);
-        b23 = 2 * (p2.y - p3.y);
-        c23 = (p2.y * p2.y - p3.y * p3.y) + (p2.x * p2.x - p3.x * p3.x);
+        double a13 = 2 * (p1.x - p3.x);
+        double b13 = 2 * (p1.y - p3.y);
+        double c13 = (p1.y * p1.y - p3.y * p3.y) + (p1.x * p1.x - p3.x * p3.x);
+        double a23 = 2 * (p2.x - p3.x);
+        double b23 = 2 * (p2.y - p3.y);
+        double c23 = (p2.y * p2.y - p3.y * p3.y) + (p2.x * p2.x - p3.x * p3.x);
         // testsuite-suite to be certain we have three distinct points passed
         double smallNumber = 0.01;
         if ((Math.abs(a13) < smallNumber && Math.abs(b13) < smallNumber)
@@ -291,7 +273,7 @@ public class Circle {
     private List<Coordinate> linearizeInternal(
             List<Coordinate> coordinates, Arc arc, double tolerence) {
         if (coordinates == null) {
-            coordinates = new ArrayList<Coordinate>();
+            coordinates = new ArrayList<>();
         }
         double arcHt = arc.getArcHeight();
         if (Double.compare(arcHt, tolerence) <= 0

@@ -21,7 +21,11 @@ import com.sun.media.jai.operator.ImageReadDescriptor;
 import com.sun.media.jai.util.Rational;
 import it.geosolutions.imageio.imageioimpl.EnhancedImageReadParam;
 import it.geosolutions.jaiext.utilities.ImageLayout2;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ComponentColorModel;
@@ -107,13 +111,12 @@ public final class ImageUtilities {
     static {
 
         // do we wrappers at hand?
-        boolean mediaLib = false;
         Class<?> mediaLibImage = null;
         try {
             mediaLibImage = Class.forName("com.sun.medialib.mlib.Image");
         } catch (ClassNotFoundException e) {
         }
-        mediaLib = (mediaLibImage != null);
+        boolean mediaLib = (mediaLibImage != null);
 
         // npw check if we either wanted to disable explicitly and if we installed the native libs
         if (mediaLib) {
@@ -350,30 +353,30 @@ public final class ImageUtilities {
             if (defaultSize == null) {
                 defaultSize = GEOTOOLS_DEFAULT_TILE_SIZE;
             }
-            int s;
-            if ((s = toTileSize(image.getWidth(), defaultSize.width)) != 0) {
+            int sw = toTileSize(image.getWidth(), defaultSize.width);
+            int sh = toTileSize(image.getHeight(), defaultSize.height);
+            boolean smallTileWidth = image.getTileWidth() <= STRIPE_SIZE;
+            boolean smallTileHeight = image.getTileHeight() < STRIPE_SIZE;
+            if (sw != 0 || sh != 0 || smallTileHeight || smallTileWidth) {
                 if (layout == null) {
                     layout = new ImageLayout();
                 }
-                layout = layout.setTileWidth(s);
-                layout.setTileGridXOffset(image.getMinX());
-            } else if (image.getTileWidth() <= STRIPE_SIZE) {
-                if (layout == null) {
-                    layout = new ImageLayout();
+                if (sw != 0) {
+                    layout = layout.setTileWidth(sw);
+                    layout.setTileGridXOffset(image.getMinX());
+                } else if (smallTileWidth) {
+                    layout = layout.setTileWidth(defaultSize.width);
+                } else {
+                    layout = layout.setTileWidth(image.getTileWidth());
                 }
-                layout = layout.setTileWidth(defaultSize.width);
-            }
-            if ((s = toTileSize(image.getHeight(), defaultSize.height)) != 0) {
-                if (layout == null) {
-                    layout = new ImageLayout();
+                if (sh != 0) {
+                    layout = layout.setTileHeight(sh);
+                    layout.setTileGridYOffset(image.getMinY());
+                } else if (smallTileHeight) {
+                    layout = layout.setTileHeight(defaultSize.height);
+                } else {
+                    layout = layout.setTileHeight(image.getTileHeight());
                 }
-                layout = layout.setTileHeight(s);
-                layout.setTileGridYOffset(image.getMinY());
-            } else if (image.getTileHeight() < STRIPE_SIZE) {
-                if (layout == null) {
-                    layout = new ImageLayout();
-                }
-                layout = layout.setTileHeight(defaultSize.height);
             }
         }
         return layout;
@@ -531,8 +534,8 @@ public final class ImageUtilities {
             int minYL = result.getMinY(source);
             int maxXL = result.getWidth(source) + minXL;
             int maxYL = result.getHeight(source) + minYL;
-            for (int i = 0; i < n; i++) {
-                source = sources.get(i);
+            for (RenderedImage renderedImage : sources) {
+                source = renderedImage;
                 final int minX = source.getMinX();
                 final int minY = source.getMinY();
                 final int maxX = source.getWidth() + minX;
@@ -786,7 +789,7 @@ public final class ImageUtilities {
      */
     public static void disposePlanarImageChain(PlanarImage pi) {
         Utilities.ensureNonNull("PlanarImage", pi);
-        disposePlanarImageChain(pi, new HashSet<PlanarImage>());
+        disposePlanarImageChain(pi, new HashSet<>());
     }
 
     private static void disposePlanarImageChain(PlanarImage pi, Set<PlanarImage> visited) {
@@ -822,6 +825,7 @@ public final class ImageUtilities {
             RenderedOp op = (RenderedOp) pi;
             for (Object param : op.getParameterBlock().getParameters()) {
                 if (param instanceof ImageInputStream) {
+                    @SuppressWarnings("PMD.CloseResource") // we are actually closing it...
                     ImageInputStream iis = (ImageInputStream) param;
                     try {
                         iis.close();
@@ -846,7 +850,6 @@ public final class ImageUtilities {
      * @param image the {@link RenderedImage} to work on
      * @return a new {@link RenderedImage} where the provided {@link Color} has turned into
      *     transparent.
-     * @throws IllegalStateException
      */
     public static RenderedImage maskColor(final Color transparentColor, final RenderedImage image)
             throws IllegalStateException {
@@ -950,27 +953,25 @@ public final class ImageUtilities {
         int h = source.getHeight();
 
         // Variables to store the calculated destination upper left coordinate
-        long dx0Num, dx0Denom, dy0Num, dy0Denom;
 
         // Variables to store the calculated destination bottom right
         // coordinate
-        long dx1Num, dx1Denom, dy1Num, dy1Denom;
 
         // Start calculations for destination
 
-        dx0Num = x0;
-        dx0Denom = 1;
+        long dx0Num = x0;
+        long dx0Denom = 1;
 
-        dy0Num = y0;
-        dy0Denom = 1;
+        long dy0Num = y0;
+        long dy0Denom = 1;
 
         // Formula requires srcMaxX + 1 = (x0 + w - 1) + 1 = x0 + w
-        dx1Num = x0 + w;
-        dx1Denom = 1;
+        long dx1Num = x0 + w;
+        long dx1Denom = 1;
 
         // Formula requires srcMaxY + 1 = (y0 + h - 1) + 1 = y0 + h
-        dy1Num = y0 + h;
-        dy1Denom = 1;
+        long dy1Num = y0 + h;
+        long dy1Denom = 1;
 
         dx0Num *= scaleXRationalNum;
         dx0Denom *= scaleXRationalDenom;
@@ -1017,13 +1018,12 @@ public final class ImageUtilities {
         dy1Denom *= transYRationalDenom;
 
         // Get the integral coordinates
-        int l_x0, l_y0, l_x1, l_y1;
 
-        l_x0 = Rational.ceil(dx0Num, dx0Denom);
-        l_y0 = Rational.ceil(dy0Num, dy0Denom);
+        int l_x0 = Rational.ceil(dx0Num, dx0Denom);
+        int l_y0 = Rational.ceil(dy0Num, dy0Denom);
 
-        l_x1 = Rational.ceil(dx1Num, dx1Denom);
-        l_y1 = Rational.ceil(dy1Num, dy1Denom);
+        int l_x1 = Rational.ceil(dx1Num, dx1Denom);
+        int l_y1 = Rational.ceil(dy1Num, dy1Denom);
 
         // Set the top left coordinate of the destination
         final Rectangle2D retValue = new Rectangle2D.Double();
@@ -1122,10 +1122,6 @@ public final class ImageUtilities {
     /**
      * Build a background values array using the same dataType of the input {@link SampleModel} (if
      * available) and the values provided in the input array.
-     *
-     * @param sampleModel
-     * @param backgroundValues
-     * @return
      */
     public static Number[] getBackgroundValues(
             final SampleModel sampleModel, final double[] backgroundValues) {
@@ -1162,7 +1158,7 @@ public final class ImageUtilities {
                 break;
             case DataBuffer.TYPE_INT:
                 values = new Integer[numBands];
-                if (backgroundValues == null) Arrays.fill(values, Integer.valueOf((int) 0));
+                if (backgroundValues == null) Arrays.fill(values, Integer.valueOf(0));
                 else {
                     // we have background values available
                     for (int i = 0; i < values.length; i++)
@@ -1192,8 +1188,8 @@ public final class ImageUtilities {
                     for (int i = 0; i < values.length; i++)
                         values[i] =
                                 i >= backgroundValues.length
-                                        ? Double.valueOf((Double) backgroundValues[0])
-                                        : Double.valueOf((Double) backgroundValues[i]);
+                                        ? Double.valueOf(backgroundValues[0])
+                                        : Double.valueOf(backgroundValues[i]);
                 }
                 break;
         }
@@ -1241,7 +1237,9 @@ public final class ImageUtilities {
                     }
 
                     if ((imageReader != null) && (imageReader instanceof ImageReader)) {
+                        @SuppressWarnings("PMD.CloseResource") // we are actually closing it
                         final ImageReader reader = (ImageReader) imageReader;
+                        @SuppressWarnings("PMD.CloseResource") // we are actually closing it
                         final ImageInputStream stream = (ImageInputStream) reader.getInput();
                         try {
                             stream.close();
@@ -1264,11 +1262,7 @@ public final class ImageUtilities {
         }
     }
 
-    /**
-     * Disposes the specified image, without recursing back in the sources
-     *
-     * @param planarImage
-     */
+    /** Disposes the specified image, without recursing back in the sources */
     public static void disposeSinglePlanarImage(PlanarImage planarImage) {
         // Looking for an ROI image and disposing it too
         Object roi = null;
@@ -1314,27 +1308,13 @@ public final class ImageUtilities {
         planarImage.dispose();
     }
 
-    /**
-     * Helper that cleans up a field
-     *
-     * @param theObject
-     * @param fieldName
-     * @throws NoSuchFieldException
-     * @throws IllegalAccessException
-     */
+    /** Helper that cleans up a field */
     private static void cleanField(Object theObject, String fieldName)
             throws NoSuchFieldException, IllegalAccessException {
         cleanField(theObject, fieldName, false);
     }
 
-    /**
-     * Helper that cleans up a field
-     *
-     * @param theObject
-     * @param fieldName
-     * @throws NoSuchFieldException
-     * @throws IllegalAccessException
-     */
+    /** Helper that cleans up a field */
     private static void cleanField(Object theObject, String fieldName, boolean superClass)
             throws NoSuchFieldException, IllegalAccessException {
         // getDeclaredField only provides access to current class,
@@ -1351,7 +1331,6 @@ public final class ImageUtilities {
     /**
      * Transform a data type into a representative {@link String}.
      *
-     * @param dataType
      * @return a representative {@link String}.
      */
     public static String getDatabufferTypeName(int dataType) {

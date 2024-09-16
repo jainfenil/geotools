@@ -51,7 +51,7 @@ public interface NamedLayer extends StyledLayer {
 
     public FeatureTypeConstraint[] getLayerFeatureConstraints();
 
-    public void setLayerFeatureConstraints(FeatureTypeConstraint[] constraints);
+    public void setLayerFeatureConstraints(FeatureTypeConstraint... constraints);
 
     public List<Style> styles();
 
@@ -59,10 +59,6 @@ public interface NamedLayer extends StyledLayer {
 
     public void addStyle(Style sl);
 
-    /**
-     * Used to navigate a Style/SLD.
-     *
-     * @param visitor
-     */
+    /** Used to navigate a Style/SLD. */
     void accept(StyleVisitor visitor);
 }

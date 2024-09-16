@@ -66,7 +66,6 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
-import org.opengis.filter.sort.SortBy;
 import org.opengis.filter.sort.SortOrder;
 
 /**
@@ -127,8 +126,8 @@ public final class PostGisIndexTest extends OnlineTestCase {
             // check coverage names
             final List<Name> names = reader.getCoveragesNames();
             assertNotNull(names);
-            assertTrue(!names.isEmpty());
-            assertTrue(2 == names.size());
+            assertFalse(names.isEmpty());
+            assertEquals(2, names.size());
             assertTrue(names.contains(new NameImpl("O3")));
 
             // checking slice catalog
@@ -320,7 +319,7 @@ public final class PostGisIndexTest extends OnlineTestCase {
         // using an H2 based datastore for imageMosaic index
         File dsp = TestData.file(this, "datastore.properties");
         FileUtils.copyFileToDirectory(dsp, mosaic);
-        Map<String, String> overrideMap = new HashMap<String, String>();
+        Map<String, String> overrideMap = new HashMap<>();
         overrideMap.put("database", "lowlevelindex");
         createDatastoreProperties(mosaic, overrideMap);
 
@@ -338,7 +337,7 @@ public final class PostGisIndexTest extends OnlineTestCase {
             GranuleSource source = reader.getGranules("O3", true);
             FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
             Query q = new Query(Query.ALL);
-            q.setSortBy(new SortBy[] {ff.sort("time", SortOrder.ASCENDING)});
+            q.setSortBy(ff.sort("time", SortOrder.ASCENDING));
             SimpleFeatureCollection granules = source.getGranules(q);
             assertEquals(2, granules.size());
             it = granules.features();
@@ -408,14 +407,9 @@ public final class PostGisIndexTest extends OnlineTestCase {
         }
     }
 
-    /**
-     * recursively delete indexes
-     *
-     * @param file
-     */
+    /** recursively delete indexes */
     private void cleanupFolders(final File file) {
-        if (file.isFile()) {
-        } else {
+        if (!file.isFile()) {
             final File[] files = file.listFiles();
 
             for (File f : files) {
@@ -437,13 +431,7 @@ public final class PostGisIndexTest extends OnlineTestCase {
         Hints.removeSystemDefault(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER);
     }
 
-    /**
-     * Remove the postgis created tables
-     *
-     * @param tables
-     * @param database
-     * @throws Exception
-     */
+    /** Remove the postgis created tables */
     private void removeTables(String[] tables, String database) throws Exception {
         // delete tables
         Class.forName("org.postgresql.Driver");
@@ -494,10 +482,7 @@ public final class PostGisIndexTest extends OnlineTestCase {
         cleanUp();
     }
 
-    /**
-     * @param i
-     * @param sliceIndex
-     */
+    /** */
     private void spitOutSliceInformation(int i, Slice2DIndex sliceIndex) {
         if (TestData.isInteractiveTest()) {
             String variableName = sliceIndex.getVariableName();

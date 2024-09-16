@@ -18,7 +18,6 @@
 package org.geotools.appschema.resolver.xml;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 import org.eclipse.xsd.XSDSchema;
 import org.eclipse.xsd.util.XSDSchemaLocator;
@@ -47,11 +46,7 @@ public class AppSchemaXSD extends XSD {
     /** The {@link Configuration} used to encode documents with this schema. */
     private AppSchemaConfiguration configuration;
 
-    /**
-     * @param namespaceUri
-     * @param schemaLocation
-     * @param resolver
-     */
+    /** */
     public AppSchemaXSD(String namespaceUri, String schemaLocation, SchemaResolver resolver) {
         this.namespaceUri = namespaceUri;
         this.schemaLocation = resolver.resolve(schemaLocation);
@@ -86,7 +81,7 @@ public class AppSchemaXSD extends XSD {
     @Override
     protected void addDependencies(Set dependencies) {
         if (configuration != null) {
-            for (Configuration dependency : (List<Configuration>) configuration.getDependencies()) {
+            for (Configuration dependency : configuration.getDependencies()) {
                 dependencies.add(dependency.getXSD());
             }
         }

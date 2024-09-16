@@ -64,7 +64,6 @@ public abstract class BaseGDALGridCoverage2DReader extends BaseGridCoverage2DRea
      * @param hints Hints to be used by this reader throughout his life.
      * @param worldFileExtension the specific world file extension of the underlying format
      * @param formatSpecificSpi an instance of a proper {@code ImageReaderSpi}.
-     * @throws DataSourceException
      */
     protected BaseGDALGridCoverage2DReader(
             Object input,
@@ -80,7 +79,6 @@ public abstract class BaseGDALGridCoverage2DReader extends BaseGridCoverage2DRea
      *
      * @param reader the {@code ImageReader} from which to retrieve metadata (if available) for
      *     setting properties
-     * @throws IOException
      */
     protected void setCoverageProperties(ImageReader reader) throws IOException {
         // //
@@ -219,11 +217,7 @@ public abstract class BaseGDALGridCoverage2DReader extends BaseGridCoverage2DRea
                                         ProjectiveTransform.create(tempTransform),
                                         new GeneralEnvelope(
                                                 ((GridEnvelope2D) this.originalGridRange)));
-                    } catch (IllegalStateException e) {
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
-                        }
-                    } catch (TransformException e) {
+                    } catch (IllegalStateException | TransformException e) {
                         if (LOGGER.isLoggable(Level.WARNING)) {
                             LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
                         }

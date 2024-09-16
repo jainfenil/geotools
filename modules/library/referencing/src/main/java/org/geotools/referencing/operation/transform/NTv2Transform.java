@@ -281,7 +281,7 @@ public class NTv2Transform extends AbstractMathTransform implements MathTransfor
      */
     @Override
     public ParameterValueGroup getParameterValues() {
-        final ParameterValue<URI> file = new Parameter<URI>(Provider.FILE);
+        final ParameterValue<URI> file = new Parameter<>(Provider.FILE);
         file.setValue(grid);
 
         return new ParameterGroup(Provider.PARAMETERS, new ParameterValue[] {file});
@@ -316,11 +316,6 @@ public class NTv2Transform extends AbstractMathTransform implements MathTransfor
         /**
          * Inverse transform an array of points.
          *
-         * @param source
-         * @param srcOffset
-         * @param dest
-         * @param dstOffset
-         * @param length
          * @throws TransformException if the input point is outside the area covered by this grid.
          */
         public void transform(
@@ -360,14 +355,11 @@ public class NTv2Transform extends AbstractMathTransform implements MathTransfor
          * parameter value. The default value is "".
          */
         public static final DefaultParameterDescriptor<URI> FILE =
-                new DefaultParameterDescriptor<URI>(
+                new DefaultParameterDescriptor<>(
                         toMap(
-                                new NamedIdentifier[] {
-                                    new NamedIdentifier(
-                                            Citations.EPSG,
-                                            "Latitude and longitude difference file"),
-                                    new NamedIdentifier(Citations.EPSG, "8656")
-                                }),
+                                new NamedIdentifier(
+                                        Citations.EPSG, "Latitude and longitude difference file"),
+                                new NamedIdentifier(Citations.EPSG, "8656")),
                         URI.class,
                         null,
                         null,

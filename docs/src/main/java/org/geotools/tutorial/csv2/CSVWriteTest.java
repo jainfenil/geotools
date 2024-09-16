@@ -87,8 +87,8 @@ public class CSVWriteTest {
     public void removeTemporaryLocations() throws IOException {
         File list[] = tmp.listFiles();
         if (list != null) {
-            for (int i = 0; i < list.length; i++) {
-                list[i].delete();
+            for (File value : list) {
+                value.delete();
             }
         }
         tmp.delete();
@@ -221,18 +221,15 @@ public class CSVWriteTest {
 
         Transaction t = new DefaultTransaction("locations");
         try {
-            FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
-                    store.getFeatureWriter("locations", Filter.INCLUDE, t);
 
-            SimpleFeature feature;
-            try {
+            try (FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
+                    store.getFeatureWriter("locations", Filter.INCLUDE, t)) {
+                SimpleFeature feature;
                 while (writer.hasNext()) {
                     feature = writer.next();
                     System.out.println("remove " + feature.getID());
                     writer.remove(); // marking contents for removal
                 }
-            } finally {
-                writer.close();
             }
             System.out.println("commit " + t); // now the contents are removed
             t.commit();
@@ -257,7 +254,6 @@ public class CSVWriteTest {
         DataStore store = DataStoreFinder.getDataStore(params);
 
         final SimpleFeatureType type = store.getSchema("locations");
-        final FeatureWriter<SimpleFeatureType, SimpleFeature> writer;
         SimpleFeature f;
         DefaultFeatureCollection collection = new DefaultFeatureCollection();
 
@@ -269,7 +265,8 @@ public class CSVWriteTest {
                         type, new Object[] {boston, "Boston", 1300, 2017}, "locations.1");
         collection.add(bf);
 
-        writer = store.getFeatureWriter("locations", Transaction.AUTO_COMMIT);
+        final FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
+                store.getFeatureWriter("locations", Transaction.AUTO_COMMIT);
         try {
             // remove all features
             while (writer.hasNext()) {
@@ -311,14 +308,14 @@ public class CSVWriteTest {
         DataStore duplicate = factory.createNewDataStore(params2);
         duplicate.createSchema(featureType);
 
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader;
-        FeatureWriter<SimpleFeatureType, SimpleFeature> writer;
         SimpleFeature feature, newFeature;
 
         Query query = new Query(featureType.getTypeName(), Filter.INCLUDE);
-        reader = store.getFeatureReader(query, Transaction.AUTO_COMMIT);
+        FeatureReader<SimpleFeatureType, SimpleFeature> reader =
+                store.getFeatureReader(query, Transaction.AUTO_COMMIT);
 
-        writer = duplicate.getFeatureWriterAppend("duplicate", Transaction.AUTO_COMMIT);
+        FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
+                duplicate.getFeatureWriterAppend("duplicate", Transaction.AUTO_COMMIT);
         // writer = duplicate.getFeatureWriter("duplicate", Transaction.AUTO_COMMIT);
         try {
             while (reader.hasNext()) {

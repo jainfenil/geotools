@@ -50,7 +50,7 @@ abstract class Value {
     public static final Map<String, String> COLORS_TO_HEX;
 
     static {
-        COLORS_TO_HEX = new HashMap<String, String>();
+        COLORS_TO_HEX = new HashMap<>();
         COLORS_TO_HEX.put("aliceblue", "#f0f8ff");
         COLORS_TO_HEX.put("antiquewhite", "#faebd7");
         COLORS_TO_HEX.put("aqua", "#00ffff");
@@ -292,12 +292,7 @@ abstract class Value {
 
         public List<Value> parameters;
 
-        /**
-         * Builds a function
-         *
-         * @param name
-         * @param parameters
-         */
+        /** Builds a function */
         public Function(String name, List<Value> parameters) {
             super();
             this.parameters = parameters;
@@ -308,12 +303,7 @@ abstract class Value {
             }
         }
 
-        /**
-         * Builds a function
-         *
-         * @param name
-         * @param parameters
-         */
+        /** Builds a function */
         public Function(String name, Value... parameters) {
             this(name, Arrays.asList(parameters));
         }
@@ -373,12 +363,7 @@ abstract class Value {
 
         public Map<String, Value> parameters;
 
-        /**
-         * Builds a function
-         *
-         * @param name
-         * @param parameters
-         */
+        /** Builds a function */
         public TransformFunction(String name, Map<String, Value> parameters) {
             super();
             this.parameters = parameters;
@@ -484,9 +469,8 @@ abstract class Value {
         private org.opengis.filter.expression.Expression[] toExpressionArray(
                 List<org.opengis.filter.expression.Expression> arguments) {
             org.opengis.filter.expression.Expression[] argsArray =
-                    (org.opengis.filter.expression.Expression[])
-                            arguments.toArray(
-                                    new org.opengis.filter.expression.Expression[arguments.size()]);
+                    arguments.toArray(
+                            new org.opengis.filter.expression.Expression[arguments.size()]);
             return argsArray;
         }
 

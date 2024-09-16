@@ -70,8 +70,6 @@ public class CompoundRing extends LinearRing
     /**
      * Returns the components of this compound curve, which will be a list of straight LineString
      * objects and CircularString/CircularRing
-     *
-     * @return
      */
     public List<LineString> getComponents() {
         return delegate.components;
@@ -115,8 +113,13 @@ public class CompoundRing extends LinearRing
         return "CompoundRing";
     }
 
-    public Geometry reverse() {
-        CompoundCurve reversedDelegate = (CompoundCurve) delegate.reverse();
+    public CompoundRing reverse() {
+        return (CompoundRing) super.reverse();
+    }
+
+    // should be protected when fixed in LinearRing
+    public CompoundRing reverseInternal() {
+        CompoundCurve reversedDelegate = delegate.reverse();
         return new CompoundRing(reversedDelegate);
     }
 

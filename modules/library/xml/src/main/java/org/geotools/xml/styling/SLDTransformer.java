@@ -16,7 +16,7 @@
  */
 package org.geotools.xml.styling;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -121,7 +121,7 @@ public class SLDTransformer extends TransformerBase {
      * Additional namespace mappings to emit in the start element of the generated. Each entry has a
      * URI key and an associated prefix string value.
      */
-    private final Map uri2prefix;
+    private final Map<URI, String> uri2prefix;
 
     /** don't suppress the export of default values */
     private boolean exportDefaultValues = false;
@@ -144,12 +144,12 @@ public class SLDTransformer extends TransformerBase {
     public SLDTransformer(Map nsBindings) {
         super();
         if (nsBindings == null || nsBindings.isEmpty()) {
-            uri2prefix = new HashMap();
+            uri2prefix = new HashMap<>();
         } else {
-            uri2prefix = new HashMap(nsBindings.size());
+            uri2prefix = new HashMap<>(nsBindings.size());
             int count = 0;
-            for (Iterator it = nsBindings.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry e = (Entry) it.next();
+            for (Object o : nsBindings.entrySet()) {
+                Entry e = (Entry) o;
                 URI uri = (URI) e.getKey();
                 String prefix = (String) e.getValue();
                 if (uri != null && prefix != null) {
@@ -180,8 +180,8 @@ public class SLDTransformer extends TransformerBase {
         Translator result = new SLDTranslator(handler);
         // add pre-configured namespace mappings
         if (!uri2prefix.isEmpty()) {
-            for (Iterator it = uri2prefix.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry e = (Entry) it.next();
+            for (Entry<URI, String> uriStringEntry : uri2prefix.entrySet()) {
+                Entry e = (Entry) uriStringEntry;
                 URI uri = (URI) e.getKey();
                 if (uri != null) {
                     String prefix = (String) e.getValue();
@@ -226,19 +226,11 @@ public class SLDTransformer extends TransformerBase {
 
         private boolean exportDefaultValues = false;
 
-        /**
-         * Translates into the default of prefix "sld" for "http://www.opengis.net/sld".
-         *
-         * @param handler
-         */
+        /** Translates into the default of prefix "sld" for "http://www.opengis.net/sld". */
         public SLDTranslator(ContentHandler handler) {
             this(handler, "sld", "http://www.opengis.net/sld");
         }
-        /**
-         * Translates
-         *
-         * @param handler
-         */
+        /** Translates */
         public SLDTranslator(ContentHandler handler, String prefix, String uri) {
             super(handler, prefix, uri);
             filterTranslator = new FilterTransformer.FilterTranslator(handler);
@@ -285,22 +277,12 @@ public class SLDTransformer extends TransformerBase {
             return exportDefaultValues;
         }
 
-        /**
-         * Utility method used to quickly package up the provided expression.
-         *
-         * @param element
-         * @param expr
-         */
+        /** Utility method used to quickly package up the provided expression. */
         void element(String element, Expression expr) {
             element(element, expr, null);
         }
 
-        /**
-         * Utility method used to quickly package up the provided InternationalString.
-         *
-         * @param element
-         * @param expr
-         */
+        /** Utility method used to quickly package up the provided InternationalString. */
         void element(String element, InternationalString intString) {
             if (intString instanceof GrowableInternationalString) {
                 GrowableInternationalString growable = (GrowableInternationalString) intString;
@@ -323,12 +305,7 @@ public class SLDTransformer extends TransformerBase {
             }
         }
 
-        /**
-         * Utility method used to quickly package up the provided expression.
-         *
-         * @param element
-         * @param expr
-         */
+        /** Utility method used to quickly package up the provided expression. */
         void element(String element, Expression expr, Object defaultValue) {
             element(element, expr, defaultValue, null);
         }
@@ -577,9 +554,6 @@ public class SLDTransformer extends TransformerBase {
         /**
          * Returns true if the list of fonts has the same settings for everything besides the font
          * family, and can thus be represented as a single Font element
-         *
-         * @param fonts
-         * @return
          */
         private boolean areFontsUniform(List<Font> fonts) {
             if (fonts.size() == 1) {
@@ -731,8 +705,8 @@ public class SLDTransformer extends TransformerBase {
 
             start("ColorMap", atts);
             ColorMapEntry[] mapEntries = colorMap.getColorMapEntries();
-            for (int i = 0; i < mapEntries.length; i++) {
-                mapEntries[i].accept(this);
+            for (ColorMapEntry mapEntry : mapEntries) {
+                mapEntry.accept(this);
             }
             end("ColorMap");
         }
@@ -978,14 +952,14 @@ public class SLDTransformer extends TransformerBase {
 
             StyledLayer[] layers = sld.getStyledLayers();
 
-            for (int i = 0; i < layers.length; i++) {
-                if (layers[i] instanceof NamedLayer) {
-                    visit((NamedLayer) layers[i]);
-                } else if (layers[i] instanceof UserLayer) {
-                    visit((UserLayer) layers[i]);
+            for (StyledLayer layer : layers) {
+                if (layer instanceof NamedLayer) {
+                    visit((NamedLayer) layer);
+                } else if (layer instanceof UserLayer) {
+                    visit((UserLayer) layer);
                 } else {
                     throw new IllegalArgumentException(
-                            "StyledLayer '" + layers[i].getClass().toString() + "' not found");
+                            "StyledLayer '" + layer.getClass().toString() + "' not found");
                 }
             }
 
@@ -999,16 +973,16 @@ public class SLDTransformer extends TransformerBase {
             FeatureTypeConstraint[] lfc = layer.getLayerFeatureConstraints();
             if ((lfc != null) && lfc.length > 0) {
                 start("LayerFeatureConstraints"); // optional
-                for (int i = 0; i < lfc.length; i++) {
-                    visit(lfc[i]);
+                for (FeatureTypeConstraint featureTypeConstraint : lfc) {
+                    visit(featureTypeConstraint);
                 }
                 end("LayerFeatureConstraints");
             }
 
             Style[] styles = layer.getStyles();
 
-            for (int i = 0; i < styles.length; i++) {
-                visit(styles[i]);
+            for (Style style : styles) {
+                visit(style);
             }
 
             end("NamedLayer");
@@ -1031,8 +1005,8 @@ public class SLDTransformer extends TransformerBase {
             start("LayerFeatureConstraints"); // required
             FeatureTypeConstraint[] lfc = layer.getLayerFeatureConstraints();
             if ((lfc != null) && lfc.length > 0) {
-                for (int i = 0; i < lfc.length; i++) {
-                    visit(lfc[i]);
+                for (FeatureTypeConstraint featureTypeConstraint : lfc) {
+                    visit(featureTypeConstraint);
                 }
             } else { // create an empty FeatureTypeConstraint, since it is required
                 start("FeatureTypeConstraint");
@@ -1042,8 +1016,8 @@ public class SLDTransformer extends TransformerBase {
 
             Style[] styles = layer.getUserStyles();
 
-            for (int i = 0; i < styles.length; i++) {
-                visit(styles[i]);
+            for (Style style : styles) {
+                visit(style);
             }
 
             end("UserLayer");
@@ -1145,8 +1119,8 @@ public class SLDTransformer extends TransformerBase {
 
                 Extent[] extent = ftc.getExtents();
 
-                for (int i = 0; i < extent.length; i++) {
-                    visit(extent[i]);
+                for (Extent value : extent) {
+                    visit(value);
                 }
             }
 
@@ -1186,6 +1160,20 @@ public class SLDTransformer extends TransformerBase {
                 }
                 if (style.getDescription() != null && style.getDescription().getAbstract() != null)
                     element("Abstract", style.getDescription().getAbstract());
+                Fill background = style.getBackground();
+                if (background != null) {
+                    start("Background");
+
+                    if (background.getGraphicFill() != null) {
+                        start("GraphicFill");
+                        background.getGraphicFill().accept(this);
+                        end("GraphicFill");
+                    }
+
+                    encodeCssParam("fill", background.getColor(), "#808080");
+                    encodeCssParam("fill-opacity", background.getOpacity(), 1.0);
+                    end("Background");
+                }
                 for (FeatureTypeStyle featureTypeStyle : style.featureTypeStyles()) {
                     visit(featureTypeStyle);
                 }
@@ -1213,7 +1201,7 @@ public class SLDTransformer extends TransformerBase {
                 element("Transformation", fts.getTransformation());
             }
 
-            List<SemanticType> sti = new ArrayList(fts.semanticTypeIdentifiers());
+            List<SemanticType> sti = new ArrayList<>(fts.semanticTypeIdentifiers());
 
             if (sti.size() != 1 || !sti.get(0).equals(SemanticType.ANY)) {
                 for (SemanticType semanticType : sti) {
@@ -1343,8 +1331,8 @@ public class SLDTransformer extends TransformerBase {
                 start("StyledLayerDescriptor", NULL_ATTS);
                 start("NamedLayer", NULL_ATTS); // this is correct?
 
-                for (int i = 0, ii = styles.length; i < ii; i++) {
-                    styles[i].accept(this);
+                for (Style style : styles) {
+                    style.accept(this);
                 }
 
                 end("NamedLayer");
@@ -1372,7 +1360,7 @@ public class SLDTransformer extends TransformerBase {
             } else if (o instanceof Style[]) {
                 encode((Style[]) o);
             } else {
-                Class c = o.getClass();
+                Class<?> c = o.getClass();
 
                 try {
                     java.lang.reflect.Method m =

@@ -79,11 +79,7 @@ public class Histogram extends BaseStatisticsOperationJAI {
     /** {@link String} key for getting the {@link javax.media.jai.Histogram} object. */
     public static final String GT_SYNTHETIC_PROPERTY_HISTOGRAM = "histogram";
 
-    /**
-     * Default constructor for the {@link Histogram} operation.
-     *
-     * @throws OperationNotFoundException
-     */
+    /** Default constructor for the {@link Histogram} operation. */
     public Histogram() throws OperationNotFoundException {
         super(HISTOGRAM, getOperationDescriptor(JAIExt.getOperationName(HISTOGRAM)));
     }
@@ -120,7 +116,7 @@ public class Histogram extends BaseStatisticsOperationJAI {
             // XXX remove me with 1.5
             final RenderedOp result = (RenderedOp) data;
 
-            final Map<String, Object> synthProp = new HashMap<String, Object>();
+            final Map<String, Object> synthProp = new HashMap<>();
 
             if (JAIExt.isJAIExtOperation(STATS)) {
                 // get the properties

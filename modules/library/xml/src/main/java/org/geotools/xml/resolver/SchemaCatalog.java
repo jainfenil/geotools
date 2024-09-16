@@ -39,11 +39,7 @@ public class SchemaCatalog {
 
     private final Catalog catalog;
 
-    /**
-     * Use {@link #build(URL)} to construct an instance.
-     *
-     * @param catalog
-     */
+    /** Use {@link #build(URL)} to construct an instance. */
     private SchemaCatalog(Catalog catalog) {
         this.catalog = catalog;
     }
@@ -63,11 +59,9 @@ public class SchemaCatalog {
             throw new RuntimeException(e);
         }
         if (resolvedLocation != null) {
-            InputStream input = null;
-            try {
+            try (InputStream input = (new URL(resolvedLocation)).openStream()) {
                 // verify existence of resource
                 // could be a file, jar resource, or other
-                input = (new URL(resolvedLocation)).openStream();
                 // catalog hit
                 LOGGER.fine("Catalog resolved " + location + " to " + resolvedLocation);
             } catch (IOException e) {
@@ -80,14 +74,6 @@ public class SchemaCatalog {
                                 + " despite matching catalog entry because an error occurred: "
                                 + e.getMessage());
                 resolvedLocation = null;
-            } finally {
-                if (input != null) {
-                    try {
-                        input.close();
-                    } catch (IOException e) {
-                        // we tried
-                    }
-                }
             }
         }
         return resolvedLocation;
@@ -124,7 +110,6 @@ public class SchemaCatalog {
      * Build an catalog using the given OASIS Catalog file URL.
      *
      * @param catalogLocation local file URL to an OASIS cCtalog
-     * @return
      */
     public static SchemaCatalog build(URL catalogLocation) {
         return new SchemaCatalog(buildPrivateCatalog(catalogLocation));

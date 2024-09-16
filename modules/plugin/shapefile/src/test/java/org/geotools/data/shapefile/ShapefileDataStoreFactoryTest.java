@@ -19,7 +19,9 @@ package org.geotools.data.shapefile;
 import static org.geotools.data.shapefile.ShapefileDataStoreFactory.ENABLE_SPATIAL_INDEX;
 import static org.geotools.data.shapefile.ShapefileDataStoreFactory.FSTYPE;
 import static org.geotools.data.shapefile.ShapefileDataStoreFactory.URLP;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +33,6 @@ import org.geotools.TestData;
 import org.geotools.data.DataStore;
 import org.geotools.data.QueryCapabilities;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.util.KVP;
 import org.junit.After;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -62,7 +63,8 @@ public class ShapefileDataStoreFactoryTest extends TestCaseSupport {
     public void testFSTypeParameter() throws Exception {
         URL url = TestData.url(STATE_POP);
 
-        KVP params = new KVP(URLP.key, url);
+        Map<String, Serializable> params = new HashMap<>();
+        params.put(URLP.key, url);
 
         assertTrue("Sorting is optional", factory.canProcess(params));
 
@@ -83,7 +85,9 @@ public class ShapefileDataStoreFactoryTest extends TestCaseSupport {
     public void testQueryCapabilities() throws Exception {
         URL url = TestData.url(STATE_POP);
 
-        Map params = new KVP(URLP.key, url);
+        Map<String, Serializable> params = new HashMap<>();
+        params.put(URLP.key, url);
+
         DataStore dataStore = factory.createDataStore(params);
         Name typeName = dataStore.getNames().get(0);
         SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
@@ -108,8 +112,6 @@ public class ShapefileDataStoreFactoryTest extends TestCaseSupport {
 
     @Test
     public void testEnableIndexParameter() throws Exception {
-        Map<String, Serializable> params;
-        ShapefileDataStore ds;
 
         // remote (jar file) shapefiles
         URL remoteUrl = TestData.url(STATE_POP);
@@ -119,8 +121,8 @@ public class ShapefileDataStoreFactoryTest extends TestCaseSupport {
         URL localUrl = f.toURI().toURL();
 
         // test remote file has spatial index disabled even if requested
-        params = map(URLP.key, remoteUrl, ENABLE_SPATIAL_INDEX.key, true);
-        ds = (ShapefileDataStore) factory.createDataStore(params);
+        Map<String, Serializable> params = map(URLP.key, remoteUrl, ENABLE_SPATIAL_INDEX.key, true);
+        ShapefileDataStore ds = (ShapefileDataStore) factory.createDataStore(params);
         assertNotNull("Null datastore should not be returned", ds);
         assertTrue(
                 "should be a non indexed shapefile",
@@ -156,7 +158,7 @@ public class ShapefileDataStoreFactoryTest extends TestCaseSupport {
         if ((pairs.length & 1) != 0) {
             throw new IllegalArgumentException("Pairs was not an even number");
         }
-        Map<String, Serializable> result = new HashMap<String, Serializable>();
+        Map<String, Serializable> result = new HashMap<>();
         for (int i = 0; i < pairs.length; i += 2) {
             String key = (String) pairs[i];
             Serializable value = (Serializable) pairs[i + 1];
@@ -169,7 +171,8 @@ public class ShapefileDataStoreFactoryTest extends TestCaseSupport {
     /** Check non NullPointerException using a http URL instead Filesystem path */
     @Test
     public void testHttpUrl() throws IOException {
-        Map params = new KVP(URLP.key, "http://geo-solution.it/");
+        Map<String, Serializable> params = new HashMap<>();
+        params.put(URLP.key, "http://geo-solution.it/");
         assertFalse(factory.canProcess(params));
     }
 }

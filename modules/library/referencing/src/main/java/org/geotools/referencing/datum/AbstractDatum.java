@@ -140,7 +140,7 @@ public class AbstractDatum extends AbstractIdentifiedObject implements Datum {
      * @param properties The properties to be given to the identified object.
      */
     public AbstractDatum(final Map<String, ?> properties) {
-        this(properties, new HashMap<String, Object>());
+        this(properties, new HashMap<>());
     }
 
     /**
@@ -150,9 +150,8 @@ public class AbstractDatum extends AbstractIdentifiedObject implements Datum {
     private AbstractDatum(
             final Map<String, ?> properties, final Map<String, Object> subProperties) {
         super(properties, subProperties, LOCALIZABLES);
-        final Date realizationEpoch;
         anchorPoint = (InternationalString) subProperties.get(ANCHOR_POINT_KEY);
-        realizationEpoch = (Date) subProperties.get(REALIZATION_EPOCH_KEY);
+        final Date realizationEpoch = (Date) subProperties.get(REALIZATION_EPOCH_KEY);
         domainOfValidity = (Extent) subProperties.get(DOMAIN_OF_VALIDITY_KEY);
         scope = (InternationalString) subProperties.get(SCOPE_KEY);
         this.realizationEpoch =
@@ -165,7 +164,7 @@ public class AbstractDatum extends AbstractIdentifiedObject implements Datum {
      * compared by the {@link #equals} method.
      */
     static Map<String, Object> name(final int key) {
-        final Map<String, Object> properties = new HashMap<String, Object>(4);
+        final Map<String, Object> properties = new HashMap<>(4);
         final InternationalString name = Vocabulary.formatInternational(key);
         properties.put(NAME_KEY, name.toString(null)); // "null" required for unlocalized version.
         properties.put(ALIAS_KEY, name);

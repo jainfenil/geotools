@@ -53,7 +53,7 @@ public class SidecarFootprintProvider implements FootprintGeometryProvider {
 
     static final Logger LOGGER = Logging.getLogger(SidecarFootprintProvider.class);
 
-    static final Set<FootprintLoader> LOADERS = new HashSet<FootprintLoader>();
+    static final Set<FootprintLoader> LOADERS = new HashSet<>();
 
     private static final String FOOTPRINT_LOCATION_ATTRIBUTE = "location";
 
@@ -141,13 +141,7 @@ public class SidecarFootprintProvider implements FootprintGeometryProvider {
         return path;
     }
 
-    /**
-     * Return the footprint (if any) for a file referred by its path
-     *
-     * @param path
-     * @return
-     * @throws IOException
-     */
+    /** Return the footprint (if any) for a file referred by its path */
     public Geometry getFootprint(String path) throws IOException {
         String noExtension = getNoExtensionPath(path);
 

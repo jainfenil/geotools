@@ -16,6 +16,9 @@
  */
 package org.geotools.gce.imagemosaic;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
@@ -37,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.ImageLayout;
@@ -59,6 +64,7 @@ import org.geotools.coverage.grid.io.StructuredGridCoverage2DReader;
 import org.geotools.coverage.util.CoverageUtilities;
 import org.geotools.coverage.util.FeatureUtilities;
 import org.geotools.data.Query;
+import org.geotools.data.Transaction;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.visitor.CalcResult;
 import org.geotools.feature.visitor.FeatureCalc;
@@ -126,6 +132,26 @@ public class RasterManager implements Cloneable {
 
     final Hints excludeMosaicHints = new Hints(Utils.EXCLUDE_MOSAIC, true);
 
+    LoadingCache<Integer, Boolean> alternativeCRSCache;
+
+    public static final String ALTERNATIVE_CRS_CACHE_EXPIRATION_SECONDS_KEY =
+            "org.geotools.imagemosaic.crscache.expiration.seconds";
+
+    public static final String ALTERNATIVE_CRS_CACHE_SIZE_KEY =
+            "org.geotools.imagemosaic.crscache.size";
+
+    private static final int DEFAULT_ALTERNATIVE_CRS_CACHE_EXPIRATION_SECONDS = 60;
+
+    private static final int DEFAULT_ALTERNATIVE_CRS_CACHE_SIZE = 150;
+
+    private static final Integer ALTERNATIVE_CRS_CACHE_EXPIRATION_SECONDS =
+            Integer.getInteger(
+                    ALTERNATIVE_CRS_CACHE_EXPIRATION_SECONDS_KEY,
+                    DEFAULT_ALTERNATIVE_CRS_CACHE_EXPIRATION_SECONDS);
+
+    private static final Integer ALTERNATIVE_CRS_CACHE_SIZE =
+            Integer.getInteger(ALTERNATIVE_CRS_CACHE_SIZE_KEY, DEFAULT_ALTERNATIVE_CRS_CACHE_SIZE);
+
     private SubmosaicProducerFactory submosaicProducerFactory =
             new DefaultSubmosaicProducerFactory();
 
@@ -191,14 +217,7 @@ public class RasterManager implements Cloneable {
             prepareCoverageSpatialElements();
         }
 
-        /**
-         * Initialize the 2D properties (CRS and Envelope) of this coverage
-         *
-         * @throws TransformException
-         * @throws FactoryException
-         * @throws TransformException
-         * @throws FactoryException
-         */
+        /** Initialize the 2D properties (CRS and Envelope) of this coverage */
         private void prepareCoverageSpatialElements() throws TransformException, FactoryException {
             //
             // basic initialization
@@ -388,11 +407,7 @@ public class RasterManager implements Cloneable {
             }
         }
 
-        /**
-         * Retrieves the values for this domain
-         *
-         * @return
-         */
+        /** Retrieves the values for this domain */
         private String getValues() {
             if (domainType == DomainType.SINGLE_VALUE) {
                 return getSingleValues();
@@ -400,16 +415,12 @@ public class RasterManager implements Cloneable {
             return getRangeValues();
         }
 
-        /**
-         * Retrieves the Range values for this domain
-         *
-         * @return
-         */
+        /** Retrieves the Range values for this domain */
         private String getRangeValues() {
             try {
                 Set<String> result =
                         extractDomain(propertyName, additionalPropertyName, domainType);
-                if (result.size() <= 0) {
+                if (result.isEmpty()) {
                     return "";
                 }
 
@@ -428,18 +439,14 @@ public class RasterManager implements Cloneable {
             }
         }
 
-        /**
-         * Retrieves the single values list of this domain (no ranges available)
-         *
-         * @return
-         */
+        /** Retrieves the single values list of this domain (no ranges available) */
         private String getSingleValues() {
             try {
 
                 // implicit ordering
                 final Set result = new TreeSet(extractDomain(propertyName));
                 // check result
-                if (result.size() <= 0) {
+                if (result.isEmpty()) {
                     return "";
                 }
 
@@ -471,12 +478,10 @@ public class RasterManager implements Cloneable {
 
             // === create the filter
             // loop values and AND them
-            final int size = values.size();
-            final List<Filter> filters = new ArrayList<Filter>();
+            final List<Filter> filters = new ArrayList<>();
             FilterFactory2 ff = FeatureUtilities.DEFAULT_FILTER_FACTORY;
-            for (int i = 0; i < size; i++) {
+            for (Object value : values) {
                 // checks
-                Object value = values.get(i);
                 if (value == null) {
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Ignoring null date for the filter:" + this.identifier);
@@ -546,10 +551,9 @@ public class RasterManager implements Cloneable {
      */
     public class DomainManager {
 
-        private final Map<String, DomainDescriptor> domainsMap =
-                new HashMap<String, DomainDescriptor>();
+        private final Map<String, DomainDescriptor> domainsMap = new HashMap<>();
 
-        private final List<DimensionDescriptor> dimensions = new ArrayList<DimensionDescriptor>();
+        private final List<DimensionDescriptor> dimensions = new ArrayList<>();
         private final SimpleFeatureType simpleFeatureType;
 
         private final boolean attributeHasRange(String attribute) {
@@ -571,11 +575,7 @@ public class RasterManager implements Cloneable {
             return descriptors.get(0);
         }
 
-        /**
-         * @param domainAttributes
-         * @param simpleFeatureType
-         * @throws IllegalArgumentException
-         */
+        /** */
         private List<DimensionDescriptor> init(
                 Map<String, String> domainAttributes, SimpleFeatureType simpleFeatureType)
                 throws IllegalArgumentException {
@@ -655,9 +655,6 @@ public class RasterManager implements Cloneable {
         /**
          * build an AdditionalDomainManager on top of the provided additionalDomainAttributes (a
          * comma separated list of attribute names).
-         *
-         * @param additionalDomainAttributes
-         * @param simpleFeatureType
          */
         DomainManager(String additionalDomainAttributes, SimpleFeatureType simpleFeatureType) {
             Utilities.ensureNonNull("additionalDomainAttributes", additionalDomainAttributes);
@@ -680,10 +677,7 @@ public class RasterManager implements Cloneable {
             init(domainPairs, simpleFeatureType);
         }
 
-        /**
-         * @param domainName
-         * @return @TODO We can surely improve it by making use of Regular Expressions
-         */
+        /** @return @TODO We can surely improve it by making use of Regular Expressions */
         private String cleanupDomainName(String domainName) {
             if (attributeHasRange(domainName)
                     || (domainName.contains("(") && domainName.contains(")"))) {
@@ -780,9 +774,6 @@ public class RasterManager implements Cloneable {
         /**
          * Check whether a specific parameter (identified by the {@link Identifier} name) is
          * supported by this manager (and therefore, by the reader).
-         *
-         * @param name
-         * @return
          */
         public boolean isParameterSupported(final Identifier name) {
             if (!domainsMap.isEmpty()) {
@@ -797,13 +788,9 @@ public class RasterManager implements Cloneable {
             return false;
         }
 
-        /**
-         * Setup the List of metadataNames for this additional domains manager
-         *
-         * @return
-         */
+        /** Setup the List of metadataNames for this additional domains manager */
         public List<String> getMetadataNames() {
-            final List<String> metadataNames = new ArrayList<String>();
+            final List<String> metadataNames = new ArrayList<>();
             if (!domainsMap.isEmpty()) {
                 for (DomainDescriptor domain : domainsMap.values()) {
                     String domainName = domain.getIdentifier().toUpperCase();
@@ -825,15 +812,12 @@ public class RasterManager implements Cloneable {
 
         /**
          * Return the value of a specific metadata by parsing the requested name as a Domain Name
-         *
-         * @param name
-         * @return
          */
         public String getMetadataValue(String name) {
             Utilities.ensureNonNull("name", name);
 
             String value = null;
-            if (domainsMap.size() > 0) {
+            if (!domainsMap.isEmpty()) {
                 // is a domain?
                 if (domainsMap.containsKey(name)) {
                     final DomainDescriptor domainDescriptor = domainsMap.get(name);
@@ -868,13 +852,7 @@ public class RasterManager implements Cloneable {
             return value;
         }
 
-        /**
-         * Setup a Filter on top of the specified domainRequest which is in the form "key=value"
-         *
-         * @param domain
-         * @param values
-         * @return
-         */
+        /** Setup a Filter on top of the specified domainRequest which is in the form "key=value" */
         public Filter createFilter(String domain, List values) {
             // === checks
             if (domain == null || domain.isEmpty()) {
@@ -896,12 +874,9 @@ public class RasterManager implements Cloneable {
         /**
          * Return the set of dynamic parameterDescriptors (the ones related to domains) for this
          * reader
-         *
-         * @return
          */
         public Set<ParameterDescriptor<List>> getDynamicParameters() {
-            Set<ParameterDescriptor<List>> dynamicParameters =
-                    new HashSet<ParameterDescriptor<List>>();
+            Set<ParameterDescriptor<List>> dynamicParameters = new HashSet<>();
             if (!domainsMap.isEmpty()) {
                 for (DomainDescriptor domain : domainsMap.values()) {
                     dynamicParameters.add(domain.getDomainParameterDescriptor());
@@ -945,6 +920,8 @@ public class RasterManager implements Cloneable {
 
     boolean heterogeneousGranules;
 
+    boolean heterogeneousCRS;
+
     double[][] levels;
 
     SpatialDomainManager spatialDomainManager;
@@ -960,7 +937,7 @@ public class RasterManager implements Cloneable {
 
     volatile boolean enableEvents = false; // start disabled
 
-    List<DimensionDescriptor> dimensionDescriptors = new ArrayList<DimensionDescriptor>();
+    List<DimensionDescriptor> dimensionDescriptors = new ArrayList<>();
 
     ImageMosaicReader parentReader;
 
@@ -991,6 +968,7 @@ public class RasterManager implements Cloneable {
         this.expandMe = configuration.isExpandToRGB();
         boolean checkAuxiliaryMetadata = configuration.isCheckAuxiliaryMetadata();
         this.heterogeneousGranules = configuration.getCatalogConfigurationBean().isHeterogeneous();
+        this.heterogeneousCRS = configuration.getCatalogConfigurationBean().isHeterogeneousCRS();
         this.configuration = configuration;
         hints = parentReader.getHints();
         this.name = configuration.getName();
@@ -1086,6 +1064,33 @@ public class RasterManager implements Cloneable {
                                     + "is misconfigured");
                 }
             }
+        }
+        if (heterogeneousCRS) {
+            // If the reader is kept open (and the rasterManager doesn't change)
+            // it would be useful to cache the result of a query for
+            // a specific EPSG code on the index, so that a DB access won't be
+            // repeated while the info is in cache.
+
+            alternativeCRSCache =
+                    CacheBuilder.newBuilder()
+                            .maximumSize(ALTERNATIVE_CRS_CACHE_SIZE)
+                            .expireAfterWrite(
+                                    ALTERNATIVE_CRS_CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS)
+                            .build(
+                                    new CacheLoader<Integer, Boolean>() {
+
+                                        @Override
+                                        public Boolean load(Integer epsgCode) throws Exception {
+                                            Query query = new Query(typeName);
+                                            String crsAttribute = getCrsAttribute();
+                                            query.setPropertyNames(Arrays.asList(crsAttribute));
+                                            final UniqueVisitor visitor =
+                                                    new UniqueVisitor(crsAttribute);
+                                            granuleCatalog.computeAggregateFunction(query, visitor);
+                                            Set set = visitor.getUnique();
+                                            return set != null && set.contains("EPSG:" + epsgCode);
+                                        }
+                                    });
         }
     }
 
@@ -1199,8 +1204,6 @@ public class RasterManager implements Cloneable {
     /**
      * This code tries to load the sample image from which we can extract SM and CM to use when
      * answering to requests that falls within a hole in the mosaic.
-     *
-     * @param configuration
      */
     private void loadSampleImage(MosaicConfigurationBean configuration) {
         if (this.parentReader.sourceURL == null) {
@@ -1269,9 +1272,8 @@ public class RasterManager implements Cloneable {
 
         // check if a policy was provided using hints (check even the
         // deprecated one)
-        if (this.hints != null)
-            if (this.hints.containsKey(Hints.OVERVIEW_POLICY))
-                overviewPolicy = (OverviewPolicy) this.hints.get(Hints.OVERVIEW_POLICY);
+        overviewPolicy =
+                (OverviewPolicy) Utils.getHintIfAvailable(this.hints, Hints.OVERVIEW_POLICY);
 
         // use default if not provided. Default is nearest
         if (overviewPolicy == null) {
@@ -1289,9 +1291,8 @@ public class RasterManager implements Cloneable {
      *     DecimationPolicy#DISALLOW}. Default is {@link DecimationPolicy#ALLOW}.
      */
     private DecimationPolicy extractDecimationPolicy() {
-        if (this.hints != null)
-            if (this.hints.containsKey(Hints.DECIMATION_POLICY))
-                decimationPolicy = (DecimationPolicy) this.hints.get(Hints.DECIMATION_POLICY);
+        decimationPolicy =
+                (DecimationPolicy) Utils.getHintIfAvailable(this.hints, Hints.DECIMATION_POLICY);
 
         // use default if not provided. Default is allow
         if (decimationPolicy == null) {
@@ -1349,12 +1350,7 @@ public class RasterManager implements Cloneable {
         return typeName;
     }
 
-    /**
-     * @param metadataName
-     * @param attributeName
-     * @return
-     * @throws IOException
-     */
+    /** */
     FeatureCalc createExtremaQuery(String metadataName, String attributeName) throws IOException {
         final Query query = new Query(typeName);
         query.setPropertyNames(Arrays.asList(attributeName));
@@ -1373,7 +1369,6 @@ public class RasterManager implements Cloneable {
      * <p>It retrieves a comma separated list of values as a Set of {@link String}.
      *
      * @return a comma separated list of values as a {@link String}.
-     * @throws IOException
      */
     Set extractDomain(final String attribute) throws IOException {
         Query query = new Query(typeName);
@@ -1388,9 +1383,7 @@ public class RasterManager implements Cloneable {
      *
      * <p>It retrieves a comma separated list of values as a Set of {@link String}.
      *
-     * @param domainType
      * @return a comma separated list of values as a Set of {@link String}.
-     * @throws IOException
      */
     private Set extractDomain(
             final String attribute, final String secondAttribute, final DomainType domainType)
@@ -1422,11 +1415,16 @@ public class RasterManager implements Cloneable {
                 : ((RangeVisitor) visitor).getRange();
     }
 
-    /**
-     * TODO this should not leak through
-     *
-     * @return
-     */
+    public boolean hasAlternativeCRS(Integer epsgCode) throws IOException {
+        try {
+            return epsgCode != null && heterogeneousCRS ? alternativeCRSCache.get(epsgCode) : false;
+        } catch (ExecutionException e) {
+            throw new IOException(
+                    "Exception Occurred while checking for alternative CRS:" + epsgCode, e);
+        }
+    }
+
+    /** TODO this should not leak through */
     public GranuleCatalog getGranuleCatalog() {
         return granuleCatalog;
     }
@@ -1434,9 +1432,6 @@ public class RasterManager implements Cloneable {
     /**
      * Create a store for the coverage related to this {@link RasterManager} using the provided
      * schema
-     *
-     * @param indexSchema
-     * @throws IOException
      */
     public void createStore(SimpleFeatureType indexSchema) throws IOException {
         final String typeName = indexSchema.getTypeName();
@@ -1451,17 +1446,11 @@ public class RasterManager implements Cloneable {
             // remove them all, assuming the schema has not changed
             final Query query = new Query(type.getTypeName());
             query.setFilter(Filter.INCLUDE);
-            granuleCatalog.removeGranules(query);
+            granuleCatalog.removeGranules(query, Transaction.AUTO_COMMIT);
         }
     }
 
-    /**
-     * Remove a store for the coverage related to this {@link RasterManager}
-     *
-     * @param forceDelete
-     * @param indexSchema
-     * @throws IOException
-     */
+    /** Remove a store for the coverage related to this {@link RasterManager} */
     public void removeStore(String typeName, boolean forceDelete, boolean checkForReferences)
             throws IOException {
         Utilities.ensureNonNull("typeName", typeName);
@@ -1476,18 +1465,15 @@ public class RasterManager implements Cloneable {
             cleanupGranules(query, checkForReferences, forceDelete);
 
             // removing records from the catalog
-            granuleCatalog.removeGranules(query);
+            granuleCatalog.removeGranules(query, Transaction.AUTO_COMMIT);
             granuleCatalog.removeType(typeName);
+        }
+        if (alternativeCRSCache != null) {
+            alternativeCRSCache.invalidateAll();
         }
     }
 
-    /**
-     * Delete granules from query.
-     *
-     * @param query
-     * @param checkForReferences
-     * @throws IOException
-     */
+    /** Delete granules from query. */
     private void cleanupGranules(Query query, boolean checkForReferences, boolean deleteData)
             throws IOException {
         final SimpleFeatureCollection collection = granuleCatalog.getGranules(query);
@@ -1531,15 +1517,12 @@ public class RasterManager implements Cloneable {
                 }
             }
         }
+        if (alternativeCRSCache != null) {
+            alternativeCRSCache.invalidateAll();
+        }
     }
 
-    /**
-     * Check if there is any granule referred by other coverages.
-     *
-     * @param coverageName
-     * @return
-     * @throws IOException
-     */
+    /** Check if there is any granule referred by other coverages. */
     private boolean checkForReferences(String coverageName) throws IOException {
         final String[] coverageNames = parentReader.getGridCoverageNames();
         for (String typeName : coverageNames) {
@@ -1549,7 +1532,7 @@ public class RasterManager implements Cloneable {
                 UniqueVisitor visitor = new UniqueVisitor(parentReader.locationAttributeName);
                 collection.accepts(visitor, null);
                 Set<String> features = visitor.getUnique();
-                if (features.size() > 0) {
+                if (!features.isEmpty()) {
                     return true;
                 }
             }
@@ -1561,7 +1544,7 @@ public class RasterManager implements Cloneable {
         synchronized (this) {
             if (readOnly) {
                 if (granuleSource == null) {
-                    granuleSource = new GranuleCatalogSource(granuleCatalog, typeName, hints);
+                    granuleSource = new GranuleCatalogSource(this, granuleCatalog, typeName, hints);
                     if (!typeName.equalsIgnoreCase(name)) {
                         // need to rename
                         granuleSource = new RenamingGranuleSource(name, granuleSource);
@@ -1593,6 +1576,9 @@ public class RasterManager implements Cloneable {
                 if (granuleCatalog != null) {
                     this.granuleCatalog.dispose();
                 }
+                if (alternativeCRSCache != null) {
+                    alternativeCRSCache.invalidateAll();
+                }
             } catch (Exception e) {
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, e.getLocalizedMessage(), e);
@@ -1608,7 +1594,11 @@ public class RasterManager implements Cloneable {
     }
 
     public void initialize(final boolean checkDomains) throws IOException {
-        final BoundingBox bounds = granuleCatalog.getBounds(typeName);
+        initialize(checkDomains, Transaction.AUTO_COMMIT);
+    }
+
+    public void initialize(final boolean checkDomains, Transaction transaction) throws IOException {
+        final BoundingBox bounds = granuleCatalog.getBounds(typeName, transaction);
         if (checkDomains) {
             initDomains(configuration);
         }
@@ -1651,22 +1641,18 @@ public class RasterManager implements Cloneable {
                             crs,
                             raster2Model,
                             overviewsController);
-        } catch (TransformException e) {
-            throw new IOException(
-                    "Exception occurred while initializing the SpatialDomainManager", e);
-        } catch (FactoryException e) {
+        } catch (TransformException | FactoryException e) {
             throw new IOException(
                     "Exception occurred while initializing the SpatialDomainManager", e);
         }
+        if (alternativeCRSCache != null) {
+            alternativeCRSCache.invalidateAll();
+        }
     }
 
-    /**
-     * Return the metadataNames for this manager
-     *
-     * @return
-     */
+    /** Return the metadataNames for this manager */
     String[] getMetadataNames() {
-        final List<String> metadataNames = new ArrayList<String>();
+        final List<String> metadataNames = new ArrayList<>();
         metadataNames.add(GridCoverage2DReader.TIME_DOMAIN);
         metadataNames.add(GridCoverage2DReader.HAS_TIME_DOMAIN);
         metadataNames.add(GridCoverage2DReader.TIME_DOMAIN_MINIMUM);
@@ -1684,6 +1670,7 @@ public class RasterManager implements Cloneable {
         if (domainsManager != null) {
             metadataNames.addAll(domainsManager.getMetadataNames());
         }
+        metadataNames.add(AbstractGridCoverage2DReader.MULTICRS_READER);
         return metadataNames.toArray(new String[metadataNames.size()]);
     }
 
@@ -1695,7 +1682,6 @@ public class RasterManager implements Cloneable {
      * Return the metadata value for the specified metadata name
      *
      * @param name the name of the metadata to be returned
-     * @return
      */
     String getMetadataValue(String name) {
         String value = null;
@@ -1747,9 +1733,36 @@ public class RasterManager implements Cloneable {
 
         // check if heterogeneous CRS
         if (name.equalsIgnoreCase(AbstractGridCoverage2DReader.MULTICRS_READER)) {
-            return String.valueOf(configuration.getCatalogConfigurationBean().isHeterogeneousCRS());
+            return String.valueOf(heterogeneousCRS);
         }
 
+        if (name.equalsIgnoreCase(AbstractGridCoverage2DReader.MULTICRS_EPSGCODES)
+                && heterogeneousCRS) {
+
+            // Extract the internal EPSG Codes found on the catalog
+            String crsAttribute = null;
+            try {
+                crsAttribute = getCrsAttribute();
+                if (crsAttribute != null) {
+                    Set<String> crsSet = extractDomain(crsAttribute);
+                    for (String crs : crsSet) {
+                        // Opportunistic caching:
+                        // LoadingCache usually loads objects at first need.
+                        // However, since this metadata method is doing a scan
+                        // of the available codes when invoked, let's take
+                        // advantage of that by putting the values on cache
+                        String epsgCode = crs.replaceAll("[^0-9,]", "");
+                        alternativeCRSCache.put(Integer.valueOf(epsgCode), true);
+                    }
+                    return String.join(",", crsSet);
+                }
+            } catch (IOException e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, "Unable to retrieve the list of supported CRSs", e);
+                }
+                return "";
+            }
+        }
         // check additional domains
         if (domainsManager != null) {
             return domainsManager.getMetadataValue(name);
@@ -1775,29 +1788,50 @@ public class RasterManager implements Cloneable {
         return parentReader;
     }
 
-    /**
-     * Builds a RasterManager for the sub mosaic of a given template granule, and within a given
-     * search bounds
-     *
-     * @throws Exception
-     */
     public RasterManager getForGranuleCRS(
             GranuleDescriptor templateDescriptor, ReferencedEnvelope requestBounds)
             throws Exception {
+        return getForGranuleCRS(templateDescriptor, requestBounds, requestBounds);
+    }
+
+    /**
+     * Builds a RasterManager for the sub mosaic of a given template granule, and within a given
+     * search bounds
+     */
+    public RasterManager getForGranuleCRS(
+            GranuleDescriptor templateDescriptor,
+            ReferencedEnvelope requestBounds,
+            ReferencedEnvelope requestBoundsQuery)
+            throws Exception {
         CoordinateReferenceSystem granuleCRS =
                 templateDescriptor.getGranuleEnvelope().getCoordinateReferenceSystem();
-        if (CRS.equalsIgnoreMetadata(spatialDomainManager.coverageCRS2D, granuleCRS)) {
+        CoordinateReferenceSystem requestedCRS = requestBounds.getCoordinateReferenceSystem();
+
+        // When no requesting AlternativeCRSOutput, the provided
+        // requestBounds and requestBoundsQuery are the same object
+        boolean useAlternativeCRS =
+                heterogeneousCRS
+                        && hasAlternativeCRS(CRS.lookupEpsgCode(requestedCRS, false))
+                        && !requestBounds.equals(requestBoundsQuery);
+        CoordinateReferenceSystem referenceCRS =
+                useAlternativeCRS ? requestedCRS : spatialDomainManager.coverageCRS2D;
+        if (CRS.equalsIgnoreMetadata(referenceCRS, granuleCRS)) {
             return this;
         }
 
         // compute the bounds of the sub-mosaic in that CRS
-        ReferencedEnvelope bounds = getBoundsForGranuleCRS(templateDescriptor, requestBounds);
+        ReferencedEnvelope bounds = getBoundsForGranuleCRS(templateDescriptor, requestBoundsQuery);
         ReferencedEnvelope targetBounds = reprojectBounds(requestBounds, granuleCRS, bounds);
 
         // rebuild the raster manager
         RasterManager reprojected = (RasterManager) this.clone();
         reprojected.configuration = new MosaicConfigurationBean(this.configuration);
         reprojected.configuration.setCrs(granuleCRS);
+        if (useAlternativeCRS) {
+            // We are going to produce a submosaic in the requested CRS,
+            // so that it won't be handled as heterogeneous anymore.
+            reprojected.heterogeneousCRS = false;
+        }
         reprojected.configuration.setEnvelope(targetBounds);
         if (reprojected.imposedEnvelope != null) {
             // we might have an imposed bbox
@@ -1861,11 +1895,6 @@ public class RasterManager implements Cloneable {
     /**
      * Grab the bounds of the mosaic granules in the template granule CRS (cannot reproject, in
      * general, the whole mosaic bounds in the granule local CRS)
-     *
-     * @param templateDescriptor
-     * @param requestBounds
-     * @return
-     * @throws IOException
      */
     private ReferencedEnvelope getBoundsForGranuleCRS(
             GranuleDescriptor templateDescriptor, ReferencedEnvelope requestBounds)
@@ -1896,9 +1925,6 @@ public class RasterManager implements Cloneable {
     /**
      * Returns the name of the crs attribute in heterogeneous mosaics (for non heterogenous ones, it
      * will return null
-     *
-     * @return
-     * @throws IOException
      */
     public String getCrsAttribute() throws IOException {
         String crsAttribute = configuration.getCRSAttribute();
@@ -1912,5 +1938,15 @@ public class RasterManager implements Cloneable {
         }
 
         return crsAttribute;
+    }
+
+    /** The parent directory that can be used with the {@link PathType} enumeration */
+    public String getParentLocation() {
+        return URLs.fileToUrl(getParentReader().parentDirectory).toString();
+    }
+
+    /** The attribute containing the location information for the single granules */
+    public String getLocationAttribute() {
+        return getParentReader().locationAttributeName;
     }
 }

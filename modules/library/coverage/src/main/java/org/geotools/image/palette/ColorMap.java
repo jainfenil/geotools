@@ -16,7 +16,7 @@
  */
 package org.geotools.image.palette;
 
-import static org.geotools.image.palette.ColorUtils.*;
+import static org.geotools.image.palette.ColorUtils.color;
 
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -117,15 +117,7 @@ final class ColorMap implements Iterable<ColorEntry> {
         }
     }
 
-    /**
-     * Returns the value for the specified color, or -1 if the color is not found
-     *
-     * @param r
-     * @param g
-     * @param b
-     * @param a
-     * @return
-     */
+    /** Returns the value for the specified color, or -1 if the color is not found */
     public int get(int r, int g, int b, int a) {
         int color = color(r, g, b, a);
         int index = indexFor(hash(color), table.length);
@@ -145,10 +137,6 @@ final class ColorMap implements Iterable<ColorEntry> {
     /**
      * Associates the specified value with a color
      *
-     * @param r
-     * @param g
-     * @param b
-     * @param a
      * @return The old value associated with the color, or -1 if no old value was found
      */
     public int put(int r, int g, int b, int a, int value) {
@@ -175,15 +163,7 @@ final class ColorMap implements Iterable<ColorEntry> {
         return -1;
     }
 
-    /**
-     * Removes the specified color from the map
-     *
-     * @param r
-     * @param g
-     * @param b
-     * @param a
-     * @return
-     */
+    /** Removes the specified color from the map */
     public boolean remove(int r, int g, int b, int a) {
         int color = color(r, g, b, a);
         int index = indexFor(hash(color), table.length);
@@ -207,11 +187,7 @@ final class ColorMap implements Iterable<ColorEntry> {
         return false;
     }
 
-    /**
-     * Builds a new bucket array and redistributes the color entries among it
-     *
-     * @param newLength
-     */
+    /** Builds a new bucket array and redistributes the color entries among it */
     private void rehash(int newLength) {
         ColorEntry[] oldTable = table;
         this.table = new ColorEntry[newLength];
@@ -269,11 +245,11 @@ final class ColorMap implements Iterable<ColorEntry> {
         int empty = 0;
         int largest = 0;
         int sum = 0;
-        for (int i = 0; i < table.length; i++) {
-            if (table[i] == null) {
+        for (ColorEntry colorEntry : table) {
+            if (colorEntry == null) {
                 empty++;
             } else {
-                ColorEntry ce = table[i];
+                ColorEntry ce = colorEntry;
                 int count = 0;
                 while (ce != null) {
                     count++;

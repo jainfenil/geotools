@@ -21,8 +21,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -34,6 +35,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import org.eclipse.emf.ecore.resource.URIHandler;
 import org.eclipse.xsd.XSDSchema;
+import org.geotools.util.logging.Logging;
 import org.geotools.xs.XS;
 import org.geotools.xsd.impl.ParserHandler;
 import org.geotools.xsd.impl.ParserHandler.ContextCustomizer;
@@ -41,6 +43,8 @@ import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.helpers.NamespaceSupport;
 
 /**
@@ -61,15 +65,26 @@ import org.xml.sax.helpers.NamespaceSupport;
  * @author Justin Deoliveira, The Open Planning Project
  */
 public class Parser {
+
+    private static final Logger LOGGER = Logging.getLogger(Parser.class);
+
     private static final String LEXICAL_HANDLER_PROPERTY = "lexical-handler";
 
     private static final String SAX_PROPERTY_PREFIX = "http://xml.org/sax/properties/";
+
+    private static final String JAXP_PROPERTY_PREFIX = "http://www.oracle.com/xml/jaxp/properties/";
+    private static final String JDK_ENTITY_EXPANSION_LIMIT =
+            JAXP_PROPERTY_PREFIX + "entityExpansionLimit";
+    private static final Integer DEFAULT_ENTITY_EXPANSION_LIMIT = 100;
 
     /** sax handler which maintains the element stack */
     private ParserHandler handler;
 
     /** the sax parser driving the handler */
     private SAXParser parser;
+
+    /** Entity expansion limit configuration, set to null by default */
+    private Integer entityExpansionLimit;
 
     /**
      * Creates a new instance of the parser.
@@ -92,11 +107,7 @@ public class Parser {
         return handler;
     }
 
-    /**
-     * Allows the caller to customize the Pico context used for parsing
-     *
-     * @param contextCustomizer
-     */
+    /** Allows the caller to customize the Pico context used for parsing */
     public void setContextCustomizer(ContextCustomizer contextCustomizer) {
         handler.setContextCustomizer(contextCustomizer);
     }
@@ -108,9 +119,6 @@ public class Parser {
      * of the document. This method should only be called once for a single instance document.
      *
      * @return The object representation of the root element of the document.
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
     public Object parse(InputStream input)
             throws IOException, SAXException, ParserConfigurationException {
@@ -124,9 +132,6 @@ public class Parser {
      * of the document. This method should only be called once for a single instance document.
      *
      * @return The object representation of the root element of the document.
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
     public Object parse(Reader reader)
             throws IOException, SAXException, ParserConfigurationException {
@@ -143,10 +148,6 @@ public class Parser {
      *
      * @return @return The object representation of the root element of the document.
      *
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
      *
      * @since 2.6
      */
@@ -174,9 +175,6 @@ public class Parser {
      * of the document. This method should only be called once for a single instance document.
      *
      * @return The object representation of the root element of the document.
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
     public Object parse(InputSource source)
             throws IOException, SAXException, ParserConfigurationException {
@@ -209,7 +207,7 @@ public class Parser {
     }
 
     /**
-     * Sets the flag controlling wether the parser should validate or not.
+     * Sets the flag controlling whether the parser should validate or not.
      *
      * @param validating Validation flag, <code>true</code> to validate, otherwise <code>false
      *     </code>
@@ -291,11 +289,7 @@ public class Parser {
         return handler.isForceParserDelegate();
     }
 
-    /**
-     * Set EntityResolver
-     *
-     * @param entityResolver
-     */
+    /** Set EntityResolver */
     public void setEntityResolver(EntityResolver entityResolver) {
         handler.setEntityResolver(entityResolver);
     }
@@ -337,7 +331,7 @@ public class Parser {
      *
      * @return A list of errors, or an empty list if none.
      */
-    public List getValidationErrors() {
+    public List<Exception> getValidationErrors() {
         return handler.getValidationErrors();
     }
 
@@ -350,10 +344,6 @@ public class Parser {
      *
      * <p>This method does not do any of the work done by {@link #parse(InputSource)}, it only
      * validates.
-     *
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
     public void validate(InputStream in)
             throws IOException, SAXException, ParserConfigurationException {
@@ -369,10 +359,6 @@ public class Parser {
      *
      * <p>This method does not do any of the work done by {@link #parse(InputSource)}, it only
      * validates.
-     *
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
     public void validate(Reader reader)
             throws IOException, SAXException, ParserConfigurationException {
@@ -388,10 +374,6 @@ public class Parser {
      *
      * <p>This method does not do any of the work done by {@link #parse(InputSource)}, it only
      * validates.
-     *
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
     public void validate(InputSource source)
             throws IOException, SAXException, ParserConfigurationException {
@@ -468,9 +450,7 @@ public class Parser {
         // set the schema sources of this configuration, and all dependent ones
         StringBuffer schemaLocation = new StringBuffer();
 
-        for (Iterator d = handler.getConfiguration().allDependencies().iterator(); d.hasNext(); ) {
-            Configuration dependency = (Configuration) d.next();
-
+        for (Configuration dependency : handler.getConfiguration().allDependencies()) {
             // ignore xs namespace
             if (XS.NAMESPACE.equals(dependency.getNamespaceURI())) {
                 continue;
@@ -493,6 +473,35 @@ public class Parser {
                 schemaLocation.toString());
         // add the handler as a LexicalHandler too.
         parser.setProperty(SAX_PROPERTY_PREFIX + LEXICAL_HANDLER_PROPERTY, handler);
+        // set Entity expansion limit
+        setupEntityExpansionLimit(parser);
+
+        //
+        // return builded parser
         return parser;
+    }
+
+    private void setupEntityExpansionLimit(final SAXParser parser) throws SAXNotSupportedException {
+        try {
+            parser.setProperty(
+                    JDK_ENTITY_EXPANSION_LIMIT,
+                    entityExpansionLimit != null
+                            ? entityExpansionLimit
+                            : DEFAULT_ENTITY_EXPANSION_LIMIT);
+        } catch (SAXNotRecognizedException ex) {
+            LOGGER.warning(
+                    "Sax parser property '"
+                            + JDK_ENTITY_EXPANSION_LIMIT
+                            + "' not recognized.  "
+                            + "Xerces version is incompatible.");
+        }
+    }
+
+    public Optional<Integer> getEntityExpansionLimit() {
+        return Optional.ofNullable(entityExpansionLimit);
+    }
+
+    public void setEntityExpansionLimit(Integer entityExpansionLimit) {
+        this.entityExpansionLimit = entityExpansionLimit;
     }
 }

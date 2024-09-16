@@ -27,7 +27,6 @@ import javax.media.jai.ROI;
 import org.geotools.coverage.GridSampleDimension;
 import org.geotools.coverage.TypeMap;
 import org.geotools.coverage.grid.GridCoverage2D;
-import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.util.CoverageUtilities;
 import org.geotools.image.ImageWorker;
 import org.geotools.renderer.i18n.Vocabulary;
@@ -105,10 +104,7 @@ public class RasterSymbolizerHelper extends SubchainStyleVisitorCoverageProcessi
                             .setRenderingHints(this.getHints())
                             .retainBands(new int[] {visibleBand})
                             .getRenderedImage();
-            sd =
-                    new GridSampleDimension[] {
-                        (GridSampleDimension) output.getSampleDimension(visibleBand)
-                    };
+            sd = new GridSampleDimension[] {output.getSampleDimension(visibleBand)};
         } else {
             sd = output.getSampleDimensions();
         }
@@ -145,7 +141,8 @@ public class RasterSymbolizerHelper extends SubchainStyleVisitorCoverageProcessi
         // Apply opacity if needed
         // ///////////////////////////////////////////////////////////////////
         final RenderedImage finalImage;
-        Map properties = output.getProperties();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> properties = output.getProperties();
         if (properties == null) {
             properties = new HashMap<>();
         }
@@ -173,7 +170,7 @@ public class RasterSymbolizerHelper extends SubchainStyleVisitorCoverageProcessi
                     .create(
                             output.getName(),
                             finalImage,
-                            (GridGeometry2D) output.getGridGeometry(),
+                            output.getGridGeometry(),
                             sd,
                             new GridCoverage[] {output},
                             properties);
@@ -184,16 +181,13 @@ public class RasterSymbolizerHelper extends SubchainStyleVisitorCoverageProcessi
                 .create(
                         output.getName(),
                         outputImage,
-                        (GridGeometry2D) output.getGridGeometry(),
+                        output.getGridGeometry(),
                         sd,
                         new GridCoverage[] {output},
                         properties);
     }
 
-    /**
-     * @param sourceCoverage
-     * @param hints
-     */
+    /** */
     public RasterSymbolizerHelper(GridCoverage2D sourceCoverage, Hints hints) {
         super(
                 1,
@@ -226,7 +220,6 @@ public class RasterSymbolizerHelper extends SubchainStyleVisitorCoverageProcessi
         // final RootNode sourceNode = new RootNode(sourceCoverage, adopt,
         // hints);
 
-        CoverageProcessingNode currNode;
         CoverageProcessingNode prevNode = this.getSource(0);
 
         // /////////////////////////////////////////////////////////////////////
@@ -236,7 +229,7 @@ public class RasterSymbolizerHelper extends SubchainStyleVisitorCoverageProcessi
         // /////////////////////////////////////////////////////////////////////
 
         final ChannelSelectionNode csNode = new ChannelSelectionNode();
-        currNode = csNode;
+        CoverageProcessingNode currNode = csNode;
 
         currNode.addSource(prevNode);
         prevNode = currNode;
@@ -314,7 +307,7 @@ public class RasterSymbolizerHelper extends SubchainStyleVisitorCoverageProcessi
         /////////////////////////////////////////////////////////////////////
         final Expression op = rs.getOpacity();
         if (op != null) {
-            final Number number = (Number) op.evaluate(null, Float.class);
+            final Number number = op.evaluate(null, Float.class);
             if (number != null) {
                 opacity = number.floatValue();
             }

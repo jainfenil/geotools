@@ -85,7 +85,7 @@ public class CollectionFeatureSource implements SimpleFeatureSource {
 
     public synchronized void addFeatureListener(FeatureListener listener) {
         if (listeners == null) {
-            listeners = Collections.synchronizedList(new ArrayList<FeatureListener>());
+            listeners = Collections.synchronizedList(new ArrayList<>());
         }
         listeners.add(listener);
     }
@@ -144,7 +144,7 @@ public class CollectionFeatureSource implements SimpleFeatureSource {
 
     public synchronized Set<Key> getSupportedHints() {
         if (hints == null) {
-            Set<Key> supports = new HashSet<Key>();
+            Set<Key> supports = new HashSet<>();
             // supports.add( Hints.FEATURE_DETACHED );
             hints = Collections.unmodifiableSet(supports);
         }
@@ -183,7 +183,7 @@ public class CollectionFeatureSource implements SimpleFeatureSource {
                                 + "so there is no way a stable paging (offset/limit) can be performed");
             }
             Query copy = new Query(query);
-            copy.setSortBy(new SortBy[] {SortBy.NATURAL_ORDER});
+            copy.setSortBy(SortBy.NATURAL_ORDER);
             query = copy;
         }
         SimpleFeatureCollection features = collection;
@@ -208,7 +208,7 @@ public class CollectionFeatureSource implements SimpleFeatureSource {
                 Comparator<SimpleFeature> comparator = DataUtilities.sortComparator(sortBy);
                 Arrays.sort(array, comparator);
             }
-            ArrayList<SimpleFeature> list = new ArrayList<SimpleFeature>(Arrays.asList(array));
+            ArrayList<SimpleFeature> list = new ArrayList<>(Arrays.asList(array));
             features = new ListFeatureCollection(getSchema(), list);
         }
 
@@ -266,7 +266,7 @@ public class CollectionFeatureSource implements SimpleFeatureSource {
         @Override
         public SimpleFeatureCollection sort(SortBy order) {
             Query q = new Query(getSchema().getTypeName());
-            q.setSortBy(new SortBy[] {order});
+            q.setSortBy(order);
 
             Query subQuery = DataUtilities.mixQueries(query, q, q.getHandle());
             return CollectionFeatureSource.this.getFeatures(subQuery);

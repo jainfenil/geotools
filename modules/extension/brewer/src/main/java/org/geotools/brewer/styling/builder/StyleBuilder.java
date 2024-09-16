@@ -24,7 +24,7 @@ import org.geotools.styling.Style;
 import org.geotools.util.SimpleInternationalString;
 
 public class StyleBuilder extends AbstractStyleBuilder<Style> {
-    List<FeatureTypeStyleBuilder> fts = new ArrayList<FeatureTypeStyleBuilder>();
+    List<FeatureTypeStyleBuilder> fts = new ArrayList<>();
 
     String name;
 
@@ -33,6 +33,8 @@ public class StyleBuilder extends AbstractStyleBuilder<Style> {
     String title;
 
     boolean isDefault;
+
+    FillBuilder background;
 
     public StyleBuilder() {
         super(null);
@@ -67,13 +69,20 @@ public class StyleBuilder extends AbstractStyleBuilder<Style> {
         return ftsBuilder;
     }
 
+    public FillBuilder background() {
+        this.unset = false;
+        this.background = new FillBuilder();
+
+        return background;
+    }
+
     public Style build() {
         if (unset) {
             return null;
         }
 
         Style s;
-        if (fts.size() == 0) {
+        if (fts.isEmpty()) {
             s = sf.createNamedStyle();
             s.setName(name);
         } else {
@@ -86,6 +95,9 @@ public class StyleBuilder extends AbstractStyleBuilder<Style> {
                 s.featureTypeStyles().add(builder.build());
             }
             s.setDefault(isDefault);
+        }
+        if (background != null) {
+            s.setBackground(background.build());
         }
 
         reset();
@@ -102,6 +114,7 @@ public class StyleBuilder extends AbstractStyleBuilder<Style> {
         styleAbstract = null;
         title = null;
         isDefault = false;
+        background = null;
         unset = false;
         return this;
     }
@@ -124,6 +137,7 @@ public class StyleBuilder extends AbstractStyleBuilder<Style> {
                         .map(Object::toString)
                         .orElse(null);
         isDefault = style.isDefault();
+        background = new FillBuilder().reset(style.getBackground());
         unset = false;
         return this;
     }

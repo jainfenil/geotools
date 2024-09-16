@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.Serializable;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,16 +43,11 @@ public class HiddenDataAccessDisposalPolymorphicTest extends AbstractHiddenDataA
 
     AppSchemaDataAccess artifactDataAccess;
 
-    /**
-     * Load all the data accesses.
-     *
-     * @return
-     * @throws Exception
-     */
+    /** Load all the data accesses. */
     @Before
     public void loadDataAccesses() throws Exception {
         /** Load artifact data access using polymorphic mappings */
-        Map dsParams = new HashMap();
+        Map<String, Serializable> dsParams = new HashMap<>();
         URL url = getClass().getResource(schemaBase + "artifact_mapping_recode.xml");
         assertNotNull(url);
 

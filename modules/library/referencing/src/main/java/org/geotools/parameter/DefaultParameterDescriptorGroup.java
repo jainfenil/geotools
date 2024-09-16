@@ -87,7 +87,7 @@ public class DefaultParameterDescriptorGroup extends AbstractParameterDescriptor
      * @param parameters The {@linkplain #descriptors() parameter descriptors} for this group.
      */
     public DefaultParameterDescriptorGroup(
-            final String name, final GeneralParameterDescriptor[] parameters) {
+            final String name, final GeneralParameterDescriptor... parameters) {
         this(Collections.singletonMap(NAME_KEY, name), parameters);
     }
 
@@ -104,7 +104,7 @@ public class DefaultParameterDescriptorGroup extends AbstractParameterDescriptor
     public DefaultParameterDescriptorGroup(
             final Citation authority,
             final String name,
-            final GeneralParameterDescriptor[] parameters) {
+            final GeneralParameterDescriptor... parameters) {
         this(Collections.singletonMap(NAME_KEY, new NamedIdentifier(authority, name)), parameters);
     }
 
@@ -117,7 +117,7 @@ public class DefaultParameterDescriptorGroup extends AbstractParameterDescriptor
      * @param parameters The {@linkplain #descriptors() parameter descriptors} for this group.
      */
     public DefaultParameterDescriptorGroup(
-            final Map<String, ?> properties, final GeneralParameterDescriptor[] parameters) {
+            final Map<String, ?> properties, final GeneralParameterDescriptor... parameters) {
         this(properties, 1, 1, parameters);
     }
 
@@ -137,7 +137,7 @@ public class DefaultParameterDescriptorGroup extends AbstractParameterDescriptor
             final Map<String, ?> properties,
             final int minimumOccurs,
             final int maximumOccurs,
-            GeneralParameterDescriptor[] parameters) {
+            GeneralParameterDescriptor... parameters) {
         super(properties, minimumOccurs, maximumOccurs);
         this.maximumOccurs = maximumOccurs;
         ensureNonNull("parameters", parameters);
@@ -201,7 +201,7 @@ public class DefaultParameterDescriptorGroup extends AbstractParameterDescriptor
         private transient Set<GeneralParameterDescriptor> asSet;
 
         /** Constructs a list for the specified array. */
-        public AsList(final GeneralParameterDescriptor[] array) {
+        public AsList(final GeneralParameterDescriptor... array) {
             super(array);
         }
 
@@ -209,7 +209,7 @@ public class DefaultParameterDescriptorGroup extends AbstractParameterDescriptor
         @Override
         public boolean contains(final Object object) {
             if (asSet == null) {
-                asSet = new HashSet<GeneralParameterDescriptor>(this);
+                asSet = new HashSet<>(this);
             }
             return asSet.contains(object);
         }
@@ -258,11 +258,11 @@ public class DefaultParameterDescriptorGroup extends AbstractParameterDescriptor
             for (final GeneralParameterDescriptor param : parameters) {
                 if (param instanceof ParameterDescriptor) {
                     if (nameMatches(param, name)) {
-                        return (ParameterDescriptor) param;
+                        return param;
                     }
                 } else if (param instanceof DefaultParameterDescriptorGroup) {
                     if (subgroups == null) {
-                        subgroups = new LinkedList<DefaultParameterDescriptorGroup>();
+                        subgroups = new LinkedList<>();
                     }
                     assert !subgroups.contains(param) : param;
                     subgroups.add((DefaultParameterDescriptorGroup) param);
@@ -313,8 +313,8 @@ public class DefaultParameterDescriptorGroup extends AbstractParameterDescriptor
     public int hashCode() {
         int code = super.hashCode();
         // TODO: We should use Arrays.deepHashCode instead in J2SE 1.5.
-        for (int i = 0; i < parameters.length; i++) {
-            code = code * 37 + parameters[i].hashCode();
+        for (GeneralParameterDescriptor parameter : parameters) {
+            code = code * 37 + parameter.hashCode();
         }
         return code;
     }

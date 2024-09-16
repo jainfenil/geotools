@@ -176,8 +176,6 @@ public class H2Migrator {
     /**
      * Returns the coverage names provided by the user, or tries to guess them by looking at
      * property files in the mosaic directory
-     *
-     * @return
      */
     private String[] getCoverageNames() {
         String[] names = configuration.getCoverageNames();
@@ -228,10 +226,11 @@ public class H2Migrator {
 
         // query the location attribute
         Query q = new Query(table);
-        q.setPropertyNames(new String[] {locationAttribute});
+        q.setPropertyNames(locationAttribute);
         // extract unique values
         UniqueVisitor uniqueLocations = new UniqueVisitor(locationAttribute);
         featureSource.getFeatures(q).accepts(uniqueLocations, null);
+        @SuppressWarnings("unchecked")
         Set<String> locations = uniqueLocations.getUnique();
         // map via pathtype and return
         return locations
@@ -293,11 +292,12 @@ public class H2Migrator {
         // query the location attribute
         final String locationAttribute = catalogConfiguration.getLocationAttribute();
         Query q = new Query(coverage);
-        q.setPropertyNames(new String[] {locationAttribute});
+        q.setPropertyNames(locationAttribute);
         // extract unique values
         UniqueVisitor uniqueLocations = new UniqueVisitor(locationAttribute);
         final SimpleFeatureCollection granules = granuleSource.getGranules(q);
         granules.accepts(uniqueLocations, null);
+        @SuppressWarnings("unchecked")
         Set<String> locations = uniqueLocations.getUnique();
         // map via pathtype and return
         return locations
@@ -392,8 +392,7 @@ public class H2Migrator {
         }
         final DataStore sourceDataStore =
                 config.getDatastoreSpi().createDataStore(config.getParams());
-        Transaction t = new DefaultTransaction();
-        try {
+        try (Transaction t = new DefaultTransaction()) {
             final Set<String> typeNames =
                     new HashSet<>(Arrays.asList(sourceDataStore.getTypeNames()));
             // shuffle coverages to avoid all threads accumulating on the same coverage
@@ -418,7 +417,6 @@ public class H2Migrator {
             netcdfWriter.addLines(path);
             h2Writer.addLines(collectH2Files(config));
         } finally {
-            t.close();
             if (sourceDataStore != null) {
                 sourceDataStore.dispose();
             }

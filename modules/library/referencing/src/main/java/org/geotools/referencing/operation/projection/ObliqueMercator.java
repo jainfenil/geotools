@@ -20,7 +20,19 @@
  */
 package org.geotools.referencing.operation.projection;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.asin;
+import static java.lang.Math.atan;
+import static java.lang.Math.atan2;
+import static java.lang.Math.cos;
+import static java.lang.Math.exp;
+import static java.lang.Math.log;
+import static java.lang.Math.pow;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
+import static java.lang.Math.tan;
+import static java.lang.Math.toDegrees;
 
 import java.awt.geom.Point2D;
 import java.util.Collection;
@@ -354,8 +366,8 @@ public class ObliqueMercator extends MapProjection {
             latitudeOf2ndPoint =
                     doubleValue(expected, Provider_TwoPoint.LAT_OF_2ND_POINT, parameters);
             ensureLatitudeInRange(Provider_TwoPoint.LAT_OF_2ND_POINT, latitudeOf2ndPoint, true);
-            double longitudeOf2ndPoint; // Will be assigned to the field later.
-            longitudeOf2ndPoint =
+            // Will be assigned to the field later.
+            double longitudeOf2ndPoint =
                     doubleValue(expected, Provider_TwoPoint.LONG_OF_2ND_POINT, parameters);
             ensureLongitudeInRange(Provider_TwoPoint.LONG_OF_2ND_POINT, longitudeOf2ndPoint, true);
             /*

@@ -133,7 +133,7 @@ public class OffsetCurveBuilder {
                 dest.setOrdinate(numCoordinates, 1, source.getOrdinate(0, 1));
                 simplified = simplified.getFactory().createLinearRing(dest);
             }
-            LineString offsetLine = (LineString) offset(simplified);
+            LineString offsetLine = offset(simplified);
             if (offsetLine != null) {
                 offsets.add(offsetLine);
             }
@@ -150,17 +150,12 @@ public class OffsetCurveBuilder {
         }
     }
 
-    /**
-     * Extracts all the {@link LineString} present in the given geometry
-     *
-     * @param g
-     * @return
-     */
+    /** Extracts all the {@link LineString} present in the given geometry */
     private List<LineString> extractLineStrings(Geometry g) {
         // normalize order of polygons so that
         // left is equivalent to outwards
         if (g instanceof Polygon) {
-            ((Polygon) g).normalize();
+            g.normalize();
         } else if (g instanceof GeometryCollection) {
             g.apply(
                     new GeometryFilter() {
@@ -168,7 +163,7 @@ public class OffsetCurveBuilder {
                         @Override
                         public void filter(Geometry geom) {
                             if (geom instanceof Polygon) {
-                                ((Polygon) geom).normalize();
+                                geom.normalize();
                             }
                         }
                     });
@@ -193,12 +188,7 @@ public class OffsetCurveBuilder {
         return lines;
     }
 
-    /**
-     * Offsets a single linestring
-     *
-     * @param ls
-     * @return
-     */
+    /** Offsets a single linestring */
     private LineString offset(LineString ls) {
         boolean closed = ls instanceof LinearRing;
         CoordinateSequence cs = ls.getCoordinateSequence();
@@ -471,11 +461,6 @@ public class OffsetCurveBuilder {
     /**
      * Appends to ordinates a point calculated as being the joining point of two segments with
      * angles angle01, angle02 and starting in x,y
-     *
-     * @param dx10
-     * @param dy10
-     * @param dx12
-     * @param dy12
      */
     private void appendInternalJoint(
             double x,

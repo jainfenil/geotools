@@ -152,7 +152,7 @@ public class IndexedResourceBundle extends ResourceBundle {
      * @param values The resources to list.
      * @throws IOException if an output operation failed.
      */
-    private static void list(final Writer out, final String[] values) throws IOException {
+    private static void list(final Writer out, final String... values) throws IOException {
         final String lineSeparator = System.getProperty("line.separator", "\n");
         for (int i = 0; i < values.length; i++) {
             String value = values[i];
@@ -202,8 +202,9 @@ public class IndexedResourceBundle extends ResourceBundle {
                 /*
                  * Loads resources from the UTF file.
                  */
-                InputStream in;
+                InputStream in = null;
                 String name = filename;
+                boolean cleanupIn = true;
                 while ((in = getClass().getResourceAsStream(name)) == null) {
                     final int ext = name.lastIndexOf('.');
                     final int lang = name.lastIndexOf('_', ext - 1);
@@ -212,13 +213,18 @@ public class IndexedResourceBundle extends ResourceBundle {
                     }
                     name = name.substring(0, lang) + name.substring(ext);
                 }
-                final DataInputStream input = new DataInputStream(new BufferedInputStream(in));
-                this.values = values = new String[input.readInt()];
-                for (int i = 0; i < values.length; i++) {
-                    values[i] = input.readUTF();
-                    if (values[i].length() == 0) values[i] = null;
+                try (DataInputStream input = new DataInputStream(new BufferedInputStream(in))) {
+                    this.values = values = new String[input.readInt()];
+                    for (int i = 0; i < values.length; i++) {
+                        values[i] = input.readUTF();
+                        if (values[i].length() == 0) values[i] = null;
+                    }
+                    cleanupIn = true;
+                } catch (Exception e) {
+                    if (in != null && cleanupIn) {
+                        in.close();
+                    }
                 }
-                input.close();
                 /*
                  * Now, log the message. This message is not localized.
                  */
@@ -718,8 +724,8 @@ public class IndexedResourceBundle extends ResourceBundle {
         buffer.append('[');
         if (values != null) {
             int count = 0;
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] != null) count++;
+            for (String value : values) {
+                if (value != null) count++;
             }
             buffer.append(count);
             buffer.append(" values");

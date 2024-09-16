@@ -51,12 +51,12 @@ public abstract class Selector implements Comparable<Selector> {
     private static List<AndCombiner> AND_COMBINERS;
 
     static {
-        Class[] baseClasses =
+        Class<?>[] baseClasses =
                 new Class[] {
                     TypeName.class, ScaleRange.class, Id.class, Data.class, PseudoClass.class
                 };
         AND_COMBINERS = new ArrayList<>();
-        for (Class baseClass : baseClasses) {
+        for (Class<?> baseClass : baseClasses) {
             try {
                 Method combineAnd =
                         baseClass.getDeclaredMethod("combineAnd", List.class, Object.class);
@@ -158,7 +158,7 @@ public abstract class Selector implements Comparable<Selector> {
                 finalList.addAll(list);
             }
         }
-        if (finalList.size() == 0) {
+        if (finalList.isEmpty()) {
             return ACCEPT;
         } else if (finalList.size() == 1) {
             return finalList.get(0);
@@ -178,7 +178,7 @@ public abstract class Selector implements Comparable<Selector> {
             }
         }
 
-        if (newChildren.size() == 0) {
+        if (newChildren.isEmpty()) {
             return REJECT;
         }
 
@@ -190,14 +190,7 @@ public abstract class Selector implements Comparable<Selector> {
         return new Or(selectors);
     }
 
-    /**
-     * Combines in or and simplifies the two given selectors
-     *
-     * @param s1
-     * @param s2
-     * @param context
-     * @return
-     */
+    /** Combines in or and simplifies the two given selectors */
     public static Selector or(Selector s1, Selector s2, Object context) {
         // merge with Reject
         if (s1 instanceof Reject) {
@@ -235,7 +228,7 @@ public abstract class Selector implements Comparable<Selector> {
                 finalList.addAll(list);
             }
         }
-        if (finalList.size() == 0) {
+        if (finalList.isEmpty()) {
             return REJECT;
         } else if (finalList.size() == 1) {
             return finalList.get(0);
@@ -272,11 +265,7 @@ public abstract class Selector implements Comparable<Selector> {
         return result;
     }
 
-    /**
-     * Returns the specificity of this selector
-     *
-     * @return
-     */
+    /** Returns the specificity of this selector */
     public abstract Specificity getSpecificity();
 
     @Override

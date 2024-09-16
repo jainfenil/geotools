@@ -17,10 +17,17 @@
 
 package org.geotools.swing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import javax.swing.SwingUtilities;
 import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.edt.GuiQuery;
@@ -75,6 +82,34 @@ public class JMapPaneGraphicsTest extends JMapPaneGraphicsTestBase {
         mapPane = null;
     }
 
+    /** Test for GEOT-6342, background color is not used in 1st rendering of map */
+    @Test
+    public void drawLayersSetsBackgroundonStartup()
+            throws InvocationTargetException, InterruptedException, IOException {
+
+        window.show(new Dimension(WIDTH, HEIGHT));
+        MapContent mapContent = createMapContent(createMatchedBounds(mapPane.getVisibleRect()));
+        mapPane.setMapContent(mapContent);
+        SwingUtilities.invokeAndWait(
+                new Runnable() {
+
+                    @Override
+                    public void run() {
+                        mapPane.setBackground(Color.BLUE);
+                    }
+                });
+
+        mapPane.drawLayers(true);
+        BufferedImage image = (BufferedImage) mapPane.getBaseImage();
+
+        WritableRaster raster = image.getRaster();
+        int[] pixel = new int[4];
+        raster.getPixel(1, 1, pixel);
+        assertEquals("Pixel at (1,1) was not renderered", 0, pixel[0]);
+        assertEquals("Pixel at (1,1) was not renderered", 0, pixel[1]);
+        assertEquals("Pixel at (1,1) was not renderered", 255, pixel[2]);
+    }
+
     @Test
     public void resizingPaneFiresEvent() {
         window.show(new Dimension(WIDTH, HEIGHT));
@@ -92,13 +127,13 @@ public class JMapPaneGraphicsTest extends JMapPaneGraphicsTestBase {
 
     @Test
     public void moveImageUp() {
-        // remeber: moving image up means negative dy
+        // Remember: moving image up means negative dy
         assertMoveImage(0, -10);
     }
 
     @Test
     public void moveImageDown() {
-        // remeber: moving image down means positive dy
+        // Remember: moving image down means positive dy
         assertMoveImage(0, 10);
     }
 
@@ -155,7 +190,6 @@ public class JMapPaneGraphicsTest extends JMapPaneGraphicsTestBase {
     @Test
     public void mapPaneShouldHonourInitialViewportBounds() throws Exception {
         window.show(new Dimension(WIDTH, HEIGHT));
-        Rectangle visRect = mapPane.getVisibleRect();
         GuiActionRunner.execute(
                 new GuiTask() {
                     @Override

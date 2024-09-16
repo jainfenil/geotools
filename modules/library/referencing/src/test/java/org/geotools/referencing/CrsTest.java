@@ -104,11 +104,7 @@ public final class CrsTest {
         assertFalse(crsTransform.isIdentity());
     }
 
-    /**
-     * Checks X is equated to Easting and Y to Northing
-     *
-     * @throws Exception
-     */
+    /** Checks X is equated to Easting and Y to Northing */
     @Test
     public void testAxisAliases() throws Exception {
         String wkt1 =
@@ -150,20 +146,23 @@ public final class CrsTest {
 
     /** Tests the transformations of an envelope. */
     @Test
+    // code is using equals with extra parameters and semantics compared to the built-in equals
+    @SuppressWarnings("PMD.UseAssertEqualsInsteadOfAssertTrue")
     public void testEnvelopeTransformation() throws FactoryException, TransformException {
         final CoordinateReferenceSystem mapCRS = CRS.parseWKT(WKT.UTM_10N);
         final CoordinateReferenceSystem WGS84 = DefaultGeographicCRS.WGS84;
         final MathTransform crsTransform = CRS.findMathTransform(WGS84, mapCRS, true);
         assertFalse(crsTransform.isIdentity());
 
-        final GeneralEnvelope firstEnvelope, transformedEnvelope, oldEnvelope;
-        firstEnvelope = new GeneralEnvelope(new double[] {-124, 42}, new double[] {-122, 43});
+        final GeneralEnvelope firstEnvelope =
+                new GeneralEnvelope(new double[] {-124, 42}, new double[] {-122, 43});
         firstEnvelope.setCoordinateReferenceSystem(WGS84);
 
-        transformedEnvelope = CRS.transform(crsTransform, firstEnvelope);
+        final GeneralEnvelope transformedEnvelope = CRS.transform(crsTransform, firstEnvelope);
         transformedEnvelope.setCoordinateReferenceSystem(mapCRS);
 
-        oldEnvelope = CRS.transform(crsTransform.inverse(), transformedEnvelope);
+        final GeneralEnvelope oldEnvelope =
+                CRS.transform(crsTransform.inverse(), transformedEnvelope);
         oldEnvelope.setCoordinateReferenceSystem(WGS84);
 
         assertTrue(oldEnvelope.contains(firstEnvelope, true));
@@ -181,8 +180,8 @@ public final class CrsTest {
         final MathTransform crsTransform = CRS.findMathTransform(WGS84, WGS84Altered, true);
         assertTrue(crsTransform.isIdentity());
 
-        final GeneralEnvelope firstEnvelope;
-        firstEnvelope = new GeneralEnvelope(new double[] {-124, 42}, new double[] {-122, 43});
+        final GeneralEnvelope firstEnvelope =
+                new GeneralEnvelope(new double[] {-124, 42}, new double[] {-122, 43});
         firstEnvelope.setCoordinateReferenceSystem(WGS84);
 
         // this triggered a assertion error in GEOT-2934
@@ -201,8 +200,7 @@ public final class CrsTest {
     @Ignore
     public void testEnvelopeTransformClipping() throws Exception {
         final CoordinateReferenceSystem source = WGS84;
-        final CoordinateReferenceSystem target;
-        target =
+        final CoordinateReferenceSystem target =
                 CRS.parseWKT(
                         "GEOGCS[\"GCS_North_American_1983\","
                                 + "DATUM[\"North_American_Datum_1983\", "
@@ -334,6 +332,20 @@ public final class CrsTest {
                         + "  AUTHORITY[\"EPSG\",\"23031\"]]";
         assertEquals(AxisOrder.EAST_NORTH, CRS.getAxisOrder(CRS.parseWKT(wkt)));
         assertEquals(AxisOrder.NORTH_EAST, CRS.getAxisOrder(CRS.parseWKT(wkt), true));
+
+        // test with compound axis
+        wkt =
+                "COMPD_CS[\"ETRS89 + EVRF2000 height\", GEOGCS[\"ETRS89\", "
+                        + "DATUM[\"European Terrestrial Reference System 1989\", "
+                        + "SPHEROID[\"GRS 1980\", 6378137.0, 298.257222101, AUTHORITY[\"EPSG\",\"7019\"]], "
+                        + "TOWGS84[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], AUTHORITY[\"EPSG\",\"6258\"]], "
+                        + "PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], UNIT[\"degree\", 0.017453292519943295], "
+                        + "AXIS[\"Geodetic latitude\", NORTH], AXIS[\"Geodetic longitude\", EAST], AUTHORITY[\"EPSG\",\"4258\"]], "
+                        + "VERT_CS[\"EVRF2000 height\", VERT_DATUM[\"European Vertical Reference Frame 2000\", 2005, "
+                        + "AUTHORITY[\"EPSG\",\"5129\"]], UNIT[\"m\", 1.0], AXIS[\"Gravity-related height\", UP], "
+                        + "AUTHORITY[\"EPSG\",\"5730\"]], AUTHORITY[\"EPSG\",\"7409\"]]";
+        assertEquals(AxisOrder.NORTH_EAST, CRS.getAxisOrder(CRS.parseWKT(wkt)));
+        assertEquals(AxisOrder.NORTH_EAST, CRS.getAxisOrder(CRS.parseWKT(wkt), true));
     }
 
     @Test
@@ -428,7 +440,7 @@ public final class CrsTest {
                         + "  AXIS[\"Easting\", EAST], \n"
                         + "  AXIS[\"Northing\", NORTH], \n"
                         + "  AUTHORITY[\"EPSG\",\"3857\"]]";
-        CoordinateReferenceSystem epsg3857 = CRS.parseWKT(wkt);
+        CoordinateReferenceSystem epsg3857 = CRS.parseWKT(wkt3857);
 
         assertTrue(CRS.equalsIgnoreMetadata(esriCrs, epsg3857));
     }
@@ -558,5 +570,25 @@ public final class CrsTest {
 
         // the projected ordinates are the same, no need to actually run a transformation
         assertFalse(CRS.isTransformationRequired(lonLatWebMercator, latLonWebMercator));
+    }
+
+    @Test
+    public void testReprojectAzimuthalEquidistant() throws Exception {
+        String wkt =
+                "PROJCS[\"equi7_europe_nofalseXY\",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Azimuthal_Equidistant\"],PARAMETER[\"false_easting\",5837287.81977],PARAMETER[\"false_northing\",2121415.69617],PARAMETER[\"central_meridian\",24.0],PARAMETER[\"latitude_of_origin\",53.0],UNIT[\"Meter\",1.0]]";
+        CoordinateReferenceSystem crs = CRS.parseWKT(wkt);
+
+        CoordinateOperation op =
+                CRS.getCoordinateOperationFactory(false).createOperation(WGS84, crs);
+        GeneralEnvelope envelope = new GeneralEnvelope(WGS84);
+        envelope.setEnvelope(-180, -90, 180, 90);
+        GeneralEnvelope transformed = CRS.transform(op, envelope);
+
+        // used to miss large parts of the world, given the fragile math of the azeq
+        // testing only that its not missing significant parts
+        assertEquals(-1.38e7, transformed.getMinimum(0), 1e6);
+        assertEquals(-1.37e7, transformed.getMinimum(1), 1e6);
+        assertEquals(2.57e7, transformed.getMaximum(0), 1e6);
+        assertEquals(1.41e7, transformed.getMaximum(1), 1e6);
     }
 }

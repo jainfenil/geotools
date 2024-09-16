@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -54,6 +54,7 @@ import org.geotools.styling.Displacement;
 import org.geotools.styling.ExponentialContrastMethodStrategy;
 import org.geotools.styling.ExternalGraphic;
 import org.geotools.styling.FeatureTypeStyle;
+import org.geotools.styling.Fill;
 import org.geotools.styling.Font;
 import org.geotools.styling.Graphic;
 import org.geotools.styling.GraphicImpl;
@@ -71,7 +72,6 @@ import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.RasterSymbolizer;
 import org.geotools.styling.RuleImpl;
 import org.geotools.styling.SLD;
-import org.geotools.styling.SelectedChannelType;
 import org.geotools.styling.SelectedChannelTypeImpl;
 import org.geotools.styling.Stroke;
 import org.geotools.styling.Style;
@@ -123,7 +123,7 @@ public class SLDTransformerTest {
         transformer.setIndentation(4);
 
         // setup xml unit
-        Map<String, String> namespaces = new HashMap<String, String>();
+        Map<String, String> namespaces = new HashMap<>();
         namespaces.put("sld", "http://www.opengis.net/sld");
         namespaces.put("ogc", "http://www.opengis.net/ogc");
         namespaces.put("gml", "http://www.opengis.net/gml");
@@ -226,8 +226,6 @@ public class SLDTransformerTest {
     /**
      * This is a problem reported from uDig 1.2; we are trying to save a LineSymbolizer (and then
      * restore it) and the stroke is comming back black and with width 1 all the time.
-     *
-     * @throws Exception
      */
     @Test
     public void testStroke() throws Exception {
@@ -253,11 +251,7 @@ public class SLDTransformerTest {
         assertEquals("expected width", 2, (int) stroke.getWidth().evaluate(null, Integer.class));
     }
 
-    /**
-     * SLD Fragment reported to produce error on user list - no related Jira.
-     *
-     * @throws Exception
-     */
+    /** SLD Fragment reported to produce error on user list - no related Jira. */
     @Test
     public void testTextSymbolizerLabelPalcement() throws Exception {
         String xml =
@@ -382,8 +376,6 @@ public class SLDTransformerTest {
      * the spec allows.
      *
      * <p>See also http://jira.codehaus.org/browse/GEOS-6748
-     *
-     * @throws TransformerException
      */
     @Test
     public void testPointPlacementNoAnchorPoint() throws TransformerException {
@@ -446,8 +438,6 @@ public class SLDTransformerTest {
     /**
      * Another bug reported from uDig 1.2; we are trying to save a LineSymbolizer (and then restore
      * it) and the stroke is comming back black and with width 1 all the time.
-     *
-     * @throws Exception
      */
     @Test
     public void testPointSymbolizer() throws Exception {
@@ -552,8 +542,6 @@ public class SLDTransformerTest {
     /**
      * We have a pretty serious issue with this class not behaving well when logging is turned on!
      * This is the same test as above but with logging enganged at the FINEST level.
-     *
-     * @throws Exception
      */
     @Test
     public void testStrokeWithLogging() throws Exception {
@@ -601,16 +589,12 @@ public class SLDTransformerTest {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-            Document dom = null;
-            DocumentBuilder db = null;
-
-            db = dbf.newDocumentBuilder();
-            dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
             PointSymbolizer pointSymbolizer2 = parser.parsePointSymbolizer(dom.getFirstChild());
 
-            assertTrue(
-                    pointSymbolizer.getUnitOfMeasure().equals(pointSymbolizer2.getUnitOfMeasure()));
+            assertEquals(pointSymbolizer.getUnitOfMeasure(), pointSymbolizer2.getUnitOfMeasure());
         } catch (Exception e) {
             java.util.logging.Logger.getGlobal().log(java.util.logging.Level.INFO, "", e);
         }
@@ -629,16 +613,12 @@ public class SLDTransformerTest {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-        Document dom = null;
-        DocumentBuilder db = null;
-
-        db = dbf.newDocumentBuilder();
-        dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
         PolygonSymbolizer polygonSymbolizer2 = parser.parsePolygonSymbolizer(dom.getFirstChild());
 
-        assertTrue(
-                polygonSymbolizer.getUnitOfMeasure().equals(polygonSymbolizer2.getUnitOfMeasure()));
+        assertEquals(polygonSymbolizer.getUnitOfMeasure(), polygonSymbolizer2.getUnitOfMeasure());
     }
 
     @Test
@@ -654,16 +634,12 @@ public class SLDTransformerTest {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-        Document dom = null;
-        DocumentBuilder db = null;
-
-        db = dbf.newDocumentBuilder();
-        dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
         RasterSymbolizer rasterSymbolizer2 = parser.parseRasterSymbolizer(dom.getFirstChild());
 
-        assertTrue(
-                rasterSymbolizer.getUnitOfMeasure().equals(rasterSymbolizer2.getUnitOfMeasure()));
+        assertEquals(rasterSymbolizer.getUnitOfMeasure(), rasterSymbolizer2.getUnitOfMeasure());
     }
 
     @Test
@@ -673,10 +649,7 @@ public class SLDTransformerTest {
         RasterSymbolizer rasterSymbolizer = sf.createRasterSymbolizer();
         rasterSymbolizer.setChannelSelection(
                 sf.createChannelSelection(
-                        new SelectedChannelType[] {
-                            sf.createSelectedChannelType(
-                                    envFunction, sf.createContrastEnhancement())
-                        }));
+                        sf.createSelectedChannelType(envFunction, sf.createContrastEnhancement())));
         String xmlFragment = transformer.transform(rasterSymbolizer);
         assertNotNull(xmlFragment);
 
@@ -713,15 +686,12 @@ public class SLDTransformerTest {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-        Document dom = null;
-        DocumentBuilder db = null;
-
-        db = dbf.newDocumentBuilder();
-        dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
         LineSymbolizer lineSymbolizer2 = parser.parseLineSymbolizer(dom.getFirstChild());
 
-        assertTrue(lineSymbolizer.getUnitOfMeasure().equals(lineSymbolizer2.getUnitOfMeasure()));
+        assertEquals(lineSymbolizer.getUnitOfMeasure(), lineSymbolizer2.getUnitOfMeasure());
     }
 
     @Test
@@ -742,15 +712,12 @@ public class SLDTransformerTest {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-        Document dom = null;
-        DocumentBuilder db = null;
-
-        db = dbf.newDocumentBuilder();
-        dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
         TextSymbolizer textSymbolizer2 = parser.parseTextSymbolizer(dom.getFirstChild());
 
-        assertTrue(textSymbolizer.getUnitOfMeasure().equals(textSymbolizer2.getUnitOfMeasure()));
+        assertEquals(textSymbolizer.getUnitOfMeasure(), textSymbolizer2.getUnitOfMeasure());
     }
 
     @Test
@@ -766,15 +733,12 @@ public class SLDTransformerTest {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-            Document dom = null;
-            DocumentBuilder db = null;
-
-            db = dbf.newDocumentBuilder();
-            dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
             PointSymbolizer pointSymbolizer2 = parser.parsePointSymbolizer(dom.getFirstChild());
 
-            assertTrue(pointSymbolizer2.getUnitOfMeasure() == null);
+            assertNull(pointSymbolizer2.getUnitOfMeasure());
         } catch (Exception e) {
             java.util.logging.Logger.getGlobal().log(java.util.logging.Level.INFO, "", e);
         }
@@ -792,15 +756,12 @@ public class SLDTransformerTest {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-        Document dom = null;
-        DocumentBuilder db = null;
-
-        db = dbf.newDocumentBuilder();
-        dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
         PolygonSymbolizer polygonSymbolizer2 = parser.parsePolygonSymbolizer(dom.getFirstChild());
 
-        assertTrue(polygonSymbolizer2.getUnitOfMeasure() == null);
+        assertNull(polygonSymbolizer2.getUnitOfMeasure());
     }
 
     @Test
@@ -815,15 +776,12 @@ public class SLDTransformerTest {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-        Document dom = null;
-        DocumentBuilder db = null;
-
-        db = dbf.newDocumentBuilder();
-        dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
         RasterSymbolizer rasterSymbolizer2 = parser.parseRasterSymbolizer(dom.getFirstChild());
 
-        assertTrue(rasterSymbolizer2.getUnitOfMeasure() == null);
+        assertNull(rasterSymbolizer2.getUnitOfMeasure());
     }
 
     @Test
@@ -838,15 +796,12 @@ public class SLDTransformerTest {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-        Document dom = null;
-        DocumentBuilder db = null;
-
-        db = dbf.newDocumentBuilder();
-        dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
         LineSymbolizer lineSymbolizer2 = parser.parseLineSymbolizer(dom.getFirstChild());
 
-        assertTrue(lineSymbolizer2.getUnitOfMeasure() == null);
+        assertNull(lineSymbolizer2.getUnitOfMeasure());
     }
 
     @Test
@@ -861,15 +816,12 @@ public class SLDTransformerTest {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-        Document dom = null;
-        DocumentBuilder db = null;
-
-        db = dbf.newDocumentBuilder();
-        dom = db.parse(new InputSource(new StringReader(xmlFragment)));
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document dom = db.parse(new InputSource(new StringReader(xmlFragment)));
 
         TextSymbolizer textSymbolizer2 = parser.parseTextSymbolizer(dom.getFirstChild());
 
-        assertTrue(textSymbolizer2.getUnitOfMeasure() == null);
+        assertNull(textSymbolizer2.getUnitOfMeasure());
     }
 
     /** The displacement tag has not been exported to XML for a while... */
@@ -877,8 +829,7 @@ public class SLDTransformerTest {
     public void testDisplacement() throws Exception {
         StyleBuilder sb = new StyleBuilder();
 
-        Graphic graphic;
-        graphic = sb.createGraphic();
+        Graphic graphic = sb.createGraphic();
         Displacement disp = sb.createDisplacement(10.1, -5.5);
         graphic.setDisplacement(disp);
 
@@ -905,7 +856,7 @@ public class SLDTransformerTest {
         assertNotNull(firstImport[0]);
 
         // NPE here
-        String secondExport = st.transform(firstImport);
+        st.transform(firstImport);
     }
 
     // GEOT-5726
@@ -1074,8 +1025,6 @@ public class SLDTransformerTest {
     /**
      * Checks the output of encoding a default line symbolizer does not include all the default
      * values
-     *
-     * @throws Exception
      */
     @Test
     public void testMinimumLineSymbolizer() throws Exception {
@@ -1361,14 +1310,7 @@ public class SLDTransformerTest {
                 copy.getOtherText().getText());
     }
 
-    /**
-     * Test that perpendicularOffset for LineSymbolizer is correctly exported and reimported
-     *
-     * @throws TransformerException
-     * @throws SAXException
-     * @throws IOException
-     * @throws XpathException
-     */
+    /** Test that perpendicularOffset for LineSymbolizer is correctly exported and reimported */
     @Test
     public void testLineSymbolizerWithPerpendicularOffset()
             throws TransformerException, SAXException, IOException, XpathException {
@@ -1657,11 +1599,7 @@ public class SLDTransformerTest {
         assertTrue(xml.contains("<![CDATA[ def]]>"));
     }
 
-    /**
-     * Test the transformation of an WellKnownName element that contains an expression.
-     *
-     * @throws Exception
-     */
+    /** Test the transformation of an WellKnownName element that contains an expression. */
     @Test
     public void testWellKnownNameWithExpression() throws Exception {
 
@@ -1707,11 +1645,7 @@ public class SLDTransformerTest {
         validateWellKnownNameWithExpressionStyle(transformedStyleXml);
     }
 
-    /**
-     * Test the transformation of a stroke-dasharray element that contains expressions.
-     *
-     * @throws Exception
-     */
+    /** Test the transformation of a stroke-dasharray element that contains expressions. */
     @Test
     public void testStrokeDasharrayWithExpressions() throws Exception {
 
@@ -1755,20 +1689,22 @@ public class SLDTransformerTest {
 
         assertNotNull("style is null", style);
         assertNotNull("feature type styles are null", style.featureTypeStyles());
-        assertTrue(
+        assertEquals(
                 "more or less that one feature type style is available",
-                style.featureTypeStyles().size() == 1);
+                1,
+                style.featureTypeStyles().size());
         assertNotNull("rules are null", style.featureTypeStyles().get(0).rules());
-        assertTrue(
+        assertEquals(
                 "more or less that one rule is available",
-                style.featureTypeStyles().get(0).rules().size() == 1);
+                1,
+                style.featureTypeStyles().get(0).rules().size());
 
         Rule rule = style.featureTypeStyles().get(0).rules().get(0);
         assertNotNull("rule is null", rule);
 
         List<? extends Symbolizer> symbolizers = rule.symbolizers();
         assertNotNull("symbolizers are null", symbolizers);
-        assertTrue("more or less that one symbolizer is available", symbolizers.size() == 1);
+        assertEquals("more or less that one symbolizer is available", 1, symbolizers.size());
 
         LineSymbolizer lineSymbolizer = (LineSymbolizer) symbolizers.get(0);
         assertNotNull("line symbolizer is null", lineSymbolizer);
@@ -1778,17 +1714,15 @@ public class SLDTransformerTest {
         assertNotNull("stroke dasharray is null", stroke.dashArray());
 
         List<Expression> expressions = stroke.dashArray();
-        assertTrue("more or less expressions available", expressions.size() == 4);
-        assertTrue("not expected expression", expressions.get(0).equals(ff.property("stroke1")));
-        assertTrue("not expected expression", expressions.get(1).equals(ff.literal(1.0)));
-        assertTrue("not expected expression", expressions.get(2).equals(ff.property("stroke2")));
-        assertTrue("not expected expression", expressions.get(3).equals(ff.literal(2.0)));
+        assertEquals("more or less expressions available", 4, expressions.size());
+        assertEquals("not expected expression", expressions.get(0), ff.property("stroke1"));
+        assertEquals("not expected expression", expressions.get(1), ff.literal(1.0));
+        assertEquals("not expected expression", expressions.get(2), ff.property("stroke2"));
+        assertEquals("not expected expression", expressions.get(3), ff.literal(2.0));
     }
 
     /**
      * Test the transformation of a stroke-dasharray element that contains only literal expressions.
-     *
-     * @throws Exception
      */
     @Test
     public void testStrokeDasharrayWithOnlyLiteralExpressions() throws Exception {
@@ -1841,8 +1775,7 @@ public class SLDTransformerTest {
     public void testAnchorPointInGraphic() throws Exception {
         StyleBuilder sb = new StyleBuilder();
 
-        Graphic graphic;
-        graphic = sb.createGraphic();
+        Graphic graphic = sb.createGraphic();
         Displacement disp = sb.createDisplacement(10, 10);
         AnchorPoint ap = sb.createAnchorPoint(1, 0.3);
         graphic.setDisplacement(disp);
@@ -1882,33 +1815,36 @@ public class SLDTransformerTest {
         SLDParser sldParser = new SLDParser(sf, stringReader);
         Style[] parsedStyles = sldParser.readXML();
         assertNotNull("parsing xml style returns null", parsedStyles);
-        assertTrue("more or less that one style is available", parsedStyles.length == 1);
+        assertEquals("more or less that one style is available", 1, parsedStyles.length);
         Style style = parsedStyles[0];
 
         assertNotNull("style is null", style);
         assertNotNull("feature type styles are null", style.featureTypeStyles());
-        assertTrue(
+        assertEquals(
                 "more or less that one feature type style is available",
-                style.featureTypeStyles().size() == 1);
+                1,
+                style.featureTypeStyles().size());
         assertNotNull("rules are null", style.featureTypeStyles().get(0).rules());
-        assertTrue(
+        assertEquals(
                 "more or less that one rule is available",
-                style.featureTypeStyles().get(0).rules().size() == 1);
+                1,
+                style.featureTypeStyles().get(0).rules().size());
         Rule rule = style.featureTypeStyles().get(0).rules().get(0);
         assertNotNull("rule is null", rule);
 
         List<? extends Symbolizer> symbolizers = rule.symbolizers();
         assertNotNull("symbolizers are null", symbolizers);
-        assertTrue("more or less that one symbolizer is available", symbolizers.size() == 1);
+        assertEquals("more or less that one symbolizer is available", 1, symbolizers.size());
         PointSymbolizer pointSymbolizer = (PointSymbolizer) symbolizers.get(0);
         assertNotNull("point symbolizer is null", pointSymbolizer);
 
         Graphic graphic = pointSymbolizer.getGraphic();
         assertNotNull("graphic is null", graphic);
         assertNotNull("graphic symbols are null", graphic.graphicalSymbols());
-        assertTrue(
+        assertEquals(
                 "more or less that one graphic symbol is available",
-                graphic.graphicalSymbols().size() == 1);
+                1,
+                graphic.graphicalSymbols().size());
 
         Mark mark = (Mark) graphic.graphicalSymbols().get(0);
         assertNotNull("mark is null", mark);
@@ -1916,35 +1852,34 @@ public class SLDTransformerTest {
         assertTrue("wellKnownName is not a function", mark.getWellKnownName() instanceof Function);
 
         Function function = (Function) mark.getWellKnownName();
-        assertTrue(
-                "wellKnownName function is not strConcat", function.getName().equals("strConcat"));
-        assertTrue(
+        assertEquals("wellKnownName function is not strConcat", "strConcat", function.getName());
+        assertEquals(
                 "wellKnownName function have a wrong number of parameters",
-                function.getParameters().size() == 2);
+                2,
+                function.getParameters().size());
 
         Expression firstParameter = function.getParameters().get(0);
         assertNotNull("first parameter is null", firstParameter);
         assertTrue("first parameter is not a literal", firstParameter instanceof Literal);
 
         Literal literal = (Literal) firstParameter;
-        assertTrue("literal value is different of 'mark-'", literal.getValue().equals("mark-"));
+        assertEquals("literal value is different of 'mark-'", "mark-", literal.getValue());
 
         Expression secondParameter = function.getParameters().get(1);
         assertNotNull("second parameter is null", secondParameter);
         assertTrue("second parameter is", secondParameter instanceof PropertyName);
 
         PropertyName propertyName = (PropertyName) secondParameter;
-        assertTrue(
+        assertEquals(
                 "property name is different of 'MARK_NAME'",
-                propertyName.getPropertyName().equals("MARK_NAME"));
+                "MARK_NAME",
+                propertyName.getPropertyName());
 
         return style;
     }
 
     @Test
     public void testContrastEnhancement() throws Exception {
-        StyleBuilder sb = new StyleBuilder();
-
         ContrastEnhancement ce = new ContrastEnhancementImpl();
         NormalizeContrastMethodStrategy normal = new NormalizeContrastMethodStrategy();
         normal.setAlgorithm(ff.literal("ClipToMinimumMaximum"));
@@ -1997,8 +1932,6 @@ public class SLDTransformerTest {
 
     @Test
     public void testGammaValueExpressionContrastEnhancement() throws Exception {
-        StyleBuilder sb = new StyleBuilder();
-
         ContrastEnhancement ce = new ContrastEnhancementImpl();
         ce.setGammaValue(ff.add(ff.literal(1.0), ff.literal(0.5)));
         SLDTransformer st = new SLDTransformer();
@@ -2097,11 +2030,7 @@ public class SLDTransformerTest {
                 "2", "//sld:LineSymbolizer/sld:PerpendicularOffset/ogc:Mul/ogc:Literal", doc);
     }
 
-    /**
-     * See https://osgeo-org.atlassian.net/browse/GEOT-5613
-     *
-     * @throws Exception
-     */
+    /** See https://osgeo-org.atlassian.net/browse/GEOT-5613 */
     @Test
     public void testDefaults() throws Exception {
         StyleBuilder sb = new StyleBuilder();
@@ -2188,6 +2117,75 @@ public class SLDTransformerTest {
         assertXpathNotExists("//sld:WellKnownName", doc);
     }
 
+    @Test
+    public void testWKTMarkAlongLine() throws Exception {
+
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
+                        + "<StyledLayerDescriptor version=\"1.0.0\""
+                        + "                       xsi:schemaLocation=\"http://www.opengis.net/sld http://schemas.opengis.net/sld/1.0.0/StyledLayerDescriptor.xsd\""
+                        + "                       xmlns=\"http://www.opengis.net/sld\" xmlns:ogc=\"http://www.opengis.net/ogc\""
+                        + "                       xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                        + "  <NamedLayer>"
+                        + "    <Name>hel-zigzag</Name>"
+                        + "    <UserStyle>"
+                        + "      <Title>A sin wave line</Title>"
+                        + "      <FeatureTypeStyle>"
+                        + "        <Rule>"
+                        + "          <Name>Sine Wave</Name>"
+                        + "          <LineSymbolizer>"
+                        + "            <Stroke>"
+                        + "              <GraphicStroke>"
+                        + "                <Graphic>"
+                        + "                  <Mark>"
+                        + "                    <WellKnownName>wkt://COMPOUNDCURVE(CIRCULARSTRING(0 0, 0.25 0.25, 0.5 0), CIRCULARSTRING(0.5 0, 0.75 -0.25, 1 0))</WellKnownName>"
+                        + "                    <Stroke>"
+                        + "                      <CssParameter name=\"stroke\">0x0000AA</CssParameter>"
+                        + "                      <CssParameter name=\"stroke-width\">3</CssParameter>"
+                        + "                      <CssParameter name=\"stroke-linecap\">round</CssParameter>"
+                        + "                    </Stroke>"
+                        + "                  </Mark>"
+                        + "                  <Size>20</Size>"
+                        + "                </Graphic>"
+                        + "              </GraphicStroke>"
+                        + "            </Stroke>"
+                        + "            <VendorOption name=\"markAlongLine\">true</VendorOption>"
+                        + "            <VendorOption name=\"markAlongLineScaleLimit\">0.9</VendorOption>"
+                        + "            <VendorOption name=\"markAlongLineSimplify\">0.4</VendorOption>"
+                        + "          </LineSymbolizer>"
+                        + "        </Rule>"
+                        + "      </FeatureTypeStyle>"
+                        + "    </UserStyle>"
+                        + "  </NamedLayer>"
+                        + "</StyledLayerDescriptor>";
+
+        StringReader reader = new StringReader(xml);
+        SLDParser sldParser = new SLDParser(sf, reader);
+
+        Style[] styles = sldParser.readXML();
+
+        Style style = styles[0];
+
+        Rule rule = style.featureTypeStyles().get(0).rules().get(0);
+
+        List<? extends Symbolizer> symbolizers = rule.symbolizers();
+
+        LineSymbolizer lineSymbolizer = (LineSymbolizer) symbolizers.get(0);
+        assertNotNull(lineSymbolizer);
+
+        SLDTransformer st = new SLDTransformer();
+        st.setExportDefaultValues(true);
+        st.setIndentation(2);
+        String lineSymbolizerXML = st.transform(rule);
+
+        Document doc = buildTestDocument(lineSymbolizerXML);
+        assertXpathExists("//sld:LineSymbolizer/sld:VendorOption[@name='markAlongLine']", doc);
+        assertXpathExists(
+                "//sld:LineSymbolizer/sld:VendorOption[@name='markAlongLineScaleLimit']", doc);
+        assertXpathExists(
+                "//sld:LineSymbolizer/sld:VendorOption[@name='markAlongLineSimplify']", doc);
+    }
+
     private StyledLayerDescriptor buildSLDAroundSymbolizer(
             org.geotools.styling.Symbolizer symbolizer) {
         StyleBuilder sb = new StyleBuilder();
@@ -2200,5 +2198,55 @@ public class SLDTransformerTest {
         layer.addStyle(s);
         sld.addStyledLayer(layer);
         return sld;
+    }
+
+    @Test
+    public void testEncodeBackgroundSolid()
+            throws IOException, SAXException, TransformerException, XpathException {
+        StyleBuilder sb = new StyleBuilder();
+        Style style = sb.createStyle(sb.createLineSymbolizer());
+        style.setBackground(sb.createFill(Color.RED));
+
+        SLDTransformer st = new SLDTransformer();
+        st.setExportDefaultValues(true);
+        st.setIndentation(2);
+        String styleXML = st.transform(style);
+
+        Document doc = buildTestDocument(styleXML);
+        assertXpathEvaluatesTo(
+                "#FF0000", "//sld:UserStyle/sld:Background/sld:CssParameter[@name='fill']", doc);
+        assertXpathEvaluatesTo(
+                "1.0",
+                "//sld:UserStyle/sld:Background/sld:CssParameter[@name='fill-opacity']",
+                doc);
+    }
+
+    @Test
+    public void testEncodeBackgroundGraphicFill()
+            throws IOException, SAXException, TransformerException, XpathException {
+        StyleBuilder sb = new StyleBuilder();
+        Style style = sb.createStyle(sb.createLineSymbolizer());
+        Fill fill = sb.createFill();
+        fill.setColor(null);
+        fill.setOpacity(null);
+        fill.setGraphicFill(sb.createGraphic(null, sb.createMark("square"), null));
+        style.setBackground(fill);
+
+        SLDTransformer st = new SLDTransformer();
+        st.setExportDefaultValues(true);
+        st.setIndentation(2);
+        String styleXML = st.transform(style);
+
+        Document doc = buildTestDocument(styleXML);
+        assertXpathEvaluatesTo(
+                "square",
+                "//sld:UserStyle/sld:Background/sld:GraphicFill/sld:Graphic/sld:Mark/sld:WellKnownName",
+                doc);
+        assertXpathExists(
+                "//sld:UserStyle/sld:Background/sld:GraphicFill/sld:Graphic/sld:Mark/sld:Fill",
+                doc);
+        assertXpathExists(
+                "//sld:UserStyle/sld:Background/sld:GraphicFill/sld:Graphic/sld:Mark/sld:Stroke",
+                doc);
     }
 }

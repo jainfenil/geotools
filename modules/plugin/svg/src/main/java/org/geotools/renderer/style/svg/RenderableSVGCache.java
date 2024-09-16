@@ -51,7 +51,7 @@ public class RenderableSVGCache {
             Collections.synchronizedMap(new SoftValueHashMap<>());
 
     /** The possible mime types for SVG */
-    static final Set<String> formats = new HashSet<String>();
+    static final Set<String> formats = new HashSet<>();
 
     static {
         formats.add("image/svg");
@@ -106,12 +106,7 @@ public class RenderableSVGCache {
         return svg;
     }
 
-    /**
-     * Splits the query string in
-     *
-     * @param url
-     * @return
-     */
+    /** Splits the query string in */
     Map<String, String> getParametersFromUrl(String url) {
         // url.getQuery won't work on file addresses
         int idx = url.indexOf("?");

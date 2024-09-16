@@ -369,10 +369,9 @@ public class DimensionFilter {
         if (transform instanceof ConcatenatedTransform) {
             final ConcatenatedTransform ctr = (ConcatenatedTransform) transform;
             final int[] original = sourceDimensions;
-            final MathTransform step1, step2;
-            step1 = separateInput(ctr.transform1);
+            final MathTransform step1 = separateInput(ctr.transform1);
             sourceDimensions = targetDimensions;
-            step2 = separateInput(ctr.transform2);
+            final MathTransform step2 = separateInput(ctr.transform2);
             sourceDimensions = original;
             return factory.createConcatenatedTransform(step1, step2);
         }
@@ -388,8 +387,8 @@ public class DimensionFilter {
             final int subLower = passThrough.firstAffectedOrdinate;
             final int subUpper = subLower + dimPass;
             final DimensionFilter subFilter = new DimensionFilter(factory);
-            for (int i = 0; i < sourceDimensions.length; i++) {
-                int n = sourceDimensions[i];
+            for (int sourceDimension : sourceDimensions) {
+                int n = sourceDimension;
                 if (n >= subLower && n < subUpper) {
                     // Dimension n belong to the subtransform.
                     subFilter.addSourceDimension(n - subLower);
@@ -661,8 +660,8 @@ public class DimensionFilter {
             } else {
                 // Note: the following loop is unefficient, but should suffise since this
                 //       case should not occurs often and arrays should be small anyway.
-                for (int i = 0; i < dimensions.length; i++) {
-                    sequence = add(sequence, dimensions[i]);
+                for (int dimension : dimensions) {
+                    sequence = add(sequence, dimension);
                 }
             }
         }

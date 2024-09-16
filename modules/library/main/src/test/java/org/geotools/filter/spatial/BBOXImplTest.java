@@ -1,6 +1,8 @@
 package org.geotools.filter.spatial;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import org.geotools.data.DataUtilities;
@@ -46,11 +48,10 @@ public class BBOXImplTest {
             // TODO Auto-generated catch block
             java.util.logging.Logger.getGlobal().log(java.util.logging.Level.INFO, "", e);
         }
-        ArrayList<Object> attributes = new ArrayList<Object>();
+        ArrayList<Object> attributes = new ArrayList<>();
         attributes.add("testFeature");
         attributes.add(p);
-        Feature f = null;
-        f = SimpleFeatureBuilder.build(type, new Object[] {"testFeature", p}, null);
+        Feature f = SimpleFeatureBuilder.build(type, new Object[] {"testFeature", p}, null);
         Envelope e1 = new Envelope(3, 6, 0, 2);
         Envelope e2 = new Envelope(3.25, 3.75, 1.25, 1.75);
         assertTrue(e1.contains(e2));

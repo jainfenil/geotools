@@ -18,7 +18,6 @@ package org.geotools.gml3.complex;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,7 @@ public class GmlFeatureTypeRegistryConfiguration implements FeatureTypeRegistryC
 
     @Override
     public Collection<Schema> getSchemas() {
-        ArrayList<Schema> schemas = new ArrayList<Schema>();
+        ArrayList<Schema> schemas = new ArrayList<>();
         schemas.add(new SMIL20Schema());
         schemas.add(new SMIL20LANGSchema());
         schemas.add(new GMLSchema());
@@ -81,7 +80,7 @@ public class GmlFeatureTypeRegistryConfiguration implements FeatureTypeRegistryC
 
     @Override
     public Collection<Configuration> getConfigurations() {
-        ArrayList<Configuration> configurations = new ArrayList<Configuration>();
+        ArrayList<Configuration> configurations = new ArrayList<>();
         configurations.add(new GMLConfiguration());
         configurations.add(new org.geotools.gml3.v3_2.GMLConfiguration());
         return configurations;
@@ -150,8 +149,8 @@ public class GmlFeatureTypeRegistryConfiguration implements FeatureTypeRegistryC
 
         final String idAttName = getId().getLocalPart();
 
-        for (Iterator it = attributeUses.iterator(); it.hasNext(); ) {
-            XSDAttributeUse use = (XSDAttributeUse) it.next();
+        for (Object attributeUs : attributeUses) {
+            XSDAttributeUse use = (XSDAttributeUse) attributeUs;
             XSDAttributeUseCategory useCategory = use.getUse();
 
             XSDAttributeDeclaration idAtt = use.getAttributeDeclaration();
@@ -169,10 +168,6 @@ public class GmlFeatureTypeRegistryConfiguration implements FeatureTypeRegistryC
 
     /**
      * Returns true if the <code>typeDefinition</code> is based on provided <code>superNS</code>.
-     *
-     * @param typeDefinition
-     * @param superNS
-     * @return
      */
     private static boolean isBasedOn(XSDTypeDefinition typeDefinition, final String superNS) {
 
@@ -197,10 +192,6 @@ public class GmlFeatureTypeRegistryConfiguration implements FeatureTypeRegistryC
 
     /**
      * Returns whether <code>typeDefinition</code> has an ancestor named <code>baseTypeName</code>.
-     *
-     * @param typeDefinition
-     * @param baseTypeName
-     * @return
      */
     private static boolean isDerivedFrom(
             final XSDTypeDefinition typeDefinition, final QName baseTypeName) {
@@ -210,10 +201,6 @@ public class GmlFeatureTypeRegistryConfiguration implements FeatureTypeRegistryC
     /**
      * Returns <code>true</code> if <code>typeDefinition</code> is derived from a type named <code>
      * superTypeName</code>
-     *
-     * @param typeDefinition
-     * @param superTypeName
-     * @return
      */
     private static boolean isDerivedFrom(
             XSDTypeDefinition typeDefinition, final Name superTypeName) {

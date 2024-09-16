@@ -39,6 +39,7 @@ import java.util.AbstractList;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
+import javax.measure.MetricPrefix;
 import javax.media.jai.RasterFactory;
 import org.geotools.coverage.Category;
 import org.geotools.coverage.CoverageFactoryFinder;
@@ -52,8 +53,6 @@ import org.geotools.util.factory.Hints;
 import org.opengis.coverage.grid.GridCoverage;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import si.uom.SI;
-import si.uom.SI.*;
-import tec.uom.se.unit.MetricPrefix;
 
 /**
  * Base class for grid coverage tests. This base class provides factory methods for sample {@link
@@ -93,12 +92,8 @@ public class GridCoverageTestBase extends CoverageTestBase {
          * (longitude,latitude) coordinates, pixels of 0.25 degrees and a lower
          * left corner at 10°W 30°N.
          */
-        final GridCoverage2D coverage; // The final grid coverage.
-        final BufferedImage image; // The GridCoverage's data.
-        final WritableRaster raster; // The image's data as a raster.
-        final Rectangle2D bounds; // The GridCoverage's envelope.
-        final GridSampleDimension band; // The only image's band.
-        band =
+        // The only image's band.
+        final GridSampleDimension band =
                 new GridSampleDimension(
                         "Temperature",
                         new Category[] {
@@ -108,14 +103,17 @@ public class GridCoverageTestBase extends CoverageTestBase {
                             new Category("Temperature", null, BEGIN_VALID, 256)
                         },
                         SI.CELSIUS);
-        image = new BufferedImage(120, 80, BufferedImage.TYPE_BYTE_INDEXED);
-        raster = image.getRaster();
+        // The GridCoverage's data.
+        final BufferedImage image = new BufferedImage(120, 80, BufferedImage.TYPE_BYTE_INDEXED);
+        // The image's data as a raster.
+        final WritableRaster raster = image.getRaster();
         for (int i = raster.getWidth(); --i >= 0; ) {
             for (int j = raster.getHeight(); --j >= 0; ) {
                 raster.setSample(i, j, 0, random.nextInt(256));
             }
         }
-        bounds =
+        // The GridCoverage's envelope.
+        final Rectangle2D bounds =
                 new Rectangle2D.Double(
                         -10, 30, PIXEL_SIZE * image.getWidth(), PIXEL_SIZE * image.getHeight());
         final GeneralEnvelope envelope = new GeneralEnvelope(crs);
@@ -127,7 +125,8 @@ public class GridCoverageTestBase extends CoverageTestBase {
         }
         final Hints hints = new Hints(Hints.TILE_ENCODING, "raw");
         final GridCoverageFactory factory = CoverageFactoryFinder.getGridCoverageFactory(hints);
-        coverage =
+        // The final grid coverage.
+        final GridCoverage2D coverage =
                 factory.create(
                         "Test", image, envelope, new GridSampleDimension[] {band}, null, null);
         assertEquals("raw", coverage.tileEncoding);
@@ -412,11 +411,8 @@ public class GridCoverageTestBase extends CoverageTestBase {
          * But we want to test the default GridCoverage2D encoding.
          */
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final ObjectOutputStream out = new ObjectOutputStream(buffer);
-        try {
+        try (ObjectOutputStream out = new ObjectOutputStream(buffer)) {
             out.writeObject(coverage);
-        } finally {
-            out.close();
         }
         final ObjectInputStream in =
                 new ObjectInputStream(new ByteArrayInputStream(buffer.toByteArray()));

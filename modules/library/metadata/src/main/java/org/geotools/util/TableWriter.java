@@ -163,7 +163,7 @@ public class TableWriter extends FilterWriter {
      * null} value or a {@link Cell} object with <code>{@link Cell#text}==null</code> are move to
      * the next line.
      */
-    private final List<Cell> cells = new ArrayList<Cell>();
+    private final List<Cell> cells = new ArrayList<>();
 
     /** Alignment for current and next cells. */
     private int alignment = ALIGN_LEFT;
@@ -290,9 +290,9 @@ public class TableWriter extends FilterWriter {
          */
         int boxCount = 0;
         final char[][] box = new char[BOX.length][];
-        for (int i = 0; i < BOX.length; i++) {
-            if (BOX[i][9] == horizontalChar) {
-                box[boxCount++] = BOX[i];
+        for (char[] chars : BOX) {
+            if (chars[9] == horizontalChar) {
+                box[boxCount++] = chars;
             }
         }
         /*
@@ -761,6 +761,7 @@ public class TableWriter extends FilterWriter {
      * @param out Flot vers où écrire les données.
      * @throws IOException si une erreur est survenue lors de l'écriture dans {@code out}.
      */
+    @SuppressWarnings("PMD.CloseResource")
     private void flushTo(final Writer out) throws IOException {
         final String columnSeparator = this.separator;
         final String lineSeparator = System.getProperty("line.separator", "\n");
@@ -897,7 +898,7 @@ public class TableWriter extends FilterWriter {
     }
 
     /** Checks if {@code array} contains only {@code null} elements. */
-    private static boolean isEmpty(final Object[] array) {
+    private static boolean isEmpty(final Object... array) {
         for (int i = array.length; --i >= 0; ) {
             if (array[i] != null) {
                 return false;
@@ -928,8 +929,8 @@ public class TableWriter extends FilterWriter {
                 nextColumn();
             }
             int capacity = 2; // Room for EOL.
-            for (int i = 0; i < width.length; i++) {
-                capacity += width[i];
+            for (int j : width) {
+                capacity += j;
             }
             capacity *= getRowCount();
             final StringWriter writer;

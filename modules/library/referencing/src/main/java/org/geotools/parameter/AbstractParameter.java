@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
 import java.lang.reflect.Array;
-import java.util.Iterator;
 import org.geotools.metadata.i18n.ErrorKeys;
 import org.geotools.metadata.i18n.Errors;
 import org.geotools.referencing.wkt.Formattable;
@@ -177,15 +176,18 @@ public abstract class AbstractParameter extends Formattable
      */
     @Override
     public final String toString() {
-        final TableWriter table = new TableWriter(null, 1);
-        table.setMultiLinesCells(true);
-        try {
-            write(table);
-        } catch (IOException exception) {
-            // Should never happen, since we write to a StringWriter.
-            throw new AssertionError(exception);
+        try (TableWriter table = new TableWriter(null, 1)) {
+            table.setMultiLinesCells(true);
+            try {
+                write(table);
+            } catch (IOException exception) {
+                // Should never happen, since we write to a StringWriter.
+                throw new AssertionError(exception);
+            }
+            return table.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return table.toString();
     }
 
     /**
@@ -218,6 +220,7 @@ public abstract class AbstractParameter extends Formattable
      * @param table The table where to format the parameter value.
      * @throws IOException if an error occurs during output operation.
      */
+    @SuppressWarnings("PMD.CloseResource")
     protected void write(final TableWriter table) throws IOException {
         table.write(getName(descriptor));
         table.nextColumn();
@@ -239,9 +242,7 @@ public abstract class AbstractParameter extends Formattable
             table.write(':');
             table.nextColumn();
             TableWriter inner = null;
-            for (final Iterator it = ((ParameterValueGroup) this).values().iterator();
-                    it.hasNext(); ) {
-                final GeneralParameterValue value = (GeneralParameterValue) it.next();
+            for (final GeneralParameterValue value : ((ParameterValueGroup) this).values()) {
                 if (value instanceof AbstractParameter) {
                     if (inner == null) {
                         inner = new TableWriter(table, 1);

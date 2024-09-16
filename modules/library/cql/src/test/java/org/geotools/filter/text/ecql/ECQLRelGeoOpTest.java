@@ -22,7 +22,6 @@ import org.geotools.filter.function.FilterFunction_buffer;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLRelGeoOpTest;
-import org.geotools.util.factory.Hints;
 import org.junit.Assert;
 import org.junit.Test;
 import org.locationtech.jts.geom.Geometry;
@@ -41,7 +40,7 @@ import org.opengis.filter.spatial.DistanceBufferOperator;
  */
 public class ECQLRelGeoOpTest extends CQLRelGeoOpTest {
     protected static final FilterFactory FILTER_FACTORY =
-            CommonFactoryFinder.getFilterFactory((Hints) null);
+            CommonFactoryFinder.getFilterFactory(null);
 
     public ECQLRelGeoOpTest() {
         super(Language.ECQL);
@@ -49,10 +48,9 @@ public class ECQLRelGeoOpTest extends CQLRelGeoOpTest {
 
     @Test
     public void functionDwithinGeometry() throws Exception {
-        Filter resultFilter;
 
         // DWITHIN
-        resultFilter =
+        Filter resultFilter =
                 CompilerUtil.parseFilter(
                         this.language, "DWITHIN(buffer(the_geom,5), POINT(1 2), 10, kilometers)");
 
@@ -67,10 +65,9 @@ public class ECQLRelGeoOpTest extends CQLRelGeoOpTest {
 
     @Test
     public void functionDwithinFunction() throws Exception {
-        Filter filter;
 
         // DWITHIN
-        filter =
+        Filter filter =
                 CompilerUtil.parseFilter(
                         this.language,
                         "DWITHIN(buffer(the_geom,5), buffer(the_geom,2), 10, kilometers)");
@@ -86,10 +83,9 @@ public class ECQLRelGeoOpTest extends CQLRelGeoOpTest {
 
     @Test
     public void geometryDwithinGeometry() throws Exception {
-        Filter resultFilter;
 
         // DWITHIN
-        resultFilter =
+        Filter resultFilter =
                 CompilerUtil.parseFilter(
                         this.language, "DWITHIN(POINT(5 7), POINT(1 2), 10, kilometers)");
 

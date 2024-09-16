@@ -18,7 +18,7 @@ package org.geotools.jdbc;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +34,7 @@ import org.locationtech.jts.geom.Point;
 import org.opengis.feature.simple.SimpleFeature;
 
 /** Tests that measurements coordinates (M) are correctly handled. */
+@SuppressWarnings("PMD.JUnit4TestShouldUseTestAnnotation") // not yet a JUnit4 test
 public abstract class JDBCMeasuredGeometriesOnlineTest extends JDBCTestSupport {
 
     public void testRetrievingPointM() {

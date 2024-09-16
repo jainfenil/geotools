@@ -56,7 +56,7 @@ import java.util.List;
 public interface StyledLayerDescriptor {
     public StyledLayer[] getStyledLayers();
 
-    public void setStyledLayers(StyledLayer[] layers);
+    public void setStyledLayers(StyledLayer... layers);
 
     public void addStyledLayer(StyledLayer layer);
 
@@ -109,10 +109,6 @@ public interface StyledLayerDescriptor {
      */
     public void setAbstract(java.lang.String abstractStr);
 
-    /**
-     * Used to navigate a Style/SLD.
-     *
-     * @param visitor
-     */
+    /** Used to navigate a Style/SLD. */
     void accept(StyleVisitor visitor);
 }

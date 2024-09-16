@@ -54,7 +54,7 @@ public class ComplexElementHandler extends XMLElementHandler {
     private Element elem;
     private String text;
     private Attributes attr;
-    private List elements;
+    private List<XMLElementHandler> elements;
     private Object value = null;
     private ElementHandlerFactory ehf;
 
@@ -63,7 +63,6 @@ public class ComplexElementHandler extends XMLElementHandler {
      *
      * @param ehf ElementHandlerFactory
      * @param elem Element
-     * @throws SAXException
      */
     public ComplexElementHandler(ElementHandlerFactory ehf, Element elem) throws SAXException {
         this.ehf = ehf;
@@ -108,19 +107,13 @@ public class ComplexElementHandler extends XMLElementHandler {
         }
     }
 
-    /**
-     * @param namespaceURI
-     * @param localName
-     * @param hints
-     * @throws SAXException
-     * @throws OperationNotSupportedException
-     */
-    public void endElement(URI namespaceURI, String localName, Map hints)
+    /** */
+    public void endElement(URI namespaceURI, String localName, Map<String, Object> hints)
             throws OperationNotSupportedException, SAXException {
         text = (text == null) ? null : text.trim();
 
         if (hints == null) {
-            hints = new HashMap<String, Object>();
+            hints = new HashMap<>();
             hints.put(ElementHandlerFactory.KEY, ehf);
         } else {
             if (!hints.containsKey(ElementHandlerFactory.KEY))
@@ -157,7 +150,7 @@ public class ComplexElementHandler extends XMLElementHandler {
         ElementValue[] vals = new ElementValue[elements.size() + (type.isMixed() ? 1 : 0)];
 
         for (int i = 0; i < elements.size(); i++) {
-            XMLElementHandler xeh = (XMLElementHandler) elements.get(i);
+            XMLElementHandler xeh = elements.get(i);
             vals[i] = new DefaultElementValue(xeh.getElement(), xeh.getValue());
         }
 
@@ -181,7 +174,7 @@ public class ComplexElementHandler extends XMLElementHandler {
      *
      */
     private void validateElementOrder() throws SAXException {
-        if ((elements == null) || (elements.size() == 0)) {
+        if ((elements == null) || (elements.isEmpty())) {
             // TODO ensure we have enough elements
             return;
         }
@@ -297,9 +290,7 @@ public class ComplexElementHandler extends XMLElementHandler {
             c = false;
 
             for (int i = 0; i < elems.length; i++) {
-                if (elems[i].getType()
-                        .getName()
-                        .equalsIgnoreCase(((XMLElementHandler) elements.get(head)).getName())) {
+                if (elems[i].getType().getName().equalsIgnoreCase(elements.get(head).getName())) {
                     r[i]++;
                     head++;
                     i = elems.length;
@@ -322,12 +313,7 @@ public class ComplexElementHandler extends XMLElementHandler {
      * @see valid(ElementGrouping)
      */
     private int[] valid(Any any, int index) {
-        if (any.getNamespace()
-                .equals(
-                        ((XMLElementHandler) elements.get(index))
-                                .getElement()
-                                .getType()
-                                .getNamespace())) {
+        if (any.getNamespace().equals(elements.get(index).getElement().getType().getNamespace())) {
             return new int[] {index + 1, 1};
         }
 
@@ -404,7 +390,7 @@ public class ComplexElementHandler extends XMLElementHandler {
 
         XMLElementHandler indexHandler = null;
         if (index < elements.size()) {
-            indexHandler = ((XMLElementHandler) elements.get(index));
+            indexHandler = elements.get(index);
         } else {
             // not found :)
             return new int[] {index, 0};
@@ -497,9 +483,6 @@ public class ComplexElementHandler extends XMLElementHandler {
      *
      * @see org.geotools.xml.XMLElementHandler#startElement(java.net.URI, java.lang.String,
      *     org.xml.sax.Attributes)
-     * @param namespaceURI
-     * @param localName
-     * @param attr1
      */
     public void startElement(URI namespaceURI, String localName, Attributes attr1) {
         this.attr = new AttributesImpl(attr1);
@@ -510,16 +493,12 @@ public class ComplexElementHandler extends XMLElementHandler {
      *
      * @see org.geotools.xml.XMLElementHandler#getHandler(java.net.URI, java.lang.String,
      *     java.util.Map)
-     * @param namespaceURI
-     * @param localName
-     * @param hints
      * @return XMLElementHandler
-     * @throws SAXException
      */
-    public XMLElementHandler getHandler(URI namespaceURI, String localName, Map hints)
-            throws SAXException {
+    public XMLElementHandler getHandler(
+            URI namespaceURI, String localName, Map<String, Object> hints) throws SAXException {
         if (elements == null) {
-            elements = new LinkedList();
+            elements = new LinkedList<>();
         }
 
         logger.finest("Starting search for element handler " + localName + " :: " + namespaceURI);
@@ -581,11 +560,7 @@ public class ComplexElementHandler extends XMLElementHandler {
         return elem.getName();
     }
 
-    /**
-     * Remove the given XMLElementHandler from the Child-List
-     *
-     * @param handler
-     */
+    /** Remove the given XMLElementHandler from the Child-List */
     public void removeElement(XMLElementHandler handler) {
         if (elements != null) {
             elements.remove(handler);

@@ -203,8 +203,8 @@ public class Console extends AbstractConsole {
      *
      * @param args the command line arguments
      */
-    @SuppressWarnings("PMD.SystemPrintln")
-    public static void main(String[] args) {
+    @SuppressWarnings({"PMD.SystemPrintln", "PMD.CloseResource"})
+    public static void main(String... args) {
         final Arguments arguments = new Arguments(args);
         final String load = arguments.getOptionalString("-load");
         final String file = arguments.getOptionalString("-file");
@@ -399,6 +399,7 @@ public class Console extends AbstractConsole {
     }
 
     /** Executes the "{@code print crs}" instruction. */
+    @SuppressWarnings("PMD.CloseResource")
     private void printCRS() throws FactoryException, IOException {
         final Locale locale = null;
         final Vocabulary resources = Vocabulary.getResources(locale);
@@ -453,6 +454,7 @@ public class Console extends AbstractConsole {
      * @throws TransformException if a transform failed.
      * @throws IOException if an error occured while writing to the output stream.
      */
+    @SuppressWarnings("PMD.CloseResource")
     private void printPts() throws FactoryException, TransformException, IOException {
         update();
         DirectPosition transformedSource = null;
@@ -547,8 +549,7 @@ public class Console extends AbstractConsole {
         if (position2 != null) {
             if (crs instanceof AbstractCRS)
                 try {
-                    final Measure distance;
-                    distance =
+                    final Measure distance =
                             ((AbstractCRS) crs)
                                     .distance(position1.getCoordinate(), position2.getCoordinate());
                     table.setAlignment(TableWriter.ALIGN_RIGHT);

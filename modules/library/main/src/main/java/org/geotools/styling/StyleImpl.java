@@ -19,6 +19,7 @@ package org.geotools.styling;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.util.Utilities;
@@ -36,10 +37,11 @@ public class StyleImpl implements org.geotools.styling.Style, Cloneable {
     private static final Logger LOGGER =
             org.geotools.util.logging.Logging.getLogger(StyleImpl.class);
 
-    private List<FeatureTypeStyle> featureTypeStyles = new ArrayList<FeatureTypeStyle>();
+    private List<FeatureTypeStyle> featureTypeStyles = new ArrayList<>();
     private DescriptionImpl description = new DescriptionImpl();
     private String name = "Default Styler";
     private boolean defaultB = false;
+    private Fill background;
 
     private Symbolizer defaultSymbolizer;
 
@@ -53,11 +55,11 @@ public class StyleImpl implements org.geotools.styling.Style, Cloneable {
     public FeatureTypeStyle[] getFeatureTypeStyles() {
         FeatureTypeStyle[] ret = new FeatureTypeStyleImpl[] {new FeatureTypeStyleImpl()};
 
-        if ((featureTypeStyles != null) && (featureTypeStyles.size() != 0)) {
+        if ((featureTypeStyles != null) && (!featureTypeStyles.isEmpty())) {
             if (LOGGER.isLoggable(Level.FINE))
                 LOGGER.fine("number of fts set " + featureTypeStyles.size());
 
-            ret = (FeatureTypeStyle[]) featureTypeStyles.toArray(new FeatureTypeStyle[] {});
+            ret = featureTypeStyles.toArray(new FeatureTypeStyle[] {});
         }
 
         return ret;
@@ -75,7 +77,7 @@ public class StyleImpl implements org.geotools.styling.Style, Cloneable {
         this.defaultSymbolizer = defaultSymbolizer;
     }
 
-    public void setFeatureTypeStyles(FeatureTypeStyle[] styles) {
+    public void setFeatureTypeStyles(FeatureTypeStyle... styles) {
         List<FeatureTypeStyle> newStyles = Arrays.asList(styles);
 
         this.featureTypeStyles.clear();
@@ -135,30 +137,10 @@ public class StyleImpl implements org.geotools.styling.Style, Cloneable {
         return clone;
     }
 
-    /**
-     * Overrides hashcode.
-     *
-     * @return The hash code.
-     */
+    @Override
     public int hashCode() {
-        final int PRIME = 1000003;
-        int result = 0;
-
-        if (featureTypeStyles != null) {
-            result = (PRIME * result) + featureTypeStyles.hashCode();
-        }
-
-        if (description != null) {
-            result = (PRIME * result) + description.hashCode();
-        }
-
-        if (name != null) {
-            result = (PRIME * result) + name.hashCode();
-        }
-
-        result = (PRIME * result) + (defaultB ? 1 : 0);
-
-        return result;
+        return Objects.hash(
+                featureTypeStyles, description, name, defaultB, background, defaultSymbolizer);
     }
 
     /**
@@ -180,7 +162,8 @@ public class StyleImpl implements org.geotools.styling.Style, Cloneable {
 
             return Utilities.equals(name, other.name)
                     && Utilities.equals(description, other.description)
-                    && Utilities.equals(featureTypeStyles, other.featureTypeStyles);
+                    && Utilities.equals(featureTypeStyles, other.featureTypeStyles)
+                    && Utilities.equals(background, other.background);
         }
 
         return false;
@@ -217,5 +200,13 @@ public class StyleImpl implements org.geotools.styling.Style, Cloneable {
         } else {
             this.description = DescriptionImpl.cast(description);
         }
+    }
+
+    public Fill getBackground() {
+        return background;
+    }
+
+    public void setBackground(Fill background) {
+        this.background = background;
     }
 }

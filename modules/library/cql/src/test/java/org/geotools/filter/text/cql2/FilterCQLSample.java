@@ -27,7 +27,6 @@ import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.temporal.object.DefaultInstant;
 import org.geotools.temporal.object.DefaultPeriod;
 import org.geotools.temporal.object.DefaultPosition;
-import org.geotools.util.factory.Hints;
 import org.opengis.filter.And;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
@@ -59,7 +58,7 @@ import org.opengis.temporal.Period;
  */
 public class FilterCQLSample {
 
-    private static final FilterFactory FACTORY = CommonFactoryFinder.getFilterFactory((Hints) null);
+    private static final FilterFactory FACTORY = CommonFactoryFinder.getFilterFactory(null);
 
     private static final String DATE_TIME_FORMATTER = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     private static final String DATE_TIME_FORMATTER_MILLIS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
@@ -278,15 +277,14 @@ public class FilterCQLSample {
     public static final String NOT_BETWEEN_FILTER = "ATTR1 NOT BETWEEN 10 AND 20";
 
     /** Catalog of samples */
-    public static Map<String, Object> SAMPLES = new HashMap<String, Object>();
+    public static Map<String, Object> SAMPLES = new HashMap<>();
 
     static {
         // Samples initialization
         {
-            Filter filter;
 
             // ---------------------------------------
-            filter = FACTORY.less(FACTORY.property("ATTR1"), FACTORY.literal(1));
+            Filter filter = FACTORY.less(FACTORY.property("ATTR1"), FACTORY.literal(1));
             SAMPLES.put(LESS_FILTER_SAMPLE, filter);
 
             // ---------------------------------------
@@ -457,13 +455,12 @@ public class FilterCQLSample {
 
                 Date firstDate = strToDate(FIRST_DATE);
 
-                Date lastDate;
                 // adds Days
                 CALENDAR.setTime(firstDate);
 
                 int days = Integer.parseInt(DURATION_DATE);
                 CALENDAR.add(Calendar.DATE, days);
-                lastDate = CALENDAR.getTime();
+                Date lastDate = CALENDAR.getTime();
 
                 afterFilter = FACTORY.after(FACTORY.property("ATTR1"), FACTORY.literal(lastDate));
 
@@ -863,13 +860,7 @@ public class FilterCQLSample {
         return new DefaultPeriod(i1, i2);
     }
 
-    /**
-     * Add duration to date
-     *
-     * @param firstDate
-     * @return
-     * @throws NumberFormatException
-     */
+    /** Add duration to date */
     private static Date addDuration(
             final Date date, final String durationDate, final String durationTime) {
         CALENDAR.setTime(date);
@@ -893,8 +884,6 @@ public class FilterCQLSample {
      * Subtract duration to date
      *
      * @param lastDate a Date
-     * @param durationDate
-     * @param durationTime
      * @return Date
      */
     private static Date subtractDuration(

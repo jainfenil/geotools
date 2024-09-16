@@ -22,6 +22,8 @@ import java.util.Collections;
 import org.geotools.data.wfs.WFSDataStoreFactory;
 import org.geotools.data.wfs.online.AbstractWfsDataStoreOnlineTest;
 import org.geotools.factory.CommonFactoryFinder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
@@ -33,7 +35,7 @@ import org.opengis.filter.FilterFactory2;
 public class GeoServerOnlineTest extends AbstractWfsDataStoreOnlineTest {
 
     public static final String SERVER_URL =
-            "http://localhost:9090/geoserver/wfs?service=WFS&request=GetCapabilities&version=2.0.0";
+            "http://localhost:8080/geoserver/wfs?service=WFS&request=GetCapabilities&version=2.0.0";
 
     public GeoServerOnlineTest() {
         super(
@@ -63,6 +65,8 @@ public class GeoServerOnlineTest extends AbstractWfsDataStoreOnlineTest {
     }
 
     @Override
+    @Test
+    @Ignore
     public void testDataStoreHandlesAxisFlipping() {
         // disabled, not implemented for 2.0.0
     }

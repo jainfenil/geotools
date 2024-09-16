@@ -82,7 +82,7 @@ public class BBOXTypeBinding extends OGCBBOXTypeBinding {
     public Object getProperty(Object object, QName name) throws Exception {
         BBOX box = (BBOX) object;
 
-        if (FES.ValueReference.equals(name)) {
+        if (FES.expression.equals(name)) {
             return box.getExpression1();
         }
 
@@ -90,10 +90,11 @@ public class BBOXTypeBinding extends OGCBBOXTypeBinding {
     }
 
     @Override
-    public List getProperties(Object object, XSDElementDeclaration element) throws Exception {
+    public List<Object[]> getProperties(Object object, XSDElementDeclaration element)
+            throws Exception {
         BBOX box = (BBOX) object;
 
-        List properties = new ArrayList();
+        List<Object[]> properties = new ArrayList<>();
         ReferencedEnvelope env = ReferencedEnvelope.reference(box.getBounds());
 
         properties.add(new Object[] {ENVELOPE_PARTICLE, env});

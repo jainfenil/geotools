@@ -128,6 +128,7 @@ public class WPSUtils {
      * @param schema only used for type complexdata
      * @return the created DataType input object
      */
+    @SuppressWarnings("unchecked")
     public static DataType createInputDataType(
             Object obj, int type, String schema, String mimeType) {
         DataType dt = Wps10Factory.eINSTANCE.createDataType();
@@ -162,14 +163,13 @@ public class WPSUtils {
     /**
      * Create a map of <String name, Parameter> inputs for a process based on its describeProcess.
      *
-     * @param processDesc
      * @param map add the inputs to the given map (create it if null)
      * @return map of name,Parameter representing the input params for this process
      */
     public static Map<String, Parameter<?>> createInputParamMap(
             ProcessDescriptionType processDesc, Map<String, Parameter<?>> map) {
         if (map == null) {
-            map = new TreeMap<String, Parameter<?>>();
+            map = new TreeMap<>();
         }
 
         // loop through the process desc and setup each input param
@@ -223,6 +223,7 @@ public class WPSUtils {
             InternationalString title = Text.text(idt.getTitle().getValue());
             InternationalString description =
                     Text.text(isAbstractNull(idt) ? "" : idt.getAbstract().getValue());
+            @SuppressWarnings("unchecked")
             Parameter<?> param =
                     new Parameter(
                             identifier,
@@ -243,14 +244,13 @@ public class WPSUtils {
     /**
      * Create a map of <String name, Parameter> outputs for a process based on its describeProcess.
      *
-     * @param processDesc
      * @param map add the outputs to the given map (create it if null)
      * @return map of name,Parameter representing the output results for this process
      */
     public static Map<String, Parameter<?>> createOutputParamMap(
             ProcessDescriptionType processDesc, Map<String, Parameter<?>> map) {
         if (map == null) {
-            map = new TreeMap<String, Parameter<?>>();
+            map = new TreeMap<>();
         }
 
         // loop through the process desc and setup each output param
@@ -317,7 +317,8 @@ public class WPSUtils {
             // create the parameter
             InternationalString description =
                     Text.text(isAbstractNull(odt) ? "" : odt.getAbstract().getValue());
-            Parameter param =
+            @SuppressWarnings("unchecked")
+            Parameter<?> param =
                     new Parameter(
                             odt.getIdentifier().getValue(),
                             type,
@@ -329,12 +330,7 @@ public class WPSUtils {
         return map;
     }
 
-    /**
-     * Returns whether the abstract or its value of the given DescriptionType is null
-     *
-     * @param description
-     * @return
-     */
+    /** Returns whether the abstract or its value of the given DescriptionType is null */
     public static boolean isAbstractNull(DescriptionType description) {
         if (description.getAbstract() == null) {
             return true;
@@ -429,7 +425,7 @@ public class WPSUtils {
     public static Map<String, Object> createResultMap(
             ExecuteResponseType ert, Map<String, Object> map) {
         if (map == null) {
-            map = new TreeMap<String, Object>();
+            map = new TreeMap<>();
         }
 
         EList outputs = ert.getProcessOutputs().getOutput();
@@ -448,7 +444,7 @@ public class WPSUtils {
                 // we want (default to the String value if it failed).
                 Object value = literalData.getValue();
                 if (literalData.getDataType() != null) {
-                    Class type = getLiteralTypeFromReference(literalData.getDataType());
+                    Class<?> type = getLiteralTypeFromReference(literalData.getDataType());
                     Object convertedValue = Converters.convert(literalData.getValue(), type);
                     if (convertedValue != null) {
                         value = convertedValue;
@@ -460,7 +456,7 @@ public class WPSUtils {
                 EList datas = complexData.getData();
                 if (datas.size() > 1) {
                     Iterator iterator2 = datas.iterator();
-                    List<Object> values = new ArrayList<Object>();
+                    List<Object> values = new ArrayList<>();
                     while (iterator2.hasNext()) {
                         Object value = iterator2.next();
                         values.add(value);

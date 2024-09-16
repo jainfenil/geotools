@@ -35,7 +35,6 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
 import javax.media.jai.operator.MosaicDescriptor;
-import org.geotools.coverage.GridSampleDimension;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageFactory;
 import org.geotools.coverage.grid.GridEnvelope2D;
@@ -164,7 +163,7 @@ public class Crop extends Operation2D {
      * spatial crop.
      */
     public static final ParameterDescriptor<Envelope> CROP_ENVELOPE =
-            new DefaultParameterDescriptor<Envelope>(
+            new DefaultParameterDescriptor<>(
                     Citations.GEOTOOLS,
                     PARAMNAME_ENVELOPE,
                     Envelope.class, // Value class
@@ -185,7 +184,7 @@ public class Crop extends Operation2D {
      * <p>The parameter shall be a Polygon instance, or a GeometryCollection holding Polygons
      */
     public static final ParameterDescriptor<Geometry> CROP_ROI =
-            new DefaultParameterDescriptor<Geometry>(
+            new DefaultParameterDescriptor<>(
                     Citations.JAI,
                     PARAMNAME_ROI,
                     Geometry.class, // Value class
@@ -202,7 +201,7 @@ public class Crop extends Operation2D {
      * ROI_OPTIMISATION_TOLERANCE*FULL_CROP.
      */
     public static final ParameterDescriptor<Double> ROI_OPTIMISATION_TOLERANCE =
-            new DefaultParameterDescriptor<Double>(
+            new DefaultParameterDescriptor<>(
                     Citations.GEOTOOLS,
                     PARAMNAME_ROITOLERANCE,
                     Double.class, // Value class
@@ -218,7 +217,7 @@ public class Crop extends Operation2D {
      * avoiding any kind of optimization
      */
     public static final ParameterDescriptor<Boolean> FORCE_MOSAIC =
-            new DefaultParameterDescriptor<Boolean>(
+            new DefaultParameterDescriptor<>(
                     Citations.GEOTOOLS,
                     PARAMNAME_FORCEMOSAIC,
                     Boolean.class, // Value class
@@ -231,7 +230,7 @@ public class Crop extends Operation2D {
 
     /** The parameter descriptor used to tell this operation to check NoData */
     public static final ParameterDescriptor<Range> NODATA =
-            new DefaultParameterDescriptor<Range>(
+            new DefaultParameterDescriptor<>(
                     Citations.JAI,
                     PARAMNAME_NODATA,
                     Range.class, // Value class
@@ -244,7 +243,7 @@ public class Crop extends Operation2D {
 
     /** The parameter descriptor used to tell this operation to set destinationNoData */
     public static final ParameterDescriptor<double[]> DEST_NODATA =
-            new DefaultParameterDescriptor<double[]>(
+            new DefaultParameterDescriptor<>(
                     Citations.JAI,
                     PARAMNAME_DEST_NODATA,
                     double[].class, // Value class
@@ -284,7 +283,6 @@ public class Crop extends Operation2D {
 
         final Geometry cropRoi; // extracted from parameters
         GeneralEnvelope cropEnvelope = null; // extracted from parameters
-        final GridCoverage2D source; // extracted from parameters
         final double roiTolerance = parameters.parameter(Crop.PARAMNAME_ROITOLERANCE).doubleValue();
         final boolean forceMosaic = parameters.parameter(Crop.PARAMNAME_FORCEMOSAIC).booleanValue();
         Range nodata = (Range) parameters.parameter(Crop.PARAMNAME_NODATA).getValue();
@@ -306,7 +304,8 @@ public class Crop extends Operation2D {
                             "Source",
                             GridCoverage2D.class.toString()));
         }
-        source = (GridCoverage2D) sourceParameter.getValue();
+        // extracted from parameters
+        final GridCoverage2D source = (GridCoverage2D) sourceParameter.getValue();
 
         // Getting NoData value if not defined
         if (nodata == null) {
@@ -432,9 +431,7 @@ public class Crop extends Operation2D {
         //
         // //
         final AffineTransform sourceCornerGridToWorld =
-                (AffineTransform)
-                        ((GridGeometry2D) source.getGridGeometry())
-                                .getGridToCRS(PixelInCell.CELL_CORNER);
+                (AffineTransform) source.getGridGeometry().getGridToCRS(PixelInCell.CELL_CORNER);
 
         // //
         //
@@ -506,8 +503,7 @@ public class Crop extends Operation2D {
         // Getting the source coverage and its child geolocation objects
         //
         final RenderedImage sourceImage = sourceCoverage.getRenderedImage();
-        final GridGeometry2D sourceGridGeometry =
-                ((GridGeometry2D) sourceCoverage.getGridGeometry());
+        final GridGeometry2D sourceGridGeometry = sourceCoverage.getGridGeometry();
         final GridEnvelope2D sourceGridRange = sourceGridGeometry.getGridRange2D();
 
         //
@@ -638,7 +634,6 @@ public class Crop extends Operation2D {
             // Check if we need to use mosaic or crop
             //
             // //
-            final PlanarImage croppedImage;
             ImageWorker worker = new ImageWorker();
             java.awt.Polygon rasterSpaceROI = null;
             double[] background =
@@ -662,7 +657,7 @@ public class Crop extends Operation2D {
                 // raster space.
                 //
                 // //
-                final List<Point2D> points = new ArrayList<Point2D>(5);
+                final List<Point2D> points = new ArrayList<>(5);
                 rasterSpaceROI =
                         FeatureUtilities.convertPolygonToPointArray(
                                 modelSpaceROI,
@@ -753,13 +748,14 @@ public class Crop extends Operation2D {
             // Apply operation
             //
             // //
-            croppedImage = worker.getPlanarImage();
+            final PlanarImage croppedImage = worker.getPlanarImage();
 
             // conserve the input grid to world transformation
-            Map sourceProperties = sourceCoverage.getProperties();
-            Map properties = null;
+            @SuppressWarnings("unchecked")
+            Map<String, Object> sourceProperties = sourceCoverage.getProperties();
+            Map<String, Object> properties = null;
             if (sourceProperties != null && !sourceProperties.isEmpty()) {
-                properties = new HashMap(sourceProperties);
+                properties = new HashMap<>(sourceProperties);
             }
             if (rasterSpaceROI != null || internalROI != null) {
                 ROI finalROI = null;
@@ -773,7 +769,7 @@ public class Crop extends Operation2D {
                 }
 
                 if (properties == null) {
-                    properties = new HashMap();
+                    properties = new HashMap<>();
                 }
                 if (finalROI != null) {
                     CoverageUtilities.setROIProperty(properties, finalROI);
@@ -782,7 +778,7 @@ public class Crop extends Operation2D {
 
             if (worker.getNoData() != null) {
                 if (properties == null) {
-                    properties = new HashMap();
+                    properties = new HashMap<>();
                 }
                 CoverageUtilities.setNoDataProperty(properties, worker.getNoData());
             }
@@ -795,16 +791,11 @@ public class Crop extends Operation2D {
                                     new GridEnvelope2D(croppedImage.getBounds()),
                                     sourceGridGeometry.getGridToCRS2D(PixelOrientation.CENTER),
                                     sourceCoverage.getCoordinateReferenceSystem()),
-                            (GridSampleDimension[])
-                                    (actionTaken == 1
-                                            ? null
-                                            : sourceCoverage.getSampleDimensions().clone()),
+                            actionTaken == 1 ? null : sourceCoverage.getSampleDimensions().clone(),
                             new GridCoverage[] {sourceCoverage},
                             properties);
 
-        } catch (TransformException e) {
-            throw new CannotCropException(Errors.format(ErrorKeys.CANT_CROP), e);
-        } catch (NoninvertibleTransformException e) {
+        } catch (TransformException | NoninvertibleTransformException e) {
             throw new CannotCropException(Errors.format(ErrorKeys.CANT_CROP), e);
         }
     }
@@ -898,9 +889,6 @@ public class Crop extends Operation2D {
     /**
      * Stop gap measure to get a ROI that can scale up to massive images, until ROIGeometry gets
      * fixed to be a good ROIShape replacement
-     *
-     * @param theGeom
-     * @return
      */
     private static ROI getAsROI(Geometry theGeom) {
         org.locationtech.jts.geom.Envelope env = theGeom.getEnvelopeInternal();

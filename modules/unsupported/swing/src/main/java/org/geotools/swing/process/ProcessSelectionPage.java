@@ -185,11 +185,10 @@ public class ProcessSelectionPage extends JPage {
      * Populates an array of strings with the process factory titles based on the factory set
      *
      * @param factories the string array to populate
-     * @return
      */
     private TreeModel createFactoryTitleArray(Set<ProcessFactory> factories) {
-        final List<ProcessFactory> root = new ArrayList<ProcessFactory>();
-        final Map<ProcessFactory, List<Name>> branch = new HashMap<ProcessFactory, List<Name>>();
+        final List<ProcessFactory> root = new ArrayList<>();
+        final Map<ProcessFactory, List<Name>> branch = new HashMap<>();
 
         root.addAll(factories);
         Collections.sort(
@@ -214,7 +213,7 @@ public class ProcessSelectionPage extends JPage {
                 synchronized (factory) {
                     List<Name> list = branch.get(factory);
                     if (list == null) {
-                        list = new ArrayList<Name>();
+                        list = new ArrayList<>();
                         list.addAll(factory.getNames());
                         Collections.sort(
                                 list,

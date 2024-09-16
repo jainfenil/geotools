@@ -51,9 +51,9 @@ public class FilterAttributeExtractor extends DefaultFilterVisitor {
     static final FilterFactory2 FF = CommonFactoryFinder.getFilterFactory2();
 
     /** Last set visited */
-    protected Set<String> attributeNames = new HashSet<String>();
+    protected Set<String> attributeNames = new HashSet<>();
 
-    protected Set<PropertyName> propertyNames = new HashSet<PropertyName>();
+    protected Set<PropertyName> propertyNames = new HashSet<>();
     protected boolean usingVolatileFunctions;
     protected boolean usingDynamicProperties;
 
@@ -64,11 +64,7 @@ public class FilterAttributeExtractor extends DefaultFilterVisitor {
     public FilterAttributeExtractor() {
         this(null);
     }
-    /**
-     * Use the provided feature type as a sanity check when extracting property names.
-     *
-     * @param featureType
-     */
+    /** Use the provided feature type as a sanity check when extracting property names. */
     public FilterAttributeExtractor(SimpleFeatureType featureType) {
         this.featureType = featureType;
     }
@@ -84,8 +80,6 @@ public class FilterAttributeExtractor extends DefaultFilterVisitor {
     /**
      * Lists the PropertyNames found so far; useful when dealing with cpath expressions involving
      * namespace informaiton.
-     *
-     * @return
      */
     public Set<PropertyName> getPropertyNameSet() {
         return propertyNames;
@@ -97,18 +91,20 @@ public class FilterAttributeExtractor extends DefaultFilterVisitor {
      * @return an array of the attribute names found so far during the visit
      */
     public String[] getAttributeNames() {
-        return (String[]) attributeNames.toArray(new String[attributeNames.size()]);
+        return attributeNames.toArray(new String[attributeNames.size()]);
     }
 
     /** Resets the attributes found so that a new attribute search can be performed */
     public void clear() {
-        attributeNames = new HashSet<String>();
+        attributeNames = new HashSet<>();
         usingVolatileFunctions = false;
     }
 
     public Object visit(PropertyName expression, Object data) {
-        if (data != null && data != attributeNames) {
-            attributeNames = (Set<String>) data;
+        if (data instanceof Set && data != attributeNames) {
+            @SuppressWarnings("unchecked")
+            Set<String> cast = (Set<String>) data;
+            attributeNames = cast;
         }
         propertyNames.add(expression);
 
@@ -162,8 +158,6 @@ public class FilterAttributeExtractor extends DefaultFilterVisitor {
     /**
      * Returns true if the last visited expression is a constant, that is, does not depend on any
      * attribute and does not use any {@link VolatileFunction}
-     *
-     * @return
      */
     public boolean isConstantExpression() {
         return !usingVolatileFunctions
@@ -174,8 +168,6 @@ public class FilterAttributeExtractor extends DefaultFilterVisitor {
     /**
      * Returns true if the expression is using dynamic property names, so a static analysis of the
      * expression won't be able to return all the properties in use
-     *
-     * @return
      */
     public boolean isUsingDynamincProperties() {
         return usingDynamicProperties;

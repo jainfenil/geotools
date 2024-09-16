@@ -16,7 +16,12 @@
  */
 package org.geotools.coverage.processing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -194,14 +199,13 @@ public final class ResampleTest extends GridProcessingTestBase {
     /** Tests the "Resample" operation with a "Crop" transform. */
     @Test
     public void testCrop() {
-        final GridGeometry2D g1, g2;
         final MathTransform gridToCRS = null;
-        g1 =
+        final GridGeometry2D g1 =
                 new GridGeometry2D(
                         new GeneralGridEnvelope(new Rectangle(50, 50, 100, 100), 2),
                         gridToCRS,
                         null);
-        g2 =
+        final GridGeometry2D g2 =
                 new GridGeometry2D(
                         new GeneralGridEnvelope(new Rectangle(50, 50, 200, 200), 2),
                         gridToCRS,
@@ -217,12 +221,7 @@ public final class ResampleTest extends GridProcessingTestBase {
         assertEquals("Warp", showProjected(coverage, getProjectedCRS(coverage), null, null));
     }
 
-    /**
-     * Tests the "Resample" operation with a stereographic coordinate system.
-     *
-     * @throws FactoryException
-     * @throws NoSuchAuthorityCodeException
-     */
+    /** Tests the "Resample" operation with a stereographic coordinate system. */
     @Test
     public void testReproject() throws NoSuchAuthorityCodeException, FactoryException {
 
@@ -252,20 +251,13 @@ public final class ResampleTest extends GridProcessingTestBase {
                             CRS.parseWKT(GOOGLE_MERCATOR_WKT),
                             coverage.getGridGeometry(),
                             null));
-            Assert.assertTrue(
-                    "We should not be allowed to set different crs for target crs and target gg",
-                    false);
+            fail("We should not be allowed to set different crs for target crs and target gg");
         } catch (Exception e) {
             // ok!
         }
     }
 
-    /**
-     * Tests the "Resample" operation with a stereographic coordinate system on a paletted image
-     *
-     * @throws FactoryException
-     * @throws NoSuchAuthorityCodeException
-     */
+    /** Tests the "Resample" operation with a stereographic coordinate system on a paletted image */
     @Test
     public void testReprojectPalette() throws NoSuchAuthorityCodeException, FactoryException {
 

@@ -97,11 +97,7 @@ public class TransparencyStyledTest {
         return coverage;
     }
 
-    /**
-     * Dispose the provided coverage for good.
-     *
-     * @param coverage
-     */
+    /** Dispose the provided coverage for good. */
     private void disposeCoverage(GridCoverage2D coverage) {
         if (coverage == null) {
             return;
@@ -233,7 +229,7 @@ public class TransparencyStyledTest {
 
         // Assert the alpha band has been preserved, even with a ChannelSelect SLD in place
         assertHasAlpha(ri);
-        disposeCoverage((GridCoverage2D) output);
+        disposeCoverage(output);
     }
 
     /**
@@ -250,7 +246,7 @@ public class TransparencyStyledTest {
 
         // Assert the alpha band has been preserved, even with a ChannelSelect SLD in place
         assertHasAlpha(ri);
-        disposeCoverage((GridCoverage2D) output);
+        disposeCoverage(output);
     }
 
     /**
@@ -268,7 +264,7 @@ public class TransparencyStyledTest {
 
         // Assert the alpha band has been preserved, even with a ChannelSelect SLD in place
         assertHasAlpha(ri);
-        disposeCoverage((GridCoverage2D) output);
+        disposeCoverage(output);
     }
 
     /**
@@ -293,7 +289,7 @@ public class TransparencyStyledTest {
         Raster rasterPixel = ri.getData(new Rectangle(0, 0, 1, 1));
         assertEquals(0, rasterPixel.getSample(0, 0, 1));
 
-        disposeCoverage((GridCoverage2D) output);
+        disposeCoverage(output);
     }
 
     private File prepareDirectory(String subDirectory) throws IOException {

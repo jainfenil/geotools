@@ -73,8 +73,6 @@ class EmfAppSchemaParser {
      * @param crs the CRS to be assigned to the geometric attributes in the parsed feature type.
      *     This information shall be provided here as the schema itself has no knowledge of the CRS
      *     used.
-     * @return
-     * @throws IOException
      */
     public static SimpleFeatureType parse(
             Configuration configuration, final QName featureName, CoordinateReferenceSystem crs)
@@ -87,29 +85,23 @@ class EmfAppSchemaParser {
     public static SimpleFeatureType parse(
             URL schemaLocation, QName featureName, CoordinateReferenceSystem crs)
             throws IOException {
-        Configuration configuration;
         // use GML3 application Schema by default
         String namespaceURI = featureName.getNamespaceURI();
         String uri = schemaLocation.toExternalForm();
-        configuration = new ApplicationSchemaConfiguration(namespaceURI, uri);
+        Configuration configuration = new ApplicationSchemaConfiguration(namespaceURI, uri);
 
         XSDElementDeclaration elementDecl = parseFeatureType(featureName, configuration);
         return parse(configuration, elementDecl, crs);
     }
 
-    /**
-     * Parse the provided element declaration into a SimpleFeatureType.
-     *
-     * @param elementDecl
-     * @return
-     */
+    /** Parse the provided element declaration into a SimpleFeatureType. */
     public static SimpleFeatureType parse(
             Configuration configuration,
             XSDElementDeclaration elementDecl,
             CoordinateReferenceSystem crs)
             throws IOException {
 
-        Map<?, ?> bindings = configuration.setupBindings();
+        Map<QName, Object> bindings = configuration.setupBindings();
         BindingLoader bindingLoader = new BindingLoader(bindings);
 
         // create the document handler + root context
@@ -177,8 +169,8 @@ class EmfAppSchemaParser {
             throw new DataSourceException("Error parsing feature type for " + featureTypeName, e);
         }
 
-        XSDElementDeclaration elementDeclaration;
-        elementDeclaration = schemaIndex.getElementDeclaration(featureTypeName);
+        XSDElementDeclaration elementDeclaration =
+                schemaIndex.getElementDeclaration(featureTypeName);
         schemaIndex.destroy();
         return elementDeclaration;
     }

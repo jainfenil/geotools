@@ -9,8 +9,9 @@
  */
 package org.opengis.style;
 
-import static org.opengis.annotation.Obligation.*;
-import static org.opengis.annotation.Specification.*;
+import static org.opengis.annotation.Obligation.MANDATORY;
+import static org.opengis.annotation.Obligation.OPTIONAL;
+import static org.opengis.annotation.Specification.ISO_19117;
 
 import java.util.List;
 import org.opengis.annotation.Extension;
@@ -62,8 +63,6 @@ public interface Rule {
      * <p>A nice user interface may want to present the user with a legend that indicates how
      * features of a given type are being portrayed. Through its {@code LegendGraphic} property, a
      * {@code Rule} may provide a custom picture to be used in such a legend window.
-     *
-     * @return
      */
     @XmlElement("LegendGraphic")
     GraphicLegend getLegend();

@@ -63,8 +63,8 @@ public class SimpleElementHandler extends XMLElementHandler {
     }
 
     /** @see org.geotools.xml.XMLElementHandler#getHandler(java.lang.String, java.lang.String) */
-    public XMLElementHandler getHandler(URI namespaceURI, String localName, Map hints)
-            throws SAXException {
+    public XMLElementHandler getHandler(
+            URI namespaceURI, String localName, Map<String, Object> hints) throws SAXException {
         throw new SAXException("Should not have any children - this is a simpleType");
     }
 
@@ -87,17 +87,12 @@ public class SimpleElementHandler extends XMLElementHandler {
         }
     }
 
-    /**
-     * @throws SAXException
-     * @throws OperationNotSupportedException
-     * @see org.geotools.xml.XMLElementHandler#endElement(java.lang.String, java.lang.String)
-     */
-    public void endElement(URI namespaceURI, String localName, Map hints)
+    /** @see org.geotools.xml.XMLElementHandler#endElement(java.lang.String, java.lang.String) */
+    public void endElement(URI namespaceURI, String localName, Map<String, Object> hints)
             throws OperationNotSupportedException, SAXException {
         text = (text == null) ? null : text.trim();
 
-        ElementValue[] vals;
-        vals = new ElementValue[1];
+        ElementValue[] vals = new ElementValue[1];
         vals[0] = new DefaultElementValue(text, elem);
         value = type.getValue(elem, vals, attr, hints);
         attr = null;

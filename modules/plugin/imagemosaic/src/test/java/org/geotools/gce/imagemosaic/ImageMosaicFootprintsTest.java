@@ -17,17 +17,19 @@
 package org.geotools.gce.imagemosaic;
 
 import static org.geotools.gce.imagemosaic.Utils.FF;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import it.geosolutions.jaiext.vectorbin.ROIGeometry;
 import it.geosolutions.rendered.viewer.RenderedImageBrowser;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.Transparency;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -40,9 +42,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
@@ -51,6 +58,7 @@ import org.geotools.coverage.grid.io.GranuleRemovalPolicy;
 import org.geotools.coverage.grid.io.GranuleStore;
 import org.geotools.coverage.grid.io.footprint.FootprintBehavior;
 import org.geotools.coverage.grid.io.footprint.FootprintInsetPolicy;
+import org.geotools.coverage.grid.io.footprint.FootprintLoader;
 import org.geotools.coverage.grid.io.footprint.MultiLevelROIProviderFactory;
 import org.geotools.coverage.grid.io.footprint.WKBLoaderSPI;
 import org.geotools.coverage.grid.io.footprint.WKTLoaderSPI;
@@ -105,6 +113,8 @@ import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransform2D;
 
 public class ImageMosaicFootprintsTest {
+
+    @Rule public TemporaryFolder folder = new TemporaryFolder();
 
     private File testMosaic;
 
@@ -490,7 +500,7 @@ public class ImageMosaicFootprintsTest {
             Geometry maskedGeometry = unionGeometry.intersection(intersectingMask);
             double inputMaskArea = maskedGeometry.getArea();
 
-            List<GeneralParameterValue> paramList = new ArrayList<GeneralParameterValue>();
+            List<GeneralParameterValue> paramList = new ArrayList<>();
 
             // Setup reading params
             // FOOTPRINT
@@ -596,7 +606,7 @@ public class ImageMosaicFootprintsTest {
         try {
             reader = format.getReader(multiWkts);
 
-            List<GeneralParameterValue> paramList = new ArrayList<GeneralParameterValue>();
+            List<GeneralParameterValue> paramList = new ArrayList<>();
 
             // Setup reading params
             // FOOTPRINT
@@ -956,7 +966,6 @@ public class ImageMosaicFootprintsTest {
         params[2] = gg2DParam;
 
         coverage = reader.read(params);
-        MathTransform tr = reader.getOriginalGridToWorld(PixelInCell.CELL_CORNER);
         reader.dispose();
         assertNotNull(coverage);
 
@@ -1043,7 +1052,6 @@ public class ImageMosaicFootprintsTest {
         params[2] = gg2DParam;
 
         coverage = reader.read(params);
-        MathTransform tr = reader.getOriginalGridToWorld(PixelInCell.CELL_CORNER);
         reader.dispose();
         assertNotNull(coverage);
 
@@ -1063,11 +1071,7 @@ public class ImageMosaicFootprintsTest {
         disposeCoverage(coverage);
     }
 
-    /**
-     * Dispose the provided coverage for good.
-     *
-     * @param coverage
-     */
+    /** Dispose the provided coverage for good. */
     private void disposeCoverage(GridCoverage2D coverage) {
         if (coverage == null) {
             return;
@@ -1160,22 +1164,22 @@ public class ImageMosaicFootprintsTest {
         // Blue
         assertEquals(0, result[0]);
         assertEquals(0, result[1]);
-        assertTrue(0 != result[2]);
-        assertTrue(0 != result[3]);
+        assertNotEquals(0, result[2]);
+        assertNotEquals(0, result[3]);
         reader.dispose();
     }
 
     @Test
     public void testFootprintRGB() throws FileNotFoundException, IOException {
-        testFootprint(TestData.file(this, "footprint_rgb"));
+        checkFootprint(TestData.file(this, "footprint_rgb"));
     }
 
     @Test
     public void testFootprintRGBA() throws FileNotFoundException, IOException {
-        testFootprint(TestData.file(this, "footprint_rgba"));
+        checkFootprint(TestData.file(this, "footprint_rgba"));
     }
 
-    public void testFootprint(File mosaic) throws IOException {
+    public void checkFootprint(File mosaic) throws IOException {
         ImageMosaicReader reader =
                 (ImageMosaicReader) new ImageMosaicFormatFactory().createFormat().getReader(mosaic);
 
@@ -1193,10 +1197,10 @@ public class ImageMosaicFootprintsTest {
         coverage.evaluate(position, result);
 
         // Red
-        assertTrue(0 != result[0]);
+        assertNotEquals(0, result[0]);
         assertEquals(0, result[1]);
         assertEquals(0, result[2]);
-        assertTrue(0 != result[3]);
+        assertNotEquals(0, result[3]);
 
         position = new DirectPosition2D();
         position.setLocation(-1, -1);
@@ -1205,8 +1209,8 @@ public class ImageMosaicFootprintsTest {
         // Blue
         assertEquals(0, result[0]);
         assertEquals(0, result[1]);
-        assertTrue(0 != result[2]);
-        assertTrue(0 != result[3]);
+        assertNotEquals(0, result[2]);
+        assertNotEquals(0, result[3]);
 
         reader.dispose();
     }
@@ -1234,10 +1238,10 @@ public class ImageMosaicFootprintsTest {
         // Should be > 0
         position.setLocation(-86.252, 27.7984);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be 0
         position.setLocation(-87.937, 26.144);
         results = coverage.evaluate(position, results);
@@ -1248,10 +1252,10 @@ public class ImageMosaicFootprintsTest {
         // Should be > 0
         position.setLocation(-89.084, 27.133);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be 0
         position.setLocation(-89.763, 25.167);
         results = coverage.evaluate(position, results);
@@ -1315,10 +1319,10 @@ public class ImageMosaicFootprintsTest {
         // Should be > 0
         position.setLocation(-86.252, 27.7984);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be 0
         position.setLocation(-87.937, 26.144);
         results = coverage.evaluate(position, results);
@@ -1329,10 +1333,10 @@ public class ImageMosaicFootprintsTest {
         // Should be > 0
         position.setLocation(-89.084, 27.133);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be 0
         position.setLocation(-89.763, 25.167);
         results = coverage.evaluate(position, results);
@@ -1360,32 +1364,32 @@ public class ImageMosaicFootprintsTest {
         // final pixel is not masked
         position.setLocation(-86.724, 25.085);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be > 0
         position.setLocation(-86.252, 27.7984);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be  0 but since the mask is subsampled, it may happen that the
         // final pixel is not masked
         position.setLocation(-87.937, 26.144);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be > 0
         position.setLocation(-89.084, 27.133);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be 0
         position.setLocation(-89.763, 25.167);
         results = coverage.evaluate(position, results);
@@ -1419,10 +1423,10 @@ public class ImageMosaicFootprintsTest {
         // Should be > 0
         position.setLocation(-86.252, 27.7984);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be  0
         position.setLocation(-87.937, 26.144);
         results = coverage.evaluate(position, results);
@@ -1433,10 +1437,10 @@ public class ImageMosaicFootprintsTest {
         // Should be > 0
         position.setLocation(-89.084, 27.133);
         results = coverage.evaluate(position, results);
-        assertTrue(results[0] != 0);
-        assertTrue(results[1] != 0);
-        assertTrue(results[2] != 0);
-        assertTrue(results[3] != 0);
+        assertNotEquals(results[0], 0);
+        assertNotEquals(results[1], 0);
+        assertNotEquals(results[2], 0);
+        assertNotEquals(results[3], 0);
         // Should be 0
         position.setLocation(-89.763, 25.167);
         results = coverage.evaluate(position, results);
@@ -1625,5 +1629,64 @@ public class ImageMosaicFootprintsTest {
         File[] existingFilesPastCleanup = directory.listFiles(fileFilter);
         assertThat(existingFilesPastCleanup, Matchers.emptyArray());
         assertEquals(otherFilesCount, directory.listFiles(notFileFilter).length);
+    }
+
+    @Test
+    public void testConcurrentWKBFootprintsLoading() throws Exception {
+        WKBLoaderSPI loaderSPI = new WKBLoaderSPI();
+        FootprintLoader loader = loaderSPI.createLoader();
+        File newFolder = folder.newFolder();
+
+        // Get a sample WKB file and its footprint geometry
+        File footprintFile = TestData.file(this, "footprint_wkbs/r1c1.wkb");
+        String footprintPath = footprintFile.getAbsolutePath();
+        String fileName = FilenameUtils.getName(footprintPath);
+        footprintPath = footprintPath.substring(0, footprintPath.length() - 4);
+        Geometry footprint = loader.loadFootprint(footprintPath);
+
+        int numberOfSamples = 60;
+        String[] testFiles = new String[numberOfSamples];
+
+        // Let's copy the sample WKB to N different files
+        for (int i = 0; i < numberOfSamples; i++) {
+            String newName = fileName.replace("c1", String.format("c%03d", i));
+            File ithFile = new File(newFolder, newName);
+            FileUtils.copyFile(footprintFile, ithFile);
+            File ithFootprintFile = new File(newFolder, FilenameUtils.getBaseName(newName));
+            testFiles[i] = ithFootprintFile.getAbsolutePath();
+        }
+
+        // Concurrently load the footprints of these sample WKB files
+        // and add the results to a Geometries list, also counting
+        // any error occurred during footprint parsing
+        ExecutorService service = Executors.newFixedThreadPool(numberOfSamples / 2);
+        CountDownLatch latch = new CountDownLatch(numberOfSamples);
+        List<Geometry> geometries = new ArrayList<>(numberOfSamples);
+        AtomicInteger errors = new AtomicInteger();
+        try {
+            for (int i = 0; i < numberOfSamples; i++) {
+                int finalI = i;
+                service.submit(
+                        () -> {
+                            try {
+                                geometries.add(loader.loadFootprint(testFiles[finalI]));
+                            } catch (Exception e) {
+                                errors.getAndIncrement();
+                            }
+                            latch.countDown();
+                        });
+            }
+            latch.await();
+        } finally {
+            folder.delete();
+        }
+
+        // Make sure that no errors occurred
+        assertEquals(0, errors.get());
+
+        // Make sure that the loaded geometries match the sample footprint
+        for (Geometry geometry : geometries) {
+            assertEquals(geometry, footprint);
+        }
     }
 }

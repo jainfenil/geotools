@@ -49,11 +49,11 @@ public interface Type {
      * <p>A SAXNotSupportedException should be thrown when the child's [inherited, default
      * implementation of getValue(ElementValue[],Attributes)] method should be used.
      *
-     * @throws OperationNotSupportedException
      * @see ElementValue
      * @return Object
      */
-    public Object getValue(Element element, ElementValue[] value, Attributes attrs, Map hints)
+    public Object getValue(
+            Element element, ElementValue[] value, Attributes attrs, Map<String, Object> hints)
             throws SAXException, OperationNotSupportedException;
 
     /**
@@ -86,7 +86,7 @@ public interface Type {
      *     xml.
      * @see Type#encode(Element, Object, Writer, Map)
      */
-    public boolean canEncode(Element element, Object value, Map hints);
+    public boolean canEncode(Element element, Object value, Map<String, Object> hints);
 
     /**
      * Encode value as element on the provided output.
@@ -101,7 +101,8 @@ public interface Type {
      * @throws OperationNotSupportedException When this type cannot be encoded ... and wasn't
      *     checked first.
      */
-    public void encode(Element element, Object value, PrintHandler output, Map hints)
+    public void encode(
+            Element element, Object value, PrintHandler output, Map<String, Object> hints)
             throws IOException, OperationNotSupportedException;
 
     /**

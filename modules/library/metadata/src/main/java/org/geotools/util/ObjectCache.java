@@ -94,7 +94,7 @@ import java.util.Set;
  * @author Cory Horner (Refractions Research)
  * @see https://jsr-107-interest.dev.java.net/javadoc/javax/cache/package-summary.html
  */
-public interface ObjectCache {
+public interface ObjectCache<K, V> {
     /** Removes all entries from this cache. */
     void clear();
 
@@ -106,7 +106,7 @@ public interface ObjectCache {
      * @returns The value to which the specified key is mapped, or {@code null} if this cache
      *     contains no mapping for the key.
      */
-    Object get(Object key);
+    V get(K key);
 
     /**
      * Use the write lock to test the value for the provided key.
@@ -114,10 +114,9 @@ public interface ObjectCache {
      * <p>This method is used by a writer to test if someone (ie another writer) has provided the
      * value for us (while we were blocked waiting for them).
      *
-     * @param key
      * @return The value, may be <code>null</code>
      */
-    Object peek(Object key);
+    V peek(K key);
 
     /**
      * Puts an element into the cache.
@@ -144,21 +143,13 @@ public interface ObjectCache {
      * @param key the authority code.
      * @param object The referencing object to add in the pool.
      */
-    void put(Object key, Object object);
+    void put(K key, V object);
 
-    /**
-     * Acquire a write lock on the indicated key.
-     *
-     * @param key
-     */
-    void writeLock(Object key); // TODO: how to indicate lock was not acquired?
+    /** Acquire a write lock on the indicated key. */
+    void writeLock(K key); // TODO: how to indicate lock was not acquired?
 
-    /**
-     * Release write lock on the indicated key.
-     *
-     * @param key
-     */
-    void writeUnLock(Object key);
+    /** Release write lock on the indicated key. */
+    void writeUnLock(K key);
 
     /**
      * Returns a set of all the keys currently contained within the ObjectCache.
@@ -168,12 +159,8 @@ public interface ObjectCache {
      *
      * @return a set of keys currently contained within the cache.
      */
-    Set<Object> getKeys();
+    Set<K> getKeys();
 
-    /**
-     * Removes a given key from the cache.
-     *
-     * @param key
-     */
-    void remove(Object key);
+    /** Removes a given key from the cache. */
+    void remove(K key);
 }

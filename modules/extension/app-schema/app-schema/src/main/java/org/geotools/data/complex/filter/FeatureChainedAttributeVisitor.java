@@ -20,12 +20,14 @@ package org.geotools.data.complex.filter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.namespace.QName;
 import org.geotools.data.complex.AttributeMapping;
 import org.geotools.data.complex.FeatureTypeMapping;
 import org.geotools.data.complex.NestedAttributeMapping;
+import org.geotools.data.complex.config.AppSchemaDataAccessConfigurator.ComplexNameImpl;
 import org.geotools.data.complex.feature.type.Types;
 import org.geotools.data.complex.util.XPathUtil.Step;
 import org.geotools.data.complex.util.XPathUtil.StepList;
@@ -62,6 +64,7 @@ public class FeatureChainedAttributeVisitor extends DefaultExpressionVisitor {
     private List<FeatureChainedAttributeDescriptor> attributes;
 
     private boolean conditionalMappingFound;
+    private boolean unboundedNestedElementFound = false;
 
     public FeatureChainedAttributeVisitor(FeatureTypeMapping root) {
         if (root == null) {
@@ -111,6 +114,9 @@ public class FeatureChainedAttributeVisitor extends DefaultExpressionVisitor {
             throws IOException {
         List<NestedAttributeMapping> currentAttributes = currentType.getNestedMappings();
         boolean searchIsOver = true;
+
+        checkUnboundedElement(currentXPath, currentType);
+
         for (NestedAttributeMapping nestedAttr : currentAttributes) {
             StepList targetXPath = nestedAttr.getTargetXPath();
 
@@ -176,7 +182,7 @@ public class FeatureChainedAttributeVisitor extends DefaultExpressionVisitor {
         if (searchIsOver && currentXPath != null && !currentXPath.isEmpty()) {
             StepList lastAttrPath = currentXPath;
             List<Expression> lastAttrExpressions = currentType.findMappingsFor(lastAttrPath, false);
-            if (lastAttrExpressions != null && lastAttrExpressions.size() > 0) {
+            if (lastAttrExpressions != null && !lastAttrExpressions.isEmpty()) {
                 attrDescr.setAttributePath(lastAttrPath);
 
                 // check whether this is a case of feature chaining by reference
@@ -215,6 +221,32 @@ public class FeatureChainedAttributeVisitor extends DefaultExpressionVisitor {
         }
     }
 
+    private void checkUnboundedElement(StepList currentXPath, FeatureTypeMapping currentType) {
+        for (AttributeMapping attributeMapping : currentType.getAttributeMappings()) {
+            for (Entry<Name, Expression> entry :
+                    attributeMapping.getClientProperties().entrySet()) {
+                if (entry.getKey() instanceof ComplexNameImpl) {
+                    final ComplexNameImpl complexQname = (ComplexNameImpl) entry.getKey();
+                    final StepList unboundedElementStepList =
+                            attributeMapping.getTargetXPath().clone();
+                    Step step =
+                            new Step(
+                                    new QName(
+                                            complexQname.getNamespaceURI(),
+                                            complexQname.getLocalPart(),
+                                            currentType
+                                                    .getNamespaces()
+                                                    .getPrefix(complexQname.getNamespaceURI())),
+                                    unboundedElementStepList.size() + 1);
+                    unboundedElementStepList.add(step);
+                    if (currentXPath.equalsIgnoreIndex(unboundedElementStepList)) {
+                        this.unboundedNestedElementFound = true;
+                    }
+                }
+            }
+        }
+    }
+
     private void logConditionalMappingFound(FeatureTypeMapping containerType, StepList xpath) {
         conditionalMappingFound = true;
         if (LOGGER.isLoggable(Level.FINE)) {
@@ -228,6 +260,10 @@ public class FeatureChainedAttributeVisitor extends DefaultExpressionVisitor {
                             + "\" and target attribute \""
                             + xpath);
         }
+    }
+
+    public boolean isUnboundedNestedElementFound() {
+        return unboundedNestedElementFound;
     }
 
     private void logNestedFeatureTypeNotFound(FeatureTypeMapping containerType, StepList xpath) {
@@ -381,7 +417,7 @@ public class FeatureChainedAttributeVisitor extends DefaultExpressionVisitor {
          * @throws IndexOutOfBoundsException if the feature types chain is empty
          */
         public FeatureChainLink getFirstLink() {
-            if (featureChain.size() == 0) {
+            if (featureChain.isEmpty()) {
                 throw new IndexOutOfBoundsException("the list is empty");
             }
             return featureChain.get(0);
@@ -394,7 +430,7 @@ public class FeatureChainedAttributeVisitor extends DefaultExpressionVisitor {
          * @throws IndexOutOfBoundsException if the feature types chain is empty
          */
         public FeatureChainLink getLastLink() {
-            if (featureChain.size() == 0) {
+            if (featureChain.isEmpty()) {
                 throw new IndexOutOfBoundsException("the list is empty");
             }
             return featureChain.get(featureChain.size() - 1);
@@ -459,8 +495,6 @@ public class FeatureChainedAttributeVisitor extends DefaultExpressionVisitor {
          * <p>In practice, this is the last linked feature type in the chain, except when the last
          * chaining is done by reference (via an xlink:href attribute), in which case the second
          * last feature type is returned.
-         *
-         * @return
          */
         public FeatureTypeMapping getFeatureTypeOwningAttribute() {
             FeatureChainLink lastLink = getLastLink();

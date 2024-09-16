@@ -17,7 +17,6 @@
 package org.geotools.xsd.impl;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
 import org.eclipse.xsd.XSDComplexTypeDefinition;
@@ -68,7 +67,7 @@ public class ParseExecutor implements Visitor {
     public void visit(Binding binding) {
         // TODO: the check for InstanceBinding is a temporary measure to allow
         // for bindings that are not registered by class, but by instance.
-        // in the long term we intend to ditch pico container b/c our inection
+        // in the long term we intend to ditch pico container b/c our injection
         // needs are quite trivial and can be handled by some simple reflection
         if (!(binding instanceof InstanceBinding)) {
             // reload out of context, we do this so that the binding can pick up any new
@@ -159,11 +158,9 @@ public class ParseExecutor implements Visitor {
     }
 
     /**
-     * Pre-parses the instance compontent checking the following:
+     * Pre-parses the instance component checking the following:
      *
      * <p>
-     *
-     * @param instance
      */
     protected Object preParse(InstanceComponent instance) {
         // we only preparse text, so simple types
@@ -245,7 +242,7 @@ public class ParseExecutor implements Visitor {
 
                 // now we must parse the items up
                 final XSDSimpleTypeDefinition itemType = type.getItemTypeDefinition();
-                List parsed = new ArrayList();
+                List<Object> parsed = new ArrayList<>();
 
                 // create a pseudo declaration
                 final XSDElementDeclaration element =
@@ -272,8 +269,8 @@ public class ParseExecutor implements Visitor {
                             };
                         };
 
-                for (int i = 0; i < list.length; i++) {
-                    theInstance.setText(list[i]);
+                for (String s : list) {
+                    theInstance.setText(s);
 
                     // perform the parse
                     ParseExecutor executor = new ParseExecutor(theInstance, null, context, parser);
@@ -291,8 +288,8 @@ public class ParseExecutor implements Visitor {
                 // atomic
 
                 // walk through the facets and preparse as necessary
-                for (Iterator f = type.getFacets().iterator(); f.hasNext(); ) {
-                    XSDFacet facet = (XSDFacet) f.next();
+                for (org.eclipse.xsd.XSDConstrainingFacet xsdConstrainingFacet : type.getFacets()) {
+                    XSDFacet facet = (XSDFacet) xsdConstrainingFacet;
 
                     if (facet instanceof XSDWhiteSpaceFacet && !parser.isCDATA()) {
                         XSDWhiteSpaceFacet whitespace = (XSDWhiteSpaceFacet) facet;
@@ -347,8 +344,8 @@ public class ParseExecutor implements Visitor {
                 XSDSimpleTypeDefinition simpleType = (XSDSimpleTypeDefinition) type;
                 List facets = simpleType.getFacets();
 
-                for (Iterator itr = facets.iterator(); itr.hasNext(); ) {
-                    XSDFacet facet = (XSDFacet) itr.next();
+                for (Object o : facets) {
+                    XSDFacet facet = (XSDFacet) o;
 
                     if ("whiteSpace".equals(facet.getFacetName())) {
                         Whitespace whitespace = Whitespace.valueOf(facet.getLexicalValue());

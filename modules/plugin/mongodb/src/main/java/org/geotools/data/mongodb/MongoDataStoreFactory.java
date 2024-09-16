@@ -18,13 +18,14 @@
 package org.geotools.data.mongodb;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFactorySpi;
+import org.geotools.http.HTTPClient;
+import org.geotools.http.HTTPClientFinder;
 
 public class MongoDataStoreFactory implements DataStoreFactorySpi {
 
@@ -41,9 +42,9 @@ public class MongoDataStoreFactory implements DataStoreFactorySpi {
             new Param(
                     "schema_store",
                     String.class,
-                    "Schema Store URI",
+                    "Schema Store URI or URL",
                     true,
-                    "file://<absolute path>");
+                    "file://<absolute path> or http://www.hosting.com/files.json");
     public static final Param MAX_OBJECTS_FOR_SCHEMA =
             new Param(
                     "max_objs_schema",
@@ -56,6 +57,20 @@ public class MongoDataStoreFactory implements DataStoreFactorySpi {
                     "objs_id_schema",
                     String.class,
                     "Objects IDs for schema generation (comma separated)",
+                    false,
+                    null);
+    public static final Param HTTP_USER =
+            new Param(
+                    "http_user",
+                    String.class,
+                    "(Optional)If Schema file is hosted behind a password protected URL",
+                    false,
+                    null);
+    public static final Param HTTP_PASSWORD =
+            new Param(
+                    "http_pass",
+                    String.class,
+                    "(Optional)If Schema file is hosted behind a password protected URL",
                     false,
                     null);
 
@@ -76,7 +91,9 @@ public class MongoDataStoreFactory implements DataStoreFactorySpi {
             DATASTORE_URI,
             SCHEMASTORE_URI,
             MAX_OBJECTS_FOR_SCHEMA,
-            OBJECTS_IDS_FOR_SCHEMA
+            OBJECTS_IDS_FOR_SCHEMA,
+            HTTP_USER,
+            HTTP_PASSWORD
         };
     }
 
@@ -86,7 +103,7 @@ public class MongoDataStoreFactory implements DataStoreFactorySpi {
     }
 
     @Override
-    public MongoDataStore createDataStore(Map<String, Serializable> params) throws IOException {
+    public MongoDataStore createDataStore(Map<String, ?> params) throws IOException {
         // retrieve schema generation parameters
         final List<String> ids = getIds(params);
         final Integer maxObjects = (Integer) MAX_OBJECTS_FOR_SCHEMA.lookUp(params);
@@ -101,7 +118,8 @@ public class MongoDataStoreFactory implements DataStoreFactorySpi {
                         (String) DATASTORE_URI.lookUp(params),
                         (String) SCHEMASTORE_URI.lookUp(params),
                         true,
-                        schemaParams);
+                        schemaParams,
+                        getHTTPClient(params));
         String uri = (String) NAMESPACE.lookUp(params);
         if (uri != null) {
             dataStore.setNamespaceURI(uri);
@@ -109,7 +127,7 @@ public class MongoDataStoreFactory implements DataStoreFactorySpi {
         return dataStore;
     }
 
-    private List<String> getIds(Map<String, Serializable> params) throws IOException {
+    private List<String> getIds(Map<String, ?> params) throws IOException {
         List<String> ids = new ArrayList<>();
         Object ofs = OBJECTS_IDS_FOR_SCHEMA.lookUp(params);
         // if null, there are not ids to parse
@@ -127,8 +145,24 @@ public class MongoDataStoreFactory implements DataStoreFactorySpi {
         return ids;
     }
 
+    private HTTPClient getHTTPClient(Map<String, ?> params) throws IOException {
+        String uri = (String) SCHEMASTORE_URI.lookUp(params);
+        // check if the URI is a URL
+        if (!uri.startsWith(MongoSchemaFileStore.PRE_FIX_HTTP)) return null;
+
+        HTTPClient simpleHttpClient = HTTPClientFinder.createClient();
+        // check for credentials
+        if (HTTP_USER.lookUp(params) == null || HTTP_PASSWORD.lookUp(params) == null)
+            return simpleHttpClient;
+
+        simpleHttpClient.setUser((String) HTTP_USER.lookUp(params));
+        simpleHttpClient.setPassword((String) HTTP_PASSWORD.lookUp(params));
+
+        return simpleHttpClient;
+    }
+
     @Override
-    public DataStore createNewDataStore(Map<String, Serializable> params) throws IOException {
+    public DataStore createNewDataStore(Map<String, ?> params) throws IOException {
         throw new UnsupportedOperationException();
     }
 }

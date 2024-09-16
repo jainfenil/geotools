@@ -73,7 +73,6 @@ public class GrassCoverageWriter extends AbstractGridCoverageWriter implements G
      * <p>Note that this also takes care to cloes the file handle after writing to disk.
      *
      * @param gridCoverage2D the coverage to write.
-     * @throws IOException
      */
     public void writeRaster(GridCoverage2D gridCoverage2D) throws IOException {
         try {
@@ -104,8 +103,8 @@ public class GrassCoverageWriter extends AbstractGridCoverageWriter implements G
         Rectangle dim = null;
         JGrassRegion writeRegion = null;
         if (params != null) {
-            for (int i = 0; i < params.length; i++) {
-                final ParameterValue<?> param = (ParameterValue<?>) params[i];
+            for (GeneralParameterValue generalParameterValue : params) {
+                final ParameterValue<?> param = (ParameterValue<?>) generalParameterValue;
                 final String name = param.getDescriptor().getName().getCode();
                 if (name.equals(AbstractGridFormat.READ_GRIDGEOMETRY2D.getName().toString())) {
                     final GridGeometry2D gg = (GridGeometry2D) param.getValue();

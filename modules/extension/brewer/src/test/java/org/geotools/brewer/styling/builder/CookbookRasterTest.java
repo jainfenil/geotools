@@ -1,6 +1,10 @@
 package org.geotools.brewer.styling.builder;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.geotools.filter.function.EnvFunction;
 import org.geotools.styling.ColorMap;
@@ -190,7 +194,7 @@ public class CookbookRasterTest extends AbstractStyleTest {
         assertEquals(colorHex, colorMapEntry.getColor().evaluate(null, String.class));
         assertEquals(quantity, colorMapEntry.getQuantity().evaluate(null, Double.class), 0.0);
         assertEquals(opacity, colorMapEntry.getOpacity().evaluate(null, Double.class), 0.0);
-        assertEquals(label, colorMapEntry.getLabel());
+        assertEquals(label, colorMapEntry.getLabel() != null ? colorMapEntry.getLabel() : null);
     }
 
     @Test
@@ -284,5 +288,29 @@ public class CookbookRasterTest extends AbstractStyleTest {
         assertEquals("BAND3", rgbChannels[1].getChannelName().evaluate(null, String.class));
         assertEquals("BAND5", rgbChannels[2].getChannelName().evaluate(null, String.class));
         assertNull(rs.getChannelSelection().getGrayChannel());
+    }
+
+    @Test
+    public void testLabelExpression() {
+        ColorMapBuilder cm = new RasterSymbolizerBuilder().opacity(0.3).colorMap();
+        cm.entry().quantity(70).colorHex("#008000").label("Label1");
+        cm.entry().quantity(256).colorHex("#663333").label("Label2");
+        Style style = cm.buildStyle();
+        // print(style);
+
+        // round up the basic elements and check its simple
+        StyleCollector collector = new StyleCollector();
+        style.accept(collector);
+        assertSimpleStyle(collector);
+
+        // check the symbolizer
+        RasterSymbolizer rs = (RasterSymbolizer) collector.symbolizers.get(0);
+        assertEquals(0.3, rs.getOpacity().evaluate(null, Double.class), 0.0);
+        assertNull(rs.getChannelSelection());
+        ColorMap cmap = rs.getColorMap();
+        assertEquals(ColorMap.TYPE_RAMP, cmap.getType());
+        assertFalse(cmap.getExtendedColors());
+        assertEntry("#008000", 70.0, 1.0, "Label1", cmap.getColorMapEntry(0));
+        assertEntry("#663333", 256.0, 1.0, "Label2", cmap.getColorMapEntry(1));
     }
 }

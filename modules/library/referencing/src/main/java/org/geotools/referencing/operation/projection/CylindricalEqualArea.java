@@ -37,13 +37,15 @@ public class CylindricalEqualArea extends MapProjection {
     private double e;
     private double one_es;
     private double trueScaleLatitude;
+    private double trueScaleLatitudeDeg;
 
     protected CylindricalEqualArea(final ParameterValueGroup parameters)
             throws ParameterNotFoundException {
         super(parameters);
 
         // Set trueScaleLatitude ("lat_ts" in Proj4)
-        trueScaleLatitude = DTR * parameters.parameter("standard_parallel_1").doubleValue();
+        trueScaleLatitudeDeg = parameters.parameter("standard_parallel_1").doubleValue();
+        trueScaleLatitude = DTR * trueScaleLatitude;
 
         es = excentricitySquared;
         e = excentricity;
@@ -69,6 +71,7 @@ public class CylindricalEqualArea extends MapProjection {
     @Override
     public ParameterValueGroup getParameterValues() {
         final ParameterValueGroup values = super.getParameterValues();
+        values.parameter("standard_parallel_1").setValue(trueScaleLatitudeDeg);
         return values;
     }
 
@@ -225,10 +228,9 @@ public class CylindricalEqualArea extends MapProjection {
         private static final double P20 = .01641501294219154443;
 
         public static double[] authset(double es) {
-            double t;
             double[] APA = new double[3];
             APA[0] = es * P00;
-            t = es * es;
+            double t = es * es;
             APA[0] += t * P01;
             APA[1] = t * P10;
             t *= es;

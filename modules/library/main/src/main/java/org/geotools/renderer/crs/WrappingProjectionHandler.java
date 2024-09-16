@@ -32,7 +32,9 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.DerivedCRS;
 import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import si.uom.SI;
@@ -56,8 +58,6 @@ public class WrappingProjectionHandler extends ProjectionHandler {
     /**
      * Provides the strategy with the area we want to render and its CRS (the SPI lookup will do
      * this step)
-     *
-     * @throws FactoryException
      */
     public WrappingProjectionHandler(
             ReferencedEnvelope renderingEnvelope,
@@ -73,12 +73,15 @@ public class WrappingProjectionHandler extends ProjectionHandler {
         // this will compute the target half circle size
         setCentralMeridian(centralMeridian);
 
-        if (sourceCrs instanceof GeographicCRS) {
+        CoordinateSystemAxis axis = sourceCrs.getCoordinateSystem().getAxis(0);
+        if (sourceCrs instanceof GeographicCRS
+                || (sourceCrs instanceof DerivedCRS && axis.getUnit().isCompatible(SI.RADIAN))) {
             sourceHalfCircle = 180;
         } else {
             // assume a simplified earth circumference, which is 40075 km
-            Unit<?> sourceUnit = sourceCrs.getCoordinateSystem().getAxis(0).getUnit();
-            UnitConverter converter = SI.METRE.getConverterTo((Unit<Length>) sourceUnit);
+            @SuppressWarnings("unchecked")
+            Unit<Length> sourceUnit = (Unit<Length>) axis.getUnit();
+            UnitConverter converter = SI.METRE.getConverterTo(sourceUnit);
             this.sourceHalfCircle = converter.convert(40075000 / 2);
         }
     }
@@ -86,11 +89,9 @@ public class WrappingProjectionHandler extends ProjectionHandler {
     /**
      * Set one of the supported projection parameters: - datelineWrappingCheckEnabled (boolean) if
      * false disables the heuristic for dateline wrapping check (true by default)
-     *
-     * @param projectionParameters
      */
     @Override
-    public void setProjectionParameters(Map projectionParameters) {
+    public void setProjectionParameters(Map<String, Object> projectionParameters) {
         super.setProjectionParameters(projectionParameters);
         if (projectionParameters.containsKey(DATELINE_WRAPPING_CHECK_ENABLED)) {
             datelineWrappingCheckEnabled =
@@ -101,6 +102,9 @@ public class WrappingProjectionHandler extends ProjectionHandler {
     @Override
     public Geometry preProcess(Geometry geometry) throws TransformException, FactoryException {
         geometry = super.preProcess(geometry);
+        if (geometry == null) {
+            return null;
+        }
         // if the object was already a large one, clone it and set the user data to indicate it was
         // hopefully it will happen for few objects
         final double width = getWidth(geometry.getEnvelopeInternal(), sourceCRS);
@@ -161,7 +165,7 @@ public class WrappingProjectionHandler extends ProjectionHandler {
         // viewing
         // area might be large enough to contain the same continent multiple
         // times (a-la Google Maps)
-        List<Geometry> geoms = new ArrayList<Geometry>();
+        List<Geometry> geoms = new ArrayList<>();
         Class geomType = null;
 
         // search the west-most location inside the current rendering envelope
@@ -196,7 +200,7 @@ public class WrappingProjectionHandler extends ProjectionHandler {
         }
 
         // clone and offset as necessary
-        geomType = accumulate(geoms, geometry, geomType);
+        geomType = accumulate(geoms, geometry, geomType, renderingEnvelope);
         while (curr <= highLimit) {
             double offset = curr - base;
             if (Math.abs(offset) >= targetHalfCircle) {
@@ -204,7 +208,7 @@ public class WrappingProjectionHandler extends ProjectionHandler {
                 Geometry offseted = geometry.copy();
                 offseted.apply(new OffsetOrdinateFilter(northEast ? 1 : 0, offset));
                 offseted.geometryChanged();
-                geomType = accumulate(geoms, offseted, geomType);
+                geomType = accumulate(geoms, offseted, geomType, renderingEnvelope);
             }
 
             curr += targetHalfCircle * 2;
@@ -240,21 +244,20 @@ public class WrappingProjectionHandler extends ProjectionHandler {
      * Adds the geometries into the collection by recursively splitting apart geometry collections,
      * so that geoms will contains only simple geometries.
      *
-     * @param geoms
-     * @param geometry
-     * @param geomType
      * @return the geometry type that all geometries added to the collection conform to. Worst case
      *     it's going to be Geometry.class
      */
-    private Class accumulate(List<Geometry> geoms, Geometry geometry, Class geomType) {
+    static Class accumulate(
+            List<Geometry> geoms, Geometry geometry, Class geomType, ReferencedEnvelope envelope) {
         Class gtype = null;
         for (int i = 0; i < geometry.getNumGeometries(); i++) {
             Geometry g = geometry.getGeometryN(i);
+            Class lastType = gtype;
 
             if (g instanceof GeometryCollection) {
-                gtype = accumulate(geoms, g, geomType);
+                gtype = accumulate(geoms, g, geomType, envelope);
             } else {
-                if (renderingEnvelope.intersects(g.getEnvelopeInternal())) {
+                if (envelope.intersects(g.getEnvelopeInternal())) {
                     geoms.add(g);
                     gtype = g.getClass();
                 }
@@ -262,7 +265,9 @@ public class WrappingProjectionHandler extends ProjectionHandler {
 
             if (gtype == null) {
                 gtype = g.getClass();
-            } else if (geomType != null && !g.getClass().equals(geomType)) {
+            } else if (geomType != null && !g.getClass().equals(geomType)
+                    || lastType != null && !g.getClass().equals(lastType)) {
+                // if we have different types, switch to Geometry type
                 gtype = Geometry.class;
             }
         }
@@ -281,8 +286,6 @@ public class WrappingProjectionHandler extends ProjectionHandler {
     /**
      * Enables the check using the "half world" heuristic on the input geometries, if larger it
      * assumes they spanned the dateline. Enabled by default
-     *
-     * @param datelineWrappingCheckEnabled
      */
     public void setDatelineWrappingCheckEnabled(boolean datelineWrappingCheckEnabled) {
         this.datelineWrappingCheckEnabled = datelineWrappingCheckEnabled;

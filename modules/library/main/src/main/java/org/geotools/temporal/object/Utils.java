@@ -60,9 +60,6 @@ public class Utils {
     /**
      * Returns a Date object from an ISO-8601 representation string. (String defined with pattern
      * yyyy-MM-dd'T'HH:mm:ss.SSSZ or yyyy-MM-dd).
-     *
-     * @param dateString
-     * @return
      */
     public static Date getDateFromString(String dateString) throws ParseException {
         final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
@@ -124,12 +121,7 @@ public class Utils {
         return TimeZone.getDefault().getID();
     }
 
-    /**
-     * Return a Date (long time) from a String description
-     *
-     * @param periodDuration
-     * @return
-     */
+    /** Return a Date (long time) from a String description */
     public static long getTimeInMillis(String periodDuration) {
 
         long time = 0;
@@ -204,26 +196,25 @@ public class Utils {
         if (jdt == null) {
             return null;
         }
-        Date response = null;
 
         int JGREG = 15 + 31 * (10 + 12 * 1582);
-        int jalpha, ja, jb, jc, jd, je, year, month, day;
-        ja = (int) jdt.getCoordinateValue().intValue();
+        int jalpha;
+        int ja = jdt.getCoordinateValue().intValue();
         if (ja >= JGREG) {
             jalpha = (int) (((ja - 1867216) - 0.25) / 36524.25);
             ja = ja + 1 + jalpha - jalpha / 4;
         }
 
-        jb = ja + 1524;
-        jc = (int) (6680.0 + ((jb - 2439870) - 122.1) / 365.25);
-        jd = 365 * jc + jc / 4;
-        je = (int) ((jb - jd) / 30.6001);
-        day = jb - jd - (int) (30.6001 * je);
-        month = je - 1;
+        int jb = ja + 1524;
+        int jc = (int) (6680.0 + ((jb - 2439870) - 122.1) / 365.25);
+        int jd = 365 * jc + jc / 4;
+        int je = (int) ((jb - jd) / 30.6001);
+        int day = jb - jd - (int) (30.6001 * je);
+        int month = je - 1;
         if (month > 12) {
             month = month - 12;
         }
-        year = jc - 4715;
+        int year = jc - 4715;
         if (month > 2) {
             year--;
         }
@@ -232,16 +223,11 @@ public class Utils {
         }
         Calendar cal = Calendar.getInstance();
         cal.set(year, month, day);
-        response = cal.getTime();
+        Date response = cal.getTime();
         return response;
     }
 
-    /**
-     * Convert a CalendarDate object to java.util.Date.
-     *
-     * @param calDate
-     * @return
-     */
+    /** Convert a CalendarDate object to java.util.Date. */
     public static Date calendarDateToDate(final CalendarDate calDate) {
         if (calDate == null) {
             return null;
@@ -271,12 +257,7 @@ public class Utils {
         return null;
     }
 
-    /**
-     * Convert a DateAndTime object to Date.
-     *
-     * @param dateAndTime
-     * @return
-     */
+    /** Convert a DateAndTime object to Date. */
     public static Date dateAndTimeToDate(final DateAndTime dateAndTime) {
         if (dateAndTime == null) {
             return null;
@@ -323,11 +304,7 @@ public class Utils {
         return null;
     }
 
-    /**
-     * Convert a TemporalCoordinate object to Date.
-     *
-     * @param temporalCoord
-     */
+    /** Convert a TemporalCoordinate object to Date. */
     public static Date temporalCoordToDate(final TemporalCoordinate temporalCoord) {
         if (temporalCoord == null) {
             return null;

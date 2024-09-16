@@ -16,10 +16,50 @@
  */
 package org.geotools.renderer.label;
 
-import static org.geotools.styling.TextSymbolizer.*;
+import static org.geotools.styling.TextSymbolizer.ALLOW_OVERRUNS_KEY;
+import static org.geotools.styling.TextSymbolizer.AUTO_WRAP_KEY;
+import static org.geotools.styling.TextSymbolizer.CONFLICT_RESOLUTION_KEY;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_ALLOW_OVERRUNS;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_AUTO_WRAP;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_CONFLICT_RESOLUTION;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_FOLLOW_LINE;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_FONT_SHRINK_SIZE_MIN;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_FORCE_LEFT_TO_RIGHT;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_GOODNESS_OF_FIT;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_LABEL_ALL_GROUP;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_LABEL_REPEAT;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_MAX_ANGLE_DELTA;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_MAX_DISPLACEMENT;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_MIN_GROUP_DISTANCE;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_PARTIALS;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_POLYGONALIGN;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_REMOVE_OVERLAPS;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_SPACE_AROUND;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_STRIKETHROUGH_TEXT;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_UNDERLINE_TEXT;
+import static org.geotools.styling.TextSymbolizer.DEFAULT_WORD_SPACING;
+import static org.geotools.styling.TextSymbolizer.DISPLACEMENT_MODE_KEY;
+import static org.geotools.styling.TextSymbolizer.FOLLOW_LINE_KEY;
+import static org.geotools.styling.TextSymbolizer.FONT_SHRINK_SIZE_MIN;
+import static org.geotools.styling.TextSymbolizer.FORCE_LEFT_TO_RIGHT_KEY;
+import static org.geotools.styling.TextSymbolizer.GOODNESS_OF_FIT_KEY;
+import static org.geotools.styling.TextSymbolizer.GRAPHIC_PLACEMENT_KEY;
+import static org.geotools.styling.TextSymbolizer.LABEL_ALL_GROUP_KEY;
+import static org.geotools.styling.TextSymbolizer.LABEL_REPEAT_KEY;
+import static org.geotools.styling.TextSymbolizer.MAX_ANGLE_DELTA_KEY;
+import static org.geotools.styling.TextSymbolizer.MAX_DISPLACEMENT_KEY;
+import static org.geotools.styling.TextSymbolizer.MIN_GROUP_DISTANCE_KEY;
+import static org.geotools.styling.TextSymbolizer.PARTIALS_KEY;
+import static org.geotools.styling.TextSymbolizer.POLYGONALIGN_KEY;
+import static org.geotools.styling.TextSymbolizer.REMOVE_OVERLAPS_KEY;
+import static org.geotools.styling.TextSymbolizer.SPACE_AROUND_KEY;
+import static org.geotools.styling.TextSymbolizer.STRIKETHROUGH_TEXT_KEY;
+import static org.geotools.styling.TextSymbolizer.UNDERLINE_TEXT_KEY;
+import static org.geotools.styling.TextSymbolizer.WORD_SPACING_KEY;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -51,6 +91,8 @@ import org.geotools.renderer.lite.RendererUtilities;
 import org.geotools.renderer.style.SLDStyleFactory;
 import org.geotools.renderer.style.TextStyle2D;
 import org.geotools.styling.TextSymbolizer;
+import org.geotools.styling.TextSymbolizer.DisplacementMode;
+import org.geotools.styling.TextSymbolizer.GraphicPlacement;
 import org.geotools.styling.TextSymbolizer.PolygonAlignOptions;
 import org.geotools.util.NumberRange;
 import org.geotools.util.logging.Logging;
@@ -137,14 +179,13 @@ public class LabelCacheImpl implements LabelCache {
     public static double MIN_CURVED_DELTA = Math.PI / 60;
 
     /** Used to locate grouped labels quickly */
-    protected Map<LabelCacheItem, LabelCacheItem> groupedLabelsLookup =
-            new HashMap<LabelCacheItem, LabelCacheItem>();
+    protected Map<LabelCacheItem, LabelCacheItem> groupedLabelsLookup = new HashMap<>();
 
     /** labels get thrown in here, in insertion order */
-    protected ArrayList<LabelCacheItem> labelCache = new ArrayList<LabelCacheItem>();
+    protected ArrayList<LabelCacheItem> labelCache = new ArrayList<>();
 
     /** List of reserved areas of the screen for which labels should fear to tread */
-    private List<Rectangle2D> reserved = new ArrayList<Rectangle2D>();
+    private List<Rectangle2D> reserved = new ArrayList<>();
 
     // Anchor candidate values used when looping to find a point label that can be drawn
     static final double[] RIGHT_ANCHOR_CANDIDATES = new double[] {0, 0.5, 0, 0, 0, 1};
@@ -168,9 +209,9 @@ public class LabelCacheImpl implements LabelCache {
 
     boolean stop = false;
 
-    Set<String> enabledLayers = new HashSet<String>();
+    Set<String> enabledLayers = new HashSet<>();
 
-    Set<String> activeLayers = new HashSet<String>();
+    Set<String> activeLayers = new HashSet<>();
 
     LineLengthComparator lineLengthComparator = new LineLengthComparator();
 
@@ -182,7 +223,7 @@ public class LabelCacheImpl implements LabelCache {
 
     private VendorOptionParser voParser = new VendorOptionParser();
 
-    private List<RenderListener> renderListeners = new CopyOnWriteArrayList<RenderListener>();
+    private List<RenderListener> renderListeners = new CopyOnWriteArrayList<>();
 
     private BiFunction<Graphics2D, LabelRenderingMode, LabelPainter> constructPainter =
             LabelPainter::new;
@@ -267,9 +308,6 @@ public class LabelCacheImpl implements LabelCache {
      * its missing --> DEFAULT_PRIORITY 2. if its a number, return that number 3. if its not a
      * number, convert to string and try to parse the number; return the number 4. otherwise, return
      * DEFAULT_PRIORITY
-     *
-     * @param symbolizer
-     * @param feature
      */
     public double getPriority(TextSymbolizer symbolizer, Feature feature) {
         if (symbolizer.getPriority() == null) return DEFAULT_PRIORITY;
@@ -375,7 +413,16 @@ public class LabelCacheImpl implements LabelCache {
         double maxAngleDelta =
                 voParser.getDoubleOption(symbolizer, MAX_ANGLE_DELTA_KEY, DEFAULT_MAX_ANGLE_DELTA);
         item.setMaxAngleDelta(Math.toRadians(maxAngleDelta));
-        item.setAutoWrap(voParser.getIntOption(symbolizer, AUTO_WRAP_KEY, DEFAULT_AUTO_WRAP));
+        // follow line and write don't work toghether, disable it while we wait for a fix
+        if (!item.isFollowLineEnabled()) {
+            item.setAutoWrap(voParser.getIntOption(symbolizer, AUTO_WRAP_KEY, DEFAULT_AUTO_WRAP));
+        } else {
+            // at fine level cause it would show up for every label with this setup
+            LOGGER.log(
+                    Level.FINE,
+                    "Disabling auto-wrap, it's not supported along with followLine yet");
+            item.setAutoWrap(0);
+        }
         item.setForceLeftToRightEnabled(
                 voParser.getBooleanOption(
                         symbolizer, FORCE_LEFT_TO_RIGHT_KEY, DEFAULT_FORCE_LEFT_TO_RIGHT));
@@ -403,6 +450,13 @@ public class LabelCacheImpl implements LabelCache {
         item.setDisplacementAngles(
                 voParser.getDisplacementAngles(symbolizer, DISPLACEMENT_MODE_KEY));
 
+        item.setFontShrinkSizeMin(
+                voParser.getIntOption(
+                        symbolizer, FONT_SHRINK_SIZE_MIN, DEFAULT_FONT_SHRINK_SIZE_MIN));
+        item.setGraphicPlacement(
+                (GraphicPlacement)
+                        voParser.getEnumOption(
+                                symbolizer, GRAPHIC_PLACEMENT_KEY, GraphicPlacement.LABEL));
         return item;
     }
 
@@ -419,26 +473,17 @@ public class LabelCacheImpl implements LabelCache {
         return al;
     }
 
-    /**
-     * Returns a list of all active labels
-     *
-     * @return
-     */
+    /** Returns a list of all active labels */
     public List<LabelCacheItem> getActiveLabels() {
         // fill a list with the active labels
-        List<LabelCacheItem> al = new ArrayList<LabelCacheItem>();
+        List<LabelCacheItem> al = new ArrayList<>();
         for (LabelCacheItem item : labelCache) {
             if (isActive(item.getLayerIds())) al.add(item);
         }
         return al;
     }
 
-    /**
-     * Is the label part of an active layer?
-     *
-     * @param layerIds
-     * @return
-     */
+    /** Is the label part of an active layer? */
     private boolean isActive(Set<String> layerIds) {
         for (String layerName : layerIds) {
             if (enabledLayers.contains(layerName)) return true;
@@ -599,10 +644,6 @@ public class LabelCacheImpl implements LabelCache {
      * and likely to give us problems due to invalid polygons SO, use a sample method - make a few
      * points inside the label and see if they're "close to" the polygon The method sucks, but works
      * well...
-     *
-     * @param painter
-     * @param transform
-     * @return
      */
     private double goodnessOfFit(
             LabelPainter painter, AffineTransform transform, PreparedGeometry representativeGeom) {
@@ -682,7 +723,7 @@ public class LabelCacheImpl implements LabelCache {
                         labelItem.removeGroupOverlaps(),
                         labelItem.isPartialsEnabled());
 
-        if (lines == null || lines.size() == 0) return false;
+        if (lines == null || lines.isEmpty()) return false;
 
         // if we just want to label the longest line, remove the others
         if (!labelItem.labelAllGroup() && lines.size() > 1) {
@@ -788,8 +829,7 @@ public class LabelCacheImpl implements LabelCache {
                     }
 
                     // We check each letters for collision
-                    boolean collision = false;
-                    collision =
+                    boolean collision =
                             glyphVectorProcessor.process(
                                     new GlyphProcessor.ConflictDetector(
                                             painter, displayArea, paintedBounds, groupLabels),
@@ -904,7 +944,7 @@ public class LabelCacheImpl implements LabelCache {
                         labelItem.removeGroupOverlaps(),
                         labelItem.isPartialsEnabled());
 
-        if (lines == null || lines.size() == 0) return false;
+        if (lines == null || lines.isEmpty()) return false;
 
         // if we just want to label the longest line, remove the others
         if (!labelItem.labelAllGroup() && lines.size() > 1) {
@@ -1178,11 +1218,6 @@ public class LabelCacheImpl implements LabelCache {
     /**
      * Sets up the transformation needed to position the label at the specified point, using the
      * positioning information loaded from the the text style
-     *
-     * @param tempTransform
-     * @param centroid
-     * @param textStyle
-     * @param painter
      */
     private void setupPointTransform(
             AffineTransform tempTransform,
@@ -1220,12 +1255,6 @@ public class LabelCacheImpl implements LabelCache {
     /**
      * Sets up the transformation needed to position the label at the current location of the line
      * string, using the positioning information loaded from the text style
-     *
-     * @param painter
-     * @param cursor
-     * @param centroid
-     * @param tempTransform
-     * @param followLine
      */
     private void setupLineTransform(
             LabelPainter painter,
@@ -1241,7 +1270,6 @@ public class LabelCacheImpl implements LabelCache {
 
         // undo the above if its point placement!
         double rotation;
-        double displacementX = 0;
         double displacementY = 0;
         Rectangle2D textBounds = painter.getLabelBounds();
         if (textStyle.isPointPlacement() && !followLine) {
@@ -1264,7 +1292,7 @@ public class LabelCacheImpl implements LabelCache {
             anchorY = painter.getLinePlacementYAnchor();
         }
 
-        displacementX = (anchorX * (-textBounds.getWidth())) + textStyle.getDisplacementX();
+        double displacementX = (anchorX * (-textBounds.getWidth())) + textStyle.getDisplacementX();
         displacementY += (anchorY * (textBounds.getHeight())) - textStyle.getDisplacementY();
 
         if (Double.isNaN(rotation) || Double.isInfinite(rotation)) rotation = 0.0;
@@ -1412,8 +1440,6 @@ public class LabelCacheImpl implements LabelCache {
     /**
      * Returns the closest angle that is a multiple of 45°
      *
-     * @param x
-     * @param y
      * @return an angle in degrees
      */
     int getClosestStandardAngle(double x, double y) {
@@ -1424,16 +1450,6 @@ public class LabelCacheImpl implements LabelCache {
     /**
      * Actually try to paint the label by setting up transformations, checking for conflicts and so
      * on
-     *
-     * @param painter
-     * @param tempTransform
-     * @param displayArea
-     * @param glyphs
-     * @param labelItem
-     * @param point
-     * @param textStyle
-     * @return
-     * @throws Exception
      */
     private boolean paintPointLabelInternal(
             LabelPainter painter,
@@ -1454,7 +1470,7 @@ public class LabelCacheImpl implements LabelCache {
                         && glyphs.labelsWithinDistance(transformed, labelItem.getSpaceAround()))) {
             return false;
         } else {
-            painter.paintStraightLabel(tempTransform);
+            painter.paintStraightLabel(tempTransform, point.getCoordinate());
             if (DEBUG_CACHE_BOUNDS) {
                 painter.graphics.setStroke(new BasicStroke());
                 painter.graphics.setColor(Color.RED);
@@ -1556,14 +1572,49 @@ public class LabelCacheImpl implements LabelCache {
             textStyle.setAnchorX(0.5);
             textStyle.setAnchorY(0.5);
         }
-        AffineTransform tx = new AffineTransform(tempTransform);
-        if (paintPolygonLabelInternal(
-                painter, tx, displayArea, glyphs, labelItem, pg, centroid, textStyle)) return true;
+
+        AffineTransform tx = null;
+        boolean allowShrinking =
+                labelItem.getFontShrinkSizeMin() > DEFAULT_FONT_SHRINK_SIZE_MIN
+                        && labelItem.getFontShrinkSizeMin() < textStyle.getFont().getSize();
+        int shrinkSize =
+                allowShrinking ? labelItem.getFontShrinkSizeMin() : textStyle.getFont().getSize();
+        int textSize = textStyle.getFont().getSize();
+        // if shrinking is allowed then try to paint polygon label. If no success reduce font size
+        // by 1 unit and retry until fontShrinkSize is reached.
+        while (textSize >= shrinkSize) {
+            tx = new AffineTransform(tempTransform);
+            LabelCacheItem labelItem2 = painter.getLabel();
+            TextStyle2DExt textStyle2 = new TextStyle2DExt(labelItem2);
+            if (labelItem2.getMaxDisplacement() > 0) {
+                textStyle2.setDisplacementX(0);
+                textStyle2.setDisplacementY(0);
+                textStyle2.setAnchorX(0.5);
+                textStyle2.setAnchorY(0.5);
+            }
+            labelItem2.setTextStyle(textStyle2);
+            painter.setLabel(labelItem2);
+            if (paintPolygonLabelInternal(
+                    painter, tx, displayArea, glyphs, labelItem2, pg, centroid, textStyle2)) {
+                return true;
+            }
+            textSize -= 1;
+            if (allowShrinking) {
+                Font font =
+                        new Font(
+                                textStyle2.getFont().getName(),
+                                textStyle2.getFont().getStyle(),
+                                textSize);
+                textStyle2.setFont(font);
+            }
+        }
 
         int[] displacementAngles = labelItem.getDisplacementAngles();
         if (displacementAngles == null) {
             displacementAngles = DEFAULT_DISPLACEMENT_ANGLES;
         }
+
+        painter.setLabel(labelItem);
 
         // ... use at least a 2 pixel step, no matter what the label length is
         final double step = painter.getAscent() > 2 ? painter.getAscent() : 2;
@@ -1684,14 +1735,13 @@ public class LabelCacheImpl implements LabelCache {
      * to be "closest to the centoid of the possible points"
      *
      * @param geoms list of Point or MultiPoint (any other geometry types are rejected
-     * @param displayArea
      * @param partialsEnabled true if we don't want to exclude points out of the displayArea
      * @return a point or null (if there's nothing to draw)
      */
     Point getPointSetRepresentativeLocation(
             List<Geometry> geoms, Rectangle displayArea, boolean partialsEnabled) {
         // points that are inside the displayGeometry
-        ArrayList<Point> pts = new ArrayList<Point>();
+        ArrayList<Point> pts = new ArrayList<>();
 
         for (Geometry g : geoms) {
             if (!((g instanceof Point) || (g instanceof MultiPoint))) // handle
@@ -1710,7 +1760,7 @@ public class LabelCacheImpl implements LabelCache {
                 }
             }
         }
-        if (pts.size() == 0) return null;
+        if (pts.isEmpty()) return null;
 
         // do better metric than this:
         return pts.get(0);
@@ -1730,9 +1780,7 @@ public class LabelCacheImpl implements LabelCache {
      * <p>NOTE: we clip after joining because there could be connections "going on" outside the
      * display bbox
      *
-     * @param geoms
      * @param displayArea must be poly
-     * @param removeOverlaps
      * @param partialsEnabled true if we don't want to clip lines on the displayArea
      */
     List<LineString> getLineSetRepresentativeLocation(
@@ -1745,14 +1793,14 @@ public class LabelCacheImpl implements LabelCache {
         // if its a polygon or multipolygon, get the boundary (reduce to a line)
         // if its a line, add it to "lines"
         // if its a multiline, add each component line to "lines"
-        List<LineString> lines = new ArrayList<LineString>();
+        List<LineString> lines = new ArrayList<>();
         for (Geometry g : geoms) {
             accumulateLineStrings(g, lines);
         }
-        if (lines.size() == 0) return null;
+        if (lines.isEmpty()) return null;
 
         // clip all the lines to the current bounds
-        List<LineString> clippedLines = new ArrayList<LineString>();
+        List<LineString> clippedLines = new ArrayList<>();
         for (LineString ls : lines) {
             // If we want labels to be entirely in the display area, clip the linestring
             if (!partialsEnabled) {
@@ -1770,8 +1818,8 @@ public class LabelCacheImpl implements LabelCache {
         }
 
         if (removeOverlaps) {
-            List<LineString> cleanedLines = new ArrayList<LineString>();
-            List<Geometry> bufferCache = new ArrayList<Geometry>();
+            List<LineString> cleanedLines = new ArrayList<>();
+            List<Geometry> bufferCache = new ArrayList<>();
             for (LineString ls : clippedLines) {
                 Geometry g = ls;
                 for (int i = 0; i < cleanedLines.size(); i++) {
@@ -1793,16 +1841,16 @@ public class LabelCacheImpl implements LabelCache {
             clippedLines = cleanedLines;
         }
 
-        if (clippedLines == null || clippedLines.size() == 0) return null;
+        if (clippedLines == null || clippedLines.isEmpty()) return null;
 
         // at this point "lines" now is a list of linestring
         // join this algo doesnt always do what you want it to do, but its
         // pretty good
         List<LineString> merged = mergeLines(clippedLines);
 
-        // clippedLines is a list of LineString, all cliped (hopefully) to the
+        // clippedLines is a list of LineString, all clipped (hopefully) to the
         // display geometry. we choose longest one
-        if (merged.size() == 0) return null;
+        if (merged.isEmpty()) return null;
 
         // sort have the longest lines first
         Collections.sort(merged, new LineLengthComparator());
@@ -1852,8 +1900,6 @@ public class LabelCacheImpl implements LabelCache {
      *
      * <p>This will try to solve robustness problems, but read code as to what it does. It might
      * return the unclipped line if there's a problem!
-     *
-     * @param line
      */
     public MultiLineString clipLineString(LineString line) {
 
@@ -1888,13 +1934,11 @@ public class LabelCacheImpl implements LabelCache {
      * 1. make a list of all the polygons clipped to the displayGeometry NOTE: reject any points or
      * lines 2. choose the largest of the clipped geometries
      *
-     * @param geoms
-     * @param displayArea
      * @param partialsEnabled true if we don't want to clip lines on the displayArea
      */
     Polygon getPolySetRepresentativeLocation(
             List<Geometry> geoms, Rectangle displayArea, boolean partialsEnabled) {
-        List<Polygon> polys = new ArrayList<Polygon>(); // points that are
+        List<Polygon> polys = new ArrayList<>(); // points that are
         // inside the
         Geometry displayGeometry = gf.toGeometry(toEnvelope(displayArea));
 
@@ -1915,10 +1959,10 @@ public class LabelCacheImpl implements LabelCache {
                 }
             }
         }
-        if (polys.size() == 0) return null;
+        if (polys.isEmpty()) return null;
 
         // at this point "polys" is a list of polygons. Clip them
-        List<Polygon> clippedPolys = new ArrayList<Polygon>();
+        List<Polygon> clippedPolys = new ArrayList<>();
         Envelope displayGeomEnv = displayGeometry.getEnvelopeInternal();
         for (Polygon p : polys) {
             // If we want labels to be entirely in the display area, clip polygons
@@ -1937,14 +1981,14 @@ public class LabelCacheImpl implements LabelCache {
 
         // clippedPolys is a list of Polygon, all cliped (hopefully) to the
         // display geometry. we choose largest one
-        if (clippedPolys.size() == 0) {
+        if (clippedPolys.isEmpty()) {
             return null;
         }
         double maxSize = -1;
         Polygon maxPoly = null;
         Polygon cpoly;
-        for (int t = 0; t < clippedPolys.size(); t++) {
-            cpoly = clippedPolys.get(t);
+        for (Polygon clippedPoly : clippedPolys) {
+            cpoly = clippedPoly;
             final double area = cpoly.getArea();
             if (area > maxSize) {
                 maxPoly = cpoly;
@@ -1963,9 +2007,6 @@ public class LabelCacheImpl implements LabelCache {
      * try to do a more robust way of clipping a polygon to a bounding box. This might return the
      * orginal polygon if it cannot clip TODO: this is a bit simplistic, there's lots more to do.
      *
-     * @param poly
-     * @param bbox
-     * @param displayGeomEnv
      * @return a MutliPolygon
      */
     public MultiPolygon clipPolygon(Polygon poly, Polygon bbox, Envelope displayGeomEnv) {
@@ -2005,7 +2046,7 @@ public class LabelCacheImpl implements LabelCache {
 
         // its a GC
         GeometryCollection gc = (GeometryCollection) clip;
-        List<Polygon> polys = new ArrayList<Polygon>();
+        List<Polygon> polys = new ArrayList<>();
         Geometry g;
         for (int t = 0; t < gc.getNumGeometries(); t++) {
             g = gc.getGeometryN(t);
@@ -2014,7 +2055,7 @@ public class LabelCacheImpl implements LabelCache {
         }
 
         // convert to multipoly
-        if (polys.size() == 0) return null;
+        if (polys.isEmpty()) return null;
 
         return poly.getFactory().createMultiPolygon(polys.toArray(new Polygon[1]));
     }
@@ -2028,9 +2069,10 @@ public class LabelCacheImpl implements LabelCache {
         LineMerger lm = new LineMerger();
         lm.add(lines);
         // build merged lines
-        List<LineString> merged = new ArrayList<LineString>(lm.getMergedLineStrings());
+        @SuppressWarnings("unchecked")
+        List<LineString> merged = new ArrayList<>(lm.getMergedLineStrings());
 
-        if (merged.size() == 0) {
+        if (merged.isEmpty()) {
             return null; // shouldnt happen
         } else if (merged.size() == 1) { // simple case - no need to continue
             // merging
@@ -2038,14 +2080,13 @@ public class LabelCacheImpl implements LabelCache {
         }
 
         // coordinate -> list of incoming/outgoing lines
-        Map<Coordinate, List<LineString>> nodes =
-                new HashMap<Coordinate, List<LineString>>(merged.size() * 2);
+        Map<Coordinate, List<LineString>> nodes = new HashMap<>(merged.size() * 2);
         for (LineString ls : merged) {
             putInNodeHash(ls.getCoordinateN(0), ls, nodes);
             putInNodeHash(ls.getCoordinateN(ls.getNumPoints() - 1), ls, nodes);
         }
 
-        List<LineString> merged_list = new ArrayList<LineString>(merged);
+        List<LineString> merged_list = new ArrayList<>(merged);
 
         // SORT -- sorting is important because order does matter.
         // sorted long->short
@@ -2058,13 +2099,10 @@ public class LabelCacheImpl implements LabelCache {
      * "result" 2. otherwise, merge it at the start/end with the LONGEST line there. 3. remove the
      * original line, and the lines it merged with from the hashtables 4. go again, with the merged
      * line
-     *
-     * @param edges
-     * @param nodes
      */
     public List<LineString> processNodes(
             List<LineString> edges, Map<Coordinate, List<LineString>> nodes) {
-        List<LineString> result = new ArrayList<LineString>();
+        List<LineString> result = new ArrayList<>();
         int index = 0; // index into edges
         while (index < edges.size()) // still more to do
         {
@@ -2085,19 +2123,19 @@ public class LabelCacheImpl implements LabelCache {
             List<LineString> nodeList2 = nodes.get(key2);
 
             // case 1 -- this line is independent
-            if ((nodeList.size() == 0) && (nodeList2.size() == 0)) {
+            if ((nodeList.isEmpty()) && (nodeList2.isEmpty())) {
                 result.add(ls);
                 index++; // move to next line
                 continue;
             }
 
-            if (nodeList.size() > 0) // touches something at the start
+            if (!nodeList.isEmpty()) // touches something at the start
             {
                 LineString ls2 = getLongest(nodeList); // merge with this one
                 ls = merge(ls, ls2);
                 removeFromHash(nodes, ls2);
             }
-            if (nodeList2.size() > 0) // touches something at the start
+            if (!nodeList2.isEmpty()) // touches something at the start
             {
                 LineString ls2 = getLongest(nodeList2); // merge with this one
                 ls = merge(ls, ls2);
@@ -2142,7 +2180,7 @@ public class LabelCacheImpl implements LabelCache {
             Coordinate node, LineString ls, Map<Coordinate, List<LineString>> nodes) {
         List<LineString> nodeList = nodes.get(node);
         if (nodeList == null) {
-            nodeList = new ArrayList<LineString>();
+            nodeList = new ArrayList<>();
             nodeList.add(ls);
             nodes.put(node, nodeList);
         } else {
@@ -2160,9 +2198,6 @@ public class LabelCacheImpl implements LabelCache {
     /**
      * If possible, merge the two lines together (ie. their start/end points are equal) returns null
      * if not possible
-     *
-     * @param major
-     * @param minor
      */
     private LineString merge(LineString major, LineString minor) {
         Coordinate major_s = major.getCoordinateN(0);
@@ -2189,7 +2224,7 @@ public class LabelCacheImpl implements LabelCache {
 
     /** simple linestring merge - l1 points then l2 points */
     private LineString mergeSimple(LineString l1, LineString l2) {
-        List<Coordinate> clist = new ArrayList<Coordinate>(Arrays.asList(l1.getCoordinates()));
+        List<Coordinate> clist = new ArrayList<>(Arrays.asList(l1.getCoordinates()));
         clist.addAll(Arrays.asList(l2.getCoordinates()));
 
         return l1.getFactory().createLineString(clist.toArray(new Coordinate[1]));

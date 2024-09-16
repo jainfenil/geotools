@@ -47,17 +47,17 @@ import org.opengis.feature.type.Schema;
 public class SchemaGeneratorMojo extends AbstractGeneratorMojo {
 
 	/**
-	 * Flag controlling wether complex types from the schema should be included.
+	 * Flag controlling whether complex types from the schema should be included.
 	 * @parameter expression="true"
 	 */
 	boolean includeComplexTypes;
 	/**
-	 * Flag controlling wether simple types from the schema should be included.
+	 * Flag controlling whether simple types from the schema should be included.
 	 * @parameter expression="true"
 	 */
 	boolean includeSimpleTypes;
 	/**
-	 * Flag controlling wether complex types should be composed of geotools 
+	 * Flag controlling whether complex types should be composed of geotools 
 	 * attribute descriptors which mirror the xml schema particles.
 	 * @parameter expression="true"
 	 */
@@ -68,7 +68,7 @@ public class SchemaGeneratorMojo extends AbstractGeneratorMojo {
 	 */
 	String[] imports;
 	/**
-         * Flag controlling wether paths are printed out as the generator recurses 
+         * Flag controlling whether paths are printed out as the generator recurses 
          * through the schema.
          * @parameter expression="false"
          */
@@ -121,21 +121,20 @@ public class SchemaGeneratorMojo extends AbstractGeneratorMojo {
 		
 		if (imports != null) {
 		    //build a url classload from dependencies
-		    List urls = new ArrayList();
-	        for ( Iterator d = project.getDependencies().iterator(); d.hasNext(); ) {
-	            Dependency dep = (Dependency) d.next();
-	            
-	            Artifact artifact = artifactFactory.createArtifact( 
-                    dep.getGroupId(), dep.getArtifactId(), dep.getVersion(), null, dep.getType()
+		    List<URL> urls = new ArrayList<>();
+            for (Object o : project.getDependencies()) {
+                Dependency dep = (Dependency) o;
+
+                Artifact artifact = artifactFactory.createArtifact(
+                        dep.getGroupId(), dep.getArtifactId(), dep.getVersion(), null, dep.getType()
                 );
-	            try {
-	                artifactResolver.resolve( artifact, remoteRepositories, localRepository );
-	                urls.add( artifact.getFile().toURI().toURL() );
-	            } 
-	            catch( Exception e ) {
-	                getLog().error( "Unable to resolve " + artifact.getId() );
-	            }
-	        }
+                try {
+                    artifactResolver.resolve(artifact, remoteRepositories, localRepository);
+                    urls.add(artifact.getFile().toURI().toURL());
+                } catch (Exception e) {
+                    getLog().error("Unable to resolve " + artifact.getId());
+                }
+            }
 	        
 	        //add compiled classes to classloader
 	        try {
@@ -148,33 +147,30 @@ public class SchemaGeneratorMojo extends AbstractGeneratorMojo {
 	        
 	        
 	        ClassLoader ext = 
-	            new URLClassLoader( (URL[]) urls.toArray( new URL[ urls.size() ] ), getClass().getClassLoader() );
+	            new URLClassLoader(urls.toArray( new URL[ urls.size() ] ), getClass().getClassLoader() );
 
-		    for ( int i = 0; i < imports.length; i++ ) {
-		        String schemaClassName = imports[i];
-		        Class schemaClass = null;
-		        try {
+            for (String schemaClassName : imports) {
+                Class<?> schemaClass = null;
+                try {
                     schemaClass = ext.loadClass(schemaClassName);
-                } 
-		        catch (ClassNotFoundException e) {
-		            getLog().error("Could note load class: " + schemaClassName);
+                } catch (ClassNotFoundException e) {
+                    getLog().error("Could note load class: " + schemaClassName);
                     return;
-		        }
-		        
-		        getLog().info("Loading import schema: " + schemaClassName);
-		        Schema gtSchema = null;
-		        try {
+                }
+
+                getLog().info("Loading import schema: " + schemaClassName);
+                Schema gtSchema = null;
+                try {
                     gtSchema = (Schema) schemaClass.getDeclaredConstructor().newInstance();
-                } 
-		        catch( Exception e ) {
-		            getLog().error("Could not insantiate class: " + schemaClass.getName());
-		            return;
-		        }
-		        
-		        if ( gtSchema != null ) {
-		            generator.addImport(gtSchema);
-		        }
-		    }
+                } catch (Exception e) {
+                    getLog().error("Could not insantiate class: " + schemaClass.getName());
+                    return;
+                }
+
+                if (gtSchema != null) {
+                    generator.addImport(gtSchema);
+                }
+            }
 		    
 		}
 		

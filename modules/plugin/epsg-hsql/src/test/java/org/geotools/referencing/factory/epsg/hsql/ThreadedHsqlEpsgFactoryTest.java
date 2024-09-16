@@ -82,6 +82,7 @@ public class ThreadedHsqlEpsgFactoryTest {
         assertEquals(original, afterCorruption);
     }
 
+    @SuppressWarnings("PMD.CloseResource")
     private void corruptConnection() throws Exception {
         java.lang.reflect.Field field =
                 org.geotools.referencing.factory.BufferedAuthorityFactory.class.getDeclaredField(
@@ -124,8 +125,7 @@ public class ThreadedHsqlEpsgFactoryTest {
 
     @Test
     public void testFindWSG84() throws FactoryException {
-        String wkt;
-        wkt =
+        String wkt =
                 "GEOGCS[\"WGS 84\",\n"
                         + "  DATUM[\"World Geodetic System 1984\",\n"
                         + "    SPHEROID[\"WGS 84\", 6378137.0, 298.257223563]],\n"
@@ -259,26 +259,22 @@ public class ThreadedHsqlEpsgFactoryTest {
         DefaultGeodeticDatum datum = (DefaultGeodeticDatum) crs.getDatum();
         BursaWolfParameters[] params = datum.getBursaWolfParameters();
         boolean wgs84Found = false;
-        for (int i = 0; i < params.length; i++) {
-            if (DefaultGeodeticDatum.isWGS84(params[i].targetDatum)) {
+        for (BursaWolfParameters param : params) {
+            if (DefaultGeodeticDatum.isWGS84(param.targetDatum)) {
                 wgs84Found = true;
-                assertEquals(0.0, params[i].dx, EPS);
-                assertEquals(0.0, params[i].dy, EPS);
-                assertEquals(0.0, params[i].dz, EPS);
-                assertEquals(0.0, params[i].ex, EPS);
-                assertEquals(0.0, params[i].ey, EPS);
-                assertEquals(0.0, params[i].ez, EPS);
-                assertEquals(0.0, params[i].ppm, EPS);
+                assertEquals(0.0, param.dx, EPS);
+                assertEquals(0.0, param.dy, EPS);
+                assertEquals(0.0, param.dz, EPS);
+                assertEquals(0.0, param.ex, EPS);
+                assertEquals(0.0, param.ey, EPS);
+                assertEquals(0.0, param.ez, EPS);
+                assertEquals(0.0, param.ppm, EPS);
             }
         }
         assertTrue(wgs84Found);
     }
 
-    /**
-     * GEOT-3644, make sure we can decode what we generated
-     *
-     * @throws Exception
-     */
+    /** GEOT-3644, make sure we can decode what we generated */
     @Test
     public void testEncodeAndParse() throws Exception {
         // a crs with out of standard axis orientation "South along 45 deg East"
@@ -291,11 +287,7 @@ public class ThreadedHsqlEpsgFactoryTest {
         assertTrue(CRS.equalsIgnoreMetadata(crs, parsed));
     }
 
-    /**
-     * GEOT-3482
-     *
-     * @throws Exception
-     */
+    /** GEOT-3482 */
     @Test
     public void testPPMUnit() throws Exception {
         // Create WGS 72 CRS where we know that the EPSG defines a unique

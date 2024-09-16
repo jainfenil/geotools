@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
-import javax.swing.*;
+import javax.swing.Icon;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.visitor.DuplicatingFilterVisitor;
 import org.geotools.styling.AnchorPoint;
@@ -105,7 +105,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     protected final DuplicatingFilterVisitor copyFilter;
 
     /** This is our internal stack; used to maintain state as we copy sub elements. */
-    protected Stack<Object> pages = new Stack<Object>();
+    protected Stack<Object> pages = new Stack<>();
 
     public DuplicatingStyleVisitor() {
         this(CommonFactoryFinder.getStyleFactory(null));
@@ -116,17 +116,27 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     }
 
     public DuplicatingStyleVisitor(StyleFactory styleFactory, FilterFactory2 filterFactory) {
-        this.copyFilter = new DuplicatingFilterVisitor(filterFactory);
+        this(styleFactory, filterFactory, new DuplicatingFilterVisitor(filterFactory));
+    }
+
+    /**
+     * Builds a new duplicating style visitor using a custom {@link DuplicatingStyleVisitor}
+     *
+     * @param styleFactory Creates new style objects during style duplication
+     * @param filterFactory Creates new filters and expressions during style duplication
+     * @param filterCloner Copies filters during style duplication
+     */
+    public DuplicatingStyleVisitor(
+            StyleFactory styleFactory,
+            FilterFactory2 filterFactory,
+            DuplicatingFilterVisitor filterCloner) {
+        this.copyFilter = filterCloner;
         this.sf = styleFactory;
         this.ff = filterFactory;
         this.STRICT = false;
     }
 
-    /**
-     * True if we should enforce equality after a copy.
-     *
-     * @param strict
-     */
+    /** True if we should enforce equality after a copy. */
     public void setStrict(boolean strict) {
         STRICT = strict;
     }
@@ -136,7 +146,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     }
 
     public void visit(StyledLayerDescriptor sld) {
-        StyledLayerDescriptor copy = null;
 
         StyledLayer[] layers = sld.getStyledLayers();
         StyledLayer[] layersCopy = new StyledLayer[layers.length];
@@ -151,7 +160,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
             }
         }
 
-        copy = sf.createStyledLayerDescriptor();
+        StyledLayerDescriptor copy = sf.createStyledLayerDescriptor();
         copy.setAbstract(sld.getAbstract());
         copy.setName(sld.getName());
         copy.setTitle(sld.getTitle());
@@ -164,7 +173,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     }
 
     public void visit(NamedLayer layer) {
-        NamedLayer copy = null;
 
         Style[] style = layer.getStyles();
         Style[] styleCopy = new Style[style.length];
@@ -187,7 +195,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
             }
         }
 
-        copy = sf.createNamedLayer();
+        NamedLayer copy = sf.createNamedLayer();
         copy.setName(layer.getName());
         length = styleCopy.length;
         for (int i = 0; i < length; i++) {
@@ -199,7 +207,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     }
 
     public void visit(UserLayer layer) {
-        UserLayer copy = null;
 
         Style[] style = layer.getUserStyles();
         int length = style.length;
@@ -222,7 +229,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
             }
         }
 
-        copy = sf.createUserLayer();
+        UserLayer copy = sf.createUserLayer();
         copy.setName(layer.getName());
         copy.setUserStyles(styleCopy);
         copy.setLayerFeatureConstraints(lfcCopy);
@@ -234,7 +241,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     }
 
     public void visit(Style style) {
-        Style copy = null;
 
         List<FeatureTypeStyle> ftsCopy = new ArrayList<>();
         for (FeatureTypeStyle fts : style.featureTypeStyles()) {
@@ -244,11 +250,12 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
             }
         }
 
-        copy = sf.createStyle();
+        Style copy = sf.createStyle();
         copy.getDescription().setAbstract(style.getDescription().getAbstract());
         copy.setName(style.getName());
         copy.getDescription().setTitle(style.getDescription().getTitle());
         copy.featureTypeStyles().addAll(ftsCopy);
+        copy.setBackground(copy(style.getBackground()));
 
         if (STRICT && !copy.equals(style)) {
             throw new IllegalStateException("Was unable to duplicate provided Style:" + style);
@@ -257,7 +264,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     }
 
     public void visit(Rule rule) {
-        Rule copy = null;
 
         Filter filterCopy = null;
 
@@ -274,7 +280,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
         Description descCopy = rule.getDescription();
         descCopy = copy(descCopy);
 
-        copy = sf.createRule();
+        Rule copy = sf.createRule();
         copy.symbolizers().addAll(symsCopy);
         copy.setDescription(descCopy);
         copy.setLegend(legendCopy);
@@ -344,12 +350,11 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Copy list of expressions.
      *
-     * @param expressions
      * @return copy of expressions or null if list was null
      */
     protected List<Expression> copyExpressions(List<Expression> expressions) {
         if (expressions == null) return null;
-        List<Expression> copy = new ArrayList<Expression>(expressions.size());
+        List<Expression> copy = new ArrayList<>(expressions.size());
         for (Expression expression : expressions) {
             copy.add(copy(expression));
         }
@@ -365,7 +370,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
      * copy.setBackgroundColor( copyExpr( fill.getColor()) );
      * </code></pre>
      *
-     * @param sion
      * @return copy of expression or null if expression was null
      */
     protected Expression copy(Expression expression) {
@@ -382,7 +386,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe graphic copy
      *
-     * @param graphic
      * @return copy of graphic or null if not provided
      */
     protected Graphic copy(Graphic graphic) {
@@ -395,7 +398,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe fill copy
      *
-     * @param graphic
      * @return copy of graphic or null if not provided
      */
     protected Fill copy(Fill fill) {
@@ -408,7 +410,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe copy of float array.
      *
-     * @param array
      * @return copy of array or null if not provided
      */
     protected float[] copy(float[] array) {
@@ -422,19 +423,17 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe map copy, used for external graphic custom properties.
      *
-     * @param customProperties
      * @return copy of map
      */
     @SuppressWarnings("unchecked")
     protected <K, V> Map<K, V> copy(Map<K, V> customProperties) {
         if (customProperties == null) return null;
-        return new HashMap<K, V>(customProperties);
+        return new HashMap<>(customProperties);
     }
 
     /**
      * Null safe copy of stroke.
      *
-     * @param stroke
      * @return copy of stroke if provided
      */
     protected Stroke copy(Stroke stroke) {
@@ -446,7 +445,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe copy of shaded relief.
      *
-     * @param shaded
      * @return copy of shaded or null if not provided
      */
     protected ShadedRelief copy(ShadedRelief shaded) {
@@ -461,7 +459,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe copy of description
      *
-     * @param shaded
      * @return copy of shaded or null if not provided
      */
     protected Description copy(Description desc) {
@@ -532,7 +529,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
         return (ColorMap) pages.pop();
     }
 
-    protected SelectedChannelType[] copy(SelectedChannelType[] channels) {
+    protected SelectedChannelType[] copy(SelectedChannelType... channels) {
         if (channels == null) return null;
 
         SelectedChannelType[] copy = new SelectedChannelType[channels.length];
@@ -556,8 +553,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
         if (channelSelection == null) return null;
 
         if (channelSelection.getGrayChannel() != null) {
-            return sf.createChannelSelection(
-                    new SelectedChannelType[] {copy(channelSelection.getGrayChannel())});
+            return sf.createChannelSelection(copy(channelSelection.getGrayChannel()));
         } else {
             return sf.createChannelSelection(copy(channelSelection.getRGBChannels()));
         }
@@ -568,14 +564,13 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
      *
      * <p>Right now style visitor does not let us visit fonts!
      *
-     * @param fonts
      * @return copy of provided fonts
      */
     protected List<Font> copyFonts(List<Font> fonts) {
         if (fonts == null) {
             return null;
         }
-        List<Font> copy = new ArrayList<Font>(fonts.size());
+        List<Font> copy = new ArrayList<>(fonts.size());
         for (Font font : fonts) {
             copy.add(copy(font));
         }
@@ -597,7 +592,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe copy of halo.
      *
-     * @param halo
      * @return copy of halo if provided
      */
     protected Halo copy(Halo halo) {
@@ -609,7 +603,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe copy of displacement.
      *
-     * @param displacement
      * @return copy of displacement if provided
      */
     protected Displacement copy(Displacement displacement) {
@@ -633,7 +626,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     /**
      * Null safe copy of anchor point.
      *
-     * @param anchorPoint
      * @return copy of anchor point if provided
      */
     protected AnchorPoint copy(AnchorPoint anchorPoint) {
@@ -793,7 +785,6 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     }
 
     public void visit(Graphic gr) {
-        Graphic copy = null;
 
         Displacement displacementCopy = copy(gr.getDisplacement());
         List<GraphicalSymbol> symbolsCopy = copy(gr.graphicalSymbols());
@@ -802,7 +793,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
         Expression sizeCopy = copy(gr.getSize());
         AnchorPoint anchorCopy = copy(gr.getAnchorPoint());
 
-        copy = sf.createDefaultGraphic();
+        Graphic copy = sf.createDefaultGraphic();
 
         copy.setDisplacement(displacementCopy);
         copy.graphicalSymbols().clear();
@@ -833,9 +824,8 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
     }
 
     public void visit(Mark mark) {
-        Mark copy = null;
 
-        copy = sf.createMark();
+        Mark copy = sf.createMark();
         copy.setFill(copy(mark.getFill()));
         copy.setStroke(copy(mark.getStroke()));
         copy.setWellKnownName(copy(mark.getWellKnownName()));
@@ -945,7 +935,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
         pages.push(copy);
     }
 
-    protected Extent[] copy(Extent[] extents) {
+    protected Extent[] copy(Extent... extents) {
         if (extents == null) {
             return null;
         }
@@ -980,8 +970,7 @@ public class DuplicatingStyleVisitor implements StyleVisitor {
         copy.setExtendedColors(colorMap.getExtendedColors());
         ColorMapEntry[] entries = colorMap.getColorMapEntries();
         if (entries != null) {
-            for (int i = 0; i < entries.length; i++) {
-                ColorMapEntry entry = entries[i];
+            for (ColorMapEntry entry : entries) {
                 copy.addColorMapEntry(copy(entry));
             }
         }

@@ -662,13 +662,6 @@ public class GMLSchema implements Schema {
          * Configures the Element for this particular GML instance. The following params match
          * schema definition attributes found in an element declaration. Those missing have been
          * hard coded for the gml Schema.
-         *
-         * @param name
-         * @param type
-         * @param min
-         * @param max
-         * @param abstracT
-         * @param substitutionGroup
          */
         public GMLElement(
                 String name,
@@ -685,13 +678,7 @@ public class GMLSchema implements Schema {
             this.substitutionGroup = substitutionGroup;
         }
 
-        /**
-         * Creates a clone using the new min/max occurences.
-         *
-         * @param element
-         * @param min
-         * @param max
-         */
+        /** Creates a clone using the new min/max occurences. */
         public GMLElement(GMLElement element, int min, int max) {
             this.abstracT = element.isAbstract();
             this.max = max;
@@ -850,7 +837,7 @@ public class GMLSchema implements Schema {
         }
 
         /** @see org.geotools.xml.schema.ComplexType#cache() */
-        public boolean cache(Element e, Map m) {
+        public boolean cache(Element e, Map<String, Object> hints) {
             return true;
         }
     }
@@ -877,38 +864,20 @@ public class GMLSchema implements Schema {
             // no op constructor
         }
 
-        /**
-         * Creates a GML attribute based on the name and type provided.
-         *
-         * @param name
-         * @param simpleType
-         */
+        /** Creates a GML attribute based on the name and type provided. */
         public GMLAttribute(String name, SimpleType simpleType) {
             this.name = name;
             this.simpleType = simpleType;
         }
 
-        /**
-         * Creates a GML attribute based on the name, use and type provided.
-         *
-         * @param name
-         * @param simpleType
-         * @param use
-         */
+        /** Creates a GML attribute based on the name, use and type provided. */
         public GMLAttribute(String name, SimpleType simpleType, int use) {
             this.name = name;
             this.simpleType = simpleType;
             this.use = use;
         }
 
-        /**
-         * Creates a GML attribute based on the name, use, default and type provided.
-         *
-         * @param name
-         * @param simpleType
-         * @param use
-         * @param def
-         */
+        /** Creates a GML attribute based on the name, use, default and type provided. */
         public GMLAttribute(String name, SimpleType simpleType, int use, String def) {
             this.name = name;
             this.simpleType = simpleType;
@@ -1032,7 +1001,8 @@ public class GMLSchema implements Schema {
         }
 
         /** @see schema.Type#getValue(java.lang.String) */
-        public Object getValue(Element element, ElementValue[] value, Attributes attr, Map hints)
+        public Object getValue(
+                Element element, ElementValue[] value, Attributes attr, Map<String, Object> hints)
                 throws SAXException {
             if ((value == null) || (value.length != 1) || (value[0].getValue() == null)) {
                 return null;
@@ -1056,8 +1026,8 @@ public class GMLSchema implements Schema {
         }
 
         private boolean contains(String[] enumeration, String text) {
-            for (int i = 0; i < enumeration.length; i++) {
-                if (enumeration[i].equalsIgnoreCase(text)) return true;
+            for (String s : enumeration) {
+                if (s.equalsIgnoreCase(text)) return true;
             }
             return false;
         }
@@ -1071,7 +1041,8 @@ public class GMLSchema implements Schema {
          * @see org.geotools.xml.schema.SimpleType#toAttribute(org.geotools.xml.schema.Attribute,
          *     java.lang.Object, java.util.Map)
          */
-        public AttributeValue toAttribute(Attribute attribute, Object value, Map hints) {
+        public AttributeValue toAttribute(
+                Attribute attribute, Object value, Map<String, Object> hints) {
             final String[] enumeration = {"inapplicable", "unknown", "unavailable", "missing"};
 
             if (Arrays.binarySearch(enumeration, value) < 0) {
@@ -1087,7 +1058,8 @@ public class GMLSchema implements Schema {
          *     org.geotools.xml.schema.SimpleType#canCreateAttributes(org.geotools.xml.schema.Attribute,
          *     java.lang.Object, java.util.Map)
          */
-        public boolean canCreateAttributes(Attribute attribute, Object value, Map hints) {
+        public boolean canCreateAttributes(
+                Attribute attribute, Object value, Map<String, Object> hints) {
             final String[] enumeration = {"inapplicable", "unknown", "unavailable", "missing"};
 
             return Arrays.binarySearch(enumeration, value) < 0;
@@ -1097,7 +1069,7 @@ public class GMLSchema implements Schema {
          * @see org.geotools.xml.schema.Type#canEncode(org.geotools.xml.schema.Element,
          *     java.lang.Object, java.util.Map)
          */
-        public boolean canEncode(Element element, Object value, Map hints) {
+        public boolean canEncode(Element element, Object value, Map<String, Object> hints) {
             final String[] enumeration = {"inapplicable", "unknown", "unavailable", "missing"};
 
             return Arrays.binarySearch(enumeration, value) < 0;
@@ -1107,7 +1079,8 @@ public class GMLSchema implements Schema {
          * @see org.geotools.xml.schema.Type#encode(org.geotools.xml.schema.Element,
          *     java.lang.Object, org.geotools.xml.PrintHandler, java.util.Map)
          */
-        public void encode(Element element, Object value, PrintHandler output, Map hints)
+        public void encode(
+                Element element, Object value, PrintHandler output, Map<String, Object> hints)
                 throws IOException {
             output.startElement(element.getNamespace(), element.getName(), null);
             output.characters(value.toString());
@@ -1143,7 +1116,7 @@ public class GMLSchema implements Schema {
     }
 
     /** Returns the implementation hints. The default implementation returns en empty map. */
-    public Map getImplementationHints() {
-        return Collections.EMPTY_MAP;
+    public Map<java.awt.RenderingHints.Key, ?> getImplementationHints() {
+        return Collections.emptyMap();
     }
 }

@@ -27,7 +27,10 @@ import java.awt.geom.Point2D;
 import java.text.Format;
 import java.util.ArrayList;
 import java.util.List;
-import net.sf.geographiclib.*;
+import net.sf.geographiclib.Geodesic;
+import net.sf.geographiclib.GeodesicData;
+import net.sf.geographiclib.GeodesicLine;
+import net.sf.geographiclib.GeodesicMask;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralDirectPosition;
 import org.geotools.geometry.TransformedDirectPosition;
@@ -747,7 +750,7 @@ public class GeodeticCalculator {
                     Errors.format(ErrorKeys.ILLEGAL_ARGUMENT_$2, "numPoints", numPoints));
         }
 
-        List<Point2D> points = new ArrayList<Point2D>(numPoints + 2);
+        List<Point2D> points = new ArrayList<>(numPoints + 2);
 
         if (!directionValid) {
             computeDirection();
@@ -777,6 +780,7 @@ public class GeodeticCalculator {
 
     /** Returns a string representation of the current state of this calculator. */
     @Override
+    @SuppressWarnings("PMD.CloseResource")
     public String toString() {
         final Vocabulary resources = Vocabulary.getResources(null);
         final TableWriter buffer = new TableWriter(null, " ");

@@ -91,8 +91,8 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
     protected void fireChange(SimpleFeature[] features, int type) {
         CollectionEvent cEvent = new CollectionEvent(this, features, type);
 
-        for (int i = 0, ii = listeners.size(); i < ii; i++) {
-            ((CollectionListener) listeners.get(i)).collectionChanged(cEvent);
+        for (CollectionListener listener : listeners) {
+            listener.collectionChanged(cEvent);
         }
     }
 
@@ -101,13 +101,13 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
     }
 
     protected void fireChange(Collection coll, int type) {
-        SimpleFeature[] features = new SimpleFeature[coll.size()];
-        features = (SimpleFeature[]) coll.toArray(features);
+        @SuppressWarnings("unchecked")
+        SimpleFeature[] features = (SimpleFeature[]) coll.toArray(new SimpleFeature[coll.size()]);
         fireChange(features, type);
     }
 
     public FeatureReader<SimpleFeatureType, SimpleFeature> reader() throws IOException {
-        return new DelegateFeatureReader<SimpleFeatureType, SimpleFeature>(getSchema(), features());
+        return new DelegateFeatureReader<>(getSchema(), features());
     }
 
     //
@@ -148,11 +148,11 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
     //
     // Content Access
     //
-    /** Set of open resource iterators & featureIterators */
-    private final Set open = new HashSet();
+    /** Set of open resource iterators & featureIterators (no common super-class or interface) */
+    private final Set<Object> open = new HashSet<>();
 
     /** listeners */
-    protected List listeners = new ArrayList();
+    protected List<CollectionListener> listeners = new ArrayList<>();
 
     /** id used when serialized to gml */
     protected String id;
@@ -192,7 +192,7 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
      */
     protected Iterator<SimpleFeature> openIterator() throws IOException {
         try {
-            FeatureWriter writer = writer();
+            FeatureWriter<SimpleFeatureType, SimpleFeature> writer = writer();
             if (writer != null) {
                 return new FeatureWriterIterator(writer());
             }
@@ -202,7 +202,7 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
         }
 
         try {
-            return new FeatureReaderIterator(reader());
+            return new FeatureReaderIterator<>(reader());
         } catch (IOException e) {
             return new NoContentIterator(e);
         }
@@ -219,6 +219,7 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
 
     protected void closeIterator(Iterator<SimpleFeature> close) throws IOException {
         if (close instanceof FeatureReaderIterator) {
+            @SuppressWarnings("PMD.CloseResource")
             FeatureReaderIterator<SimpleFeature> iterator =
                     (FeatureReaderIterator<SimpleFeature>) close;
             iterator.close(); // only needs package visability
@@ -246,11 +247,13 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
     }
 
     public void purge() {
-        for (Iterator i = open.iterator(); i.hasNext(); ) {
+        for (Iterator<Object> i = open.iterator(); i.hasNext(); ) {
             Object iterator = i.next();
             try {
                 if (iterator instanceof Iterator) {
-                    closeIterator((Iterator) iterator);
+                    @SuppressWarnings("unchecked")
+                    Iterator<SimpleFeature> cast = (Iterator<SimpleFeature>) iterator;
+                    closeIterator(cast);
                 }
                 if (iterator instanceof FeatureIterator) {
                     ((SimpleFeatureIterator) iterator).close();
@@ -272,9 +275,7 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
      * data.
      */
     public boolean isEmpty() {
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader = null;
-        try {
-            reader = reader();
+        try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = reader()) {
             try {
                 return !reader.hasNext();
             } catch (IOException e) {
@@ -282,14 +283,6 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
             }
         } catch (IOException e) {
             return true;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // return value already set
-                }
-            }
         }
     }
 
@@ -298,9 +291,7 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
         SimpleFeature value = (SimpleFeature) o;
         String ID = value.getID();
 
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader = null;
-        try {
-            reader = reader();
+        try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = reader()) {
             try {
                 while (reader.hasNext()) {
                     SimpleFeature feature = reader.next();
@@ -310,23 +301,11 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
                     if (value.equals(feature)) return true;
                 }
                 return false; // not found
-            } catch (IOException e) {
-                return false; // error seems like no features are available
-            } catch (NoSuchElementException e) {
-                return false; // error seems like no features are available
-            } catch (IllegalAttributeException e) {
+            } catch (IOException | IllegalAttributeException | NoSuchElementException e) {
                 return false; // error seems like no features are available
             }
         } catch (IOException e) {
             return false;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // return value already set
-                }
-            }
         }
     }
 
@@ -335,11 +314,13 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
     }
 
     public <T> T[] toArray(T[] array) {
-        List<T> list = new ArrayList<T>();
-        Iterator i = iterator();
+        List<T> list = new ArrayList<>();
+        Iterator<SimpleFeature> i = iterator();
         try {
             while (i.hasNext()) {
-                list.add((T) i.next());
+                @SuppressWarnings("unchecked")
+                T next = (T) i.next();
+                list.add(next);
             }
         } finally {
             close(i);
@@ -377,27 +358,22 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
         if (collection instanceof FeatureCollection) {
             return addAll((FeatureCollection<?, ?>) collection);
         }
-        try {
-            FeatureWriter writer = writer();
+        try (FeatureWriter writer = writer()) {
             if (writer == null) {
                 return false;
             }
-            try {
-                // skip to end
-                while (writer.hasNext()) {
-                    writer.next();
-                }
-                for (Object obj : collection) {
-                    if (obj instanceof SimpleFeature) {
-                        SimpleFeature copy = (SimpleFeature) obj;
-                        SimpleFeature feature = (SimpleFeature) writer.next();
+            // skip to end
+            while (writer.hasNext()) {
+                writer.next();
+            }
+            for (Object obj : collection) {
+                if (obj instanceof SimpleFeature) {
+                    SimpleFeature copy = (SimpleFeature) obj;
+                    SimpleFeature feature = (SimpleFeature) writer.next();
 
-                        feature.setAttributes(copy.getAttributes());
-                        writer.write();
-                    }
+                    feature.setAttributes(copy.getAttributes());
+                    writer.write();
                 }
-            } finally {
-                if (writer != null) writer.close();
             }
             return true;
         } catch (IOException ignore) {
@@ -453,7 +429,6 @@ public abstract class DataFeatureCollection implements SimpleFeatureCollection {
      * specification. This method should also be able to handle GeoTools specific sorting through
      * detecting order as a SortBy2 instance.
      *
-     * @param order
      * @since GeoTools 2.2, Filter 1.1
      * @return FeatureList sorted according to provided order
      */

@@ -17,11 +17,13 @@
 package org.geotools.gml.producer;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FeatureReader;
@@ -33,7 +35,9 @@ import org.geotools.feature.type.DateUtil;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.gml.producer.GeometryTransformer.GeometryTranslator;
 import org.geotools.referencing.CRS;
+import org.geotools.util.factory.Hints;
 import org.geotools.xml.XMLUtils;
+import org.geotools.xml.impl.DatatypeConverterImpl;
 import org.geotools.xml.transform.TransformerBase;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
@@ -105,7 +109,7 @@ public class FeatureTransformer extends TransformerBase {
     private static final Logger LOGGER =
             org.geotools.util.logging.Logging.getLogger(FeatureTransformer.class);
 
-    private Set gmlAtts;
+    private Set<String> gmlAtts;
 
     private String collectionPrefix = "wfs";
     private String collectionNamespace = "http://www.opengis.net/wfs";
@@ -217,7 +221,7 @@ public class FeatureTransformer extends TransformerBase {
         this.prefixGml = prefixGml;
 
         if (prefixGml && (gmlAtts == null)) {
-            gmlAtts = new HashSet();
+            gmlAtts = new HashSet<>();
             loadGmlAttributes(gmlAtts);
         }
     }
@@ -227,7 +231,7 @@ public class FeatureTransformer extends TransformerBase {
      *
      * @param gmlAtts Set of strings corresponding to element names on a type.
      */
-    protected void loadGmlAttributes(Set gmlAtts) {
+    protected void loadGmlAttributes(Set<String> gmlAtts) {
         gmlAtts.add("pointProperty");
         gmlAtts.add("geometryProperty");
         gmlAtts.add("polygonProperty");
@@ -268,8 +272,6 @@ public class FeatureTransformer extends TransformerBase {
      *
      * <p>Defaults to true (for backwards compatibility), disable explicitly if you don't want
      * feature collection bounds to be generated.
-     *
-     * @param collectionBounding
      */
     public void setCollectionBounding(boolean collectionBounding) {
         this.collectionBounding = collectionBounding;
@@ -316,7 +318,7 @@ public class FeatureTransformer extends TransformerBase {
     }
 
     public static class FeatureTypeNamespaces {
-        Map lookup = new HashMap();
+        Map<FeatureType, String> lookup = new HashMap<>();
         NamespaceSupport nsSupport;
         String defaultPrefix = null;
 
@@ -335,7 +337,7 @@ public class FeatureTransformer extends TransformerBase {
         }
 
         public String findPrefix(FeatureType type) {
-            String pre = (String) lookup.get(type);
+            String pre = lookup.get(type);
 
             if (pre == null) {
                 pre = defaultPrefix;
@@ -415,9 +417,6 @@ public class FeatureTransformer extends TransformerBase {
         /**
          * Method to be subclassed to return a custom geometry translator, mostly for gml3 geometry
          * support.
-         *
-         * @param handler
-         * @return
          */
         protected GeometryTranslator createGeometryTranslator(ContentHandler handler) {
             return new GeometryTransformer.GeometryTranslator(handler);
@@ -431,12 +430,7 @@ public class FeatureTransformer extends TransformerBase {
             return new GeometryTransformer.GeometryTranslator(
                     handler, numDecimals, padWithZeros, forceDecimalEncoding);
         }
-        /**
-         * @param handler
-         * @param numDecimals
-         * @param useDummyZ
-         * @return
-         */
+        /** */
         protected GeometryTranslator createGeometryTranslator(
                 ContentHandler handler,
                 int numDecimals,
@@ -453,9 +447,6 @@ public class FeatureTransformer extends TransformerBase {
          * <p>This method can be used by code explicitly wishing to output 2D ordinates.
          *
          * @since 2.4.1
-         * @param handler
-         * @param numDecimals
-         * @param dimension
          * @return GeometryTranslator that will delegate a CoordinateWriter configured with the
          *     above parameters
          */
@@ -548,6 +539,7 @@ public class FeatureTransformer extends TransformerBase {
             return types;
         }
 
+        @SuppressWarnings("unchecked")
         public void encode(Object o) throws IllegalArgumentException {
             try {
                 if (o instanceof FeatureCollection) {
@@ -560,8 +552,8 @@ public class FeatureTransformer extends TransformerBase {
                     startFeatureCollection();
                     if (collectionBounding) {
                         ReferencedEnvelope bounds = null;
-                        for (int i = 0; i < results.length; i++) {
-                            ReferencedEnvelope more = results[i].getBounds();
+                        for (FeatureCollection result : results) {
+                            ReferencedEnvelope more = result.getBounds();
                             if (bounds == null) {
                                 bounds = new ReferencedEnvelope(more);
                             } else {
@@ -573,12 +565,13 @@ public class FeatureTransformer extends TransformerBase {
                         writeNullBounds();
                     }
 
-                    for (int i = 0; i < results.length; i++) {
-                        handleFeatureIterator(DataUtilities.simple(results[i]).features());
+                    for (FeatureCollection<SimpleFeatureType, SimpleFeature> result : results) {
+                        handleFeatureIterator(DataUtilities.simple(result).features());
                     }
                     endFeatureCollection();
                 } else if (o instanceof FeatureReader) {
                     // THIS IS A HACK FOR QUICK USE
+                    @SuppressWarnings({"PMD.CloseResource", "unchecked"}) // the caller must close
                     FeatureReader<SimpleFeatureType, SimpleFeature> r =
                             (FeatureReader<SimpleFeatureType, SimpleFeature>) o;
 
@@ -708,7 +701,6 @@ public class FeatureTransformer extends TransformerBase {
          * writes the <code>gml:boundedBy</code> element to output based on <code>fc.getBounds()
          * </code>
          *
-         * @param bounds
          * @throws RuntimeException if it is thorwn while writing the element or coordinates
          */
         public void writeBounds(BoundingBox bounds) {
@@ -848,12 +840,7 @@ public class FeatureTransformer extends TransformerBase {
                             }
                             geometryTranslator.encode((Geometry) value, srsName);
                         } else if (value instanceof Date) {
-                            String text = null;
-                            if (value instanceof java.sql.Date)
-                                text = DateUtil.serializeSqlDate((java.sql.Date) value);
-                            else if (value instanceof java.sql.Time)
-                                text = DateUtil.serializeSqlTime((java.sql.Time) value);
-                            else text = DateUtil.serializeDateTime((Date) value);
+                            String text = getDateString(value);
                             contentHandler.characters(text.toCharArray(), 0, text.length());
                         } else {
                             String text = XMLUtils.removeXMLInvalidChars(value.toString());
@@ -870,6 +857,53 @@ public class FeatureTransformer extends TransformerBase {
             } catch (Exception e) {
                 throw new IllegalStateException(
                         "Could not transform " + descriptor.getName() + ":" + e, e);
+            }
+        }
+
+        private String getDateString(Object value) {
+            String text = null;
+            if (value instanceof java.sql.Date)
+                text = DateUtil.serializeSqlDate((java.sql.Date) value);
+            else if (value instanceof java.sql.Time) {
+                // is date time formatting activated?
+                if (isDateTimeFormattingEnabled()) {
+                    final Date dateValue = (Date) value;
+                    text = DatatypeConverterImpl.getInstance().printTime(dateToCalendar(dateValue));
+                } else {
+                    text = DateUtil.serializeSqlTime((java.sql.Time) value);
+                }
+            } else {
+                // is date time formatting activated?
+                if (isDateTimeFormattingEnabled()) {
+                    final Date dateValue = (Date) value;
+                    text =
+                            DatatypeConverterImpl.getInstance()
+                                    .printDateTime(dateToCalendar(dateValue));
+                } else {
+                    text = DateUtil.serializeDateTime((Date) value);
+                }
+            }
+            return text;
+        }
+
+        private boolean isDateTimeFormattingEnabled() {
+            Object hint = Hints.getSystemDefault(Hints.DATE_TIME_FORMAT_HANDLING);
+            return !Boolean.FALSE.equals(hint);
+        }
+
+        private Calendar dateToCalendar(Date value) {
+            Calendar calendar = getConfiguredCalendar();
+            calendar.clear();
+            calendar.setTimeInMillis(value.getTime());
+            return calendar;
+        }
+
+        private Calendar getConfiguredCalendar() {
+            Object hint = Hints.getSystemDefault(Hints.LOCAL_DATE_TIME_HANDLING);
+            if (Boolean.TRUE.equals(hint)) {
+                return Calendar.getInstance();
+            } else {
+                return Calendar.getInstance(TimeZone.getTimeZone("GMT"));
             }
         }
 

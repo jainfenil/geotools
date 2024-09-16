@@ -167,10 +167,12 @@ public class FeaturePropertyTypeBinding extends AbstractComplexBinding {
             Object clientProperties = att.getUserData().get(Attributes.class);
             Map<Name, Object> map = null;
             if (clientProperties == null) {
-                map = new HashMap<Name, Object>();
+                map = new HashMap<>();
                 att.getUserData().put(Attributes.class, map);
             } else {
-                map = (Map<Name, Object>) clientProperties;
+                @SuppressWarnings("unchecked")
+                Map<Name, Object> cast = (Map<Name, Object>) clientProperties;
+                map = cast;
             }
             map.put(toTypeName(XLINK.HREF), "#" + id.toString());
             // make sure the value is not encoded
@@ -178,12 +180,7 @@ public class FeaturePropertyTypeBinding extends AbstractComplexBinding {
         }
     }
 
-    /**
-     * Convert a {@link QName} to a {@link Name}.
-     *
-     * @param name
-     * @return
-     */
+    /** Convert a {@link QName} to a {@link Name}. */
     private static Name toTypeName(QName name) {
         if (XMLConstants.NULL_NS_URI.equals(name.getNamespaceURI())) {
             return new NameImpl(name.getLocalPart());

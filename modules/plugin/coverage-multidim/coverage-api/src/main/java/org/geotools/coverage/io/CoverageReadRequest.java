@@ -101,7 +101,7 @@ public class CoverageReadRequest extends CoverageRequest {
     /** Defines the order and the bands that should be returned. */
     private int[] bands;
 
-    private Map<String, Set<?>> additionalDomainsSubset = new HashMap<String, Set<?>>();
+    private Map<String, Set<?>> additionalDomainsSubset = new HashMap<>();
 
     /** Custom filter for additional queries */
     private Filter filter;
@@ -157,7 +157,6 @@ public class CoverageReadRequest extends CoverageRequest {
      *
      * <p>Note that a null {@link RangeType} means get everything.
      *
-     * @param value
      * @uml.property name="rangeSubset"
      */
     public void setRangeSubset(final RangeType value) {
@@ -168,14 +167,14 @@ public class CoverageReadRequest extends CoverageRequest {
     public Set<NumberRange<Double>> getVerticalSubset() {
         if (verticalSubset == null) {
             Set<NumberRange<Double>> empty = Collections.emptySet();
-            verticalSubset = new HashSet<NumberRange<Double>>(empty);
+            verticalSubset = new HashSet<>(empty);
             return verticalSubset;
-        } else return new LinkedHashSet<NumberRange<Double>>(verticalSubset);
+        } else return new LinkedHashSet<>(verticalSubset);
     }
 
     /** @see org.geotools.coverage.io.CoverageReadRequest#setVerticalSubset(java.util.SortedSet) */
     public void setVerticalSubset(Set<NumberRange<Double>> verticalSubset) {
-        this.verticalSubset = new LinkedHashSet<NumberRange<Double>>(verticalSubset);
+        this.verticalSubset = new LinkedHashSet<>(verticalSubset);
     }
 
     /** @see org.geotools.coverage.io.CoverageReadRequest#getTemporalSubset() */

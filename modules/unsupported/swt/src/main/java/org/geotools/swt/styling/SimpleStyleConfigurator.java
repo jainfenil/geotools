@@ -47,7 +47,6 @@ import org.geotools.styling.LineSymbolizer;
 import org.geotools.styling.PointSymbolizer;
 import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.Rule;
-import org.geotools.styling.SLDTransformer;
 import org.geotools.styling.Stroke;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleFactory;
@@ -66,6 +65,7 @@ import org.geotools.swt.styling.simple.StrokeViewer;
 import org.geotools.swt.utils.Messages;
 import org.geotools.swt.utils.Utils;
 import org.geotools.util.factory.GeoTools;
+import org.geotools.xml.styling.SLDTransformer;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.GeometryDescriptor;
@@ -241,7 +241,7 @@ public class SimpleStyleConfigurator extends AbstractSimpleConfigurator {
 
                     public Object[] getElements(Object inputElement) {
                         // note use of descriptors; so we can make use of associations if available
-                        ArrayList<String> names = new ArrayList<String>();
+                        ArrayList<String> names = new ArrayList<>();
                         names.add(DEFAULT_GEOMETRY);
                         if (schema != null) {
                             for (PropertyDescriptor descriptor : schema.getDescriptors()) {
@@ -310,7 +310,6 @@ public class SimpleStyleConfigurator extends AbstractSimpleConfigurator {
      *
      * @param style the style to convert.
      * @return the style string.
-     * @throws Exception
      */
     public static String styleToString(Style style) throws Exception {
         StyledLayerDescriptor sld = sf.createStyledLayerDescriptor();
@@ -443,7 +442,7 @@ public class SimpleStyleConfigurator extends AbstractSimpleConfigurator {
 
     /** Synchronize the SLD with the array of symbolizers */
     public void synchronize() {
-        List<Symbolizer> acquire = new ArrayList<Symbolizer>();
+        List<Symbolizer> acquire = new ArrayList<>();
         TextSymbolizer textSym = this.label.get(this.build);
 
         SimpleFeatureType schema = featureCollection.getSchema();
@@ -558,7 +557,7 @@ public class SimpleStyleConfigurator extends AbstractSimpleConfigurator {
                 style.featureTypeStyles().addAll(fts);
             } else {
                 // add the new entry to the array
-                List<FeatureTypeStyle> fts2 = new ArrayList<FeatureTypeStyle>(fts);
+                List<FeatureTypeStyle> fts2 = new ArrayList<>(fts);
                 Collections.copy(fts2, fts);
                 fts2.add(featureTypeStyle);
                 style.featureTypeStyles().clear();

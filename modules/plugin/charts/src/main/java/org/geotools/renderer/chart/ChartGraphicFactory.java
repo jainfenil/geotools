@@ -134,13 +134,9 @@ public class ChartGraphicFactory implements ExternalGraphicFactory {
     /**
      * Parses the CHS parameter, should be in the form wxh, where w and h are integers and x is the
      * separator
-     *
-     * @param sizes
-     * @return
      */
     int[] parseCHS(String[] sizes) {
-        int[] dims;
-        dims = new int[2];
+        int[] dims = new int[2];
         String[] xy = sizes[0].split("x");
         if (xy.length != 2)
             throw new IllegalArgumentException(

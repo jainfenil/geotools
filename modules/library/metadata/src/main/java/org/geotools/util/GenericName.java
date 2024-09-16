@@ -95,8 +95,6 @@ public abstract class GenericName implements org.opengis.util.GenericName, Seria
      * Returns the scope (name space) of this generic name. If this name has no scope (e.g. is the *
      * root), then this method returns {@code null}. Can be a no-op if the subclass overrides {@link
      * #scope()}
-     *
-     * @return
      */
     protected abstract org.opengis.util.GenericName getInternalScope();
 
@@ -171,11 +169,11 @@ public abstract class GenericName implements org.opengis.util.GenericName, Seria
         final StringBuilder buffer = new StringBuilder();
         final List<? extends LocalName> parsedNames = getParsedNames();
         final char separator = getSeparator();
-        for (final Iterator<? extends LocalName> it = parsedNames.iterator(); it.hasNext(); ) {
+        for (LocalName parsedName : parsedNames) {
             if (buffer.length() != 0) {
                 buffer.append(separator);
             }
-            buffer.append(it.next());
+            buffer.append(parsedName);
         }
         return buffer.toString();
     }

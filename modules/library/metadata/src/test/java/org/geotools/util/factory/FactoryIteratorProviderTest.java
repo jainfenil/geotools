@@ -16,10 +16,13 @@
  */
 package org.geotools.util.factory;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests {@link org.geotools.util.factory.FactoryIteratorProvider} addition in {@link
@@ -77,9 +80,8 @@ public final class FactoryIteratorProviderTest {
         try {
             FactoryIteratorProviders.addFactoryIteratorProvider(provider1);
             assertNotNull(getFactory(registry, null));
-            DummyFactory factory;
 
-            factory = getFactory(registry, DummyFactory.Example1.class);
+            DummyFactory factory = getFactory(registry, DummyFactory.Example1.class);
             assertEquals(DummyFactory.Example1.class, factory.getClass());
             factory = getFactory(registry, DummyFactory.Example2.class);
             assertEquals(DummyFactory.Example2.class, factory.getClass());

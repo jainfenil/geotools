@@ -56,9 +56,11 @@ public class GeoPkgTestSetup extends JDBCTestSetup {
     protected void setUpData() throws Exception {
         super.setUpData();
 
+        runSafe("DELETE FROM gpkg_data_column_constraints");
         removeTable("ft1");
         removeTable("ft2");
         removeTable("ft3");
+        removeTable("ft_array");
 
         GeometryBuilder gb = new GeometryBuilder();
 
@@ -66,7 +68,7 @@ public class GeoPkgTestSetup extends JDBCTestSetup {
         String sql = "CREATE TABLE ft1 (id INTEGER PRIMARY KEY, geometry BLOB)";
         run(sql);
 
-        sql = "ALTER TABLE ft1 add intProperty INTEGER";
+        sql = "ALTER TABLE ft1 add intProperty MEDIUMINT";
         run(sql);
 
         sql = "ALTER TABLE ft1 add doubleProperty DOUBLE";
@@ -100,6 +102,7 @@ public class GeoPkgTestSetup extends JDBCTestSetup {
         runSafe("DROP VIEW  IF EXISTS " + tableName);
         runSafe("DELETE FROM gpkg_geometry_columns where table_name ='" + tableName + "'");
         runSafe("DELETE FROM gpkg_contents where table_name ='" + tableName + "'");
+        runSafe("DELETE FROM gpkg_data_columns where table_name ='" + tableName + "'");
         runSafe("DELETE FROM gpkg_extensions where table_name ='" + tableName + "'");
         runSafe("DELETE FROM gt_pk_metadata where table_name ='" + tableName + "'");
     }

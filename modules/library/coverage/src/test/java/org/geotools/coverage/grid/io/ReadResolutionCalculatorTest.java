@@ -16,7 +16,7 @@
  */
 package org.geotools.coverage.grid.io;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
@@ -73,7 +73,66 @@ public class ReadResolutionCalculatorTest {
         double[] requestedResolution = calculator.computeRequestedResolution(readBounds);
 
         // Before the fix, that computation would have returned a wrong full resolution
-        assertEquals(1.85072E-4, requestedResolution[0], 1e-6);
+        assertEquals(1.53466E-4, requestedResolution[0], 1e-6);
         assertEquals(1.53466E-4, requestedResolution[1], 1e-6);
+    }
+
+    @Test
+    public void testOversamplingOnReprojection() throws Exception {
+        // &BBOX=-10000000,10000000,0,20000000&WIDTH=256&HEIGHT=256
+        final CoordinateReferenceSystem requestCRS = CRS.decode("EPSG:3857", true);
+        final CoordinateReferenceSystem nativeCRS = CRS.decode("EPSG:4326", true);
+        final ReferencedEnvelope requestBounds =
+                new ReferencedEnvelope(-10000000, -5000000, 10000000, 15000000, requestCRS);
+        GridGeometry2D gg = new GridGeometry2D(new GridEnvelope2D(0, 0, 256, 256), requestBounds);
+        ReferencedEnvelope readBounds = requestBounds.transform(nativeCRS, true);
+
+        // calculation with high oversampling, but not above the default limits
+        ReadResolutionCalculator calcDefault =
+                new ReadResolutionCalculator(gg, nativeCRS, new double[] {1, 1});
+        calcDefault.setAccurateResolution(true);
+        double[] resolutionsDefault = calcDefault.computeRequestedResolution(readBounds);
+        // due to high stretch this far up north, should be using almost the native resolution
+        assertEquals(0.0333, resolutionsDefault[0], 1e-4);
+        assertEquals(0.0333, resolutionsDefault[1], 1e-4);
+
+        // limit oversampling factor and try again
+        ReadResolutionCalculator calcLimited =
+                new ReadResolutionCalculator(gg, nativeCRS, new double[] {1, 1});
+        calcLimited.setAccurateResolution(true);
+        calcLimited.setMaxOversamplingFactor(10);
+        double[] resolutionsLimited = calcLimited.computeRequestedResolution(readBounds);
+        // this time it should be limited to oversampling 10 times the native resolution
+        assertEquals(0.1, resolutionsLimited[0], 1e-4);
+        assertEquals(0.1, resolutionsLimited[1], 1e-4);
+    }
+
+    @Test
+    public void testOversamplingLimitOnReprojection() throws Exception {
+        final CoordinateReferenceSystem requestCRS = CRS.decode("EPSG:3395", true);
+        final CoordinateReferenceSystem nativeCRS = CRS.decode("EPSG:4326", true);
+        final ReferencedEnvelope requestBounds =
+                new ReferencedEnvelope(-30000000, 30000000, -20000000, 20000000, requestCRS);
+        GridGeometry2D gg = new GridGeometry2D(new GridEnvelope2D(0, 0, 768, 512), requestBounds);
+        ReferencedEnvelope readBounds = requestBounds.transform(nativeCRS, true);
+
+        // calculation with high oversampling, but not above the default limits
+        ReadResolutionCalculator calcDefault =
+                new ReadResolutionCalculator(gg, nativeCRS, new double[] {8.6E-5, 8.6E-5});
+        calcDefault.setAccurateResolution(true);
+        double[] resolutionsDefault = calcDefault.computeRequestedResolution(readBounds);
+
+        assertEquals(0.06086, resolutionsDefault[0], 1e-4);
+        assertEquals(0.06086, resolutionsDefault[1], 1e-4);
+
+        // limit oversampling factor and try again
+        ReadResolutionCalculator calcLimited =
+                new ReadResolutionCalculator(gg, nativeCRS, new double[] {8.6E-5, 8.6E-5});
+        calcLimited.setAccurateResolution(true);
+        calcLimited.setMaxOversamplingFactor(3);
+        double[] resolutionsLimited = calcLimited.computeRequestedResolution(readBounds);
+        // this time it should be limited to oversampling 3 times the classic resolution
+        assertEquals(0.23, resolutionsLimited[0], 1e-2);
+        assertEquals(0.11, resolutionsLimited[1], 1e-2);
     }
 }

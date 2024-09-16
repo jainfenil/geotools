@@ -98,7 +98,7 @@ public abstract class InfoToolHelper implements MapBoundsListener {
             throw new IllegalArgumentException("content must not be null");
         }
 
-        contentRef = new WeakReference<MapContent>(content);
+        contentRef = new WeakReference<>(content);
         clearTransform();
     }
 
@@ -122,15 +122,11 @@ public abstract class InfoToolHelper implements MapBoundsListener {
             throw new IllegalArgumentException("layer must not be null");
         }
 
-        layerRef = new WeakReference<Layer>(layer);
+        layerRef = new WeakReference<>(layer);
         clearTransform();
     }
 
-    /**
-     * Gets the map layer associated with this helper.
-     *
-     * @return
-     */
+    /** Gets the map layer associated with this helper. */
     public Layer getLayer() {
         return layerRef != null ? layerRef.get() : null;
     }

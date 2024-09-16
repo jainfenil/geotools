@@ -27,6 +27,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
 
+@SuppressWarnings("ComparableType")
 public class SurfacePropertyTypeBinding
         extends org.geotools.gml3.bindings.SurfacePropertyTypeBinding implements Comparable {
 
@@ -44,8 +45,8 @@ public class SurfacePropertyTypeBinding
 
     @Override
     public Object parse(ElementInstance instance, Node node, Object value) throws Exception {
-        Polygon polygon = (Polygon) node.getChildValue(Polygon.class);
-        MultiPolygon surface = (MultiPolygon) node.getChildValue(MultiPolygon.class);
+        Polygon polygon = node.getChildValue(Polygon.class);
+        MultiPolygon surface = node.getChildValue(MultiPolygon.class);
 
         if (polygon != null) {
             return gf.createMultiPolygon(new Polygon[] {polygon});

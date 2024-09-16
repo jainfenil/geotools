@@ -16,7 +16,10 @@
  */
 package org.geotools.referencing.operation.transform;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -28,7 +31,7 @@ import javax.media.jai.WarpAffine;
 import javax.media.jai.WarpPolynomial;
 import javax.media.jai.WarpQuadratic;
 import org.geotools.util.Classes;
-import org.junit.*;
+import org.junit.Test;
 import org.opengis.referencing.operation.TransformException;
 
 /**
@@ -108,21 +111,17 @@ public final class WarpTransformTest {
             //
             // Try using transform(float[], ...)
             //
-            if (true) {
-                final float[] array = new float[] {source.x, source.y};
-                transform.transform(array, 0, array, 0, 1);
-                assertEquals(message, expected.x, array[0], EPS * expected.x);
-                assertEquals(message, expected.y, array[1], EPS * expected.y);
-            }
+            final float[] farray = new float[] {source.x, source.y};
+            transform.transform(farray, 0, farray, 0, 1);
+            assertEquals(message, expected.x, farray[0], EPS * expected.x);
+            assertEquals(message, expected.y, farray[1], EPS * expected.y);
             //
             // Try using transform(double[], ...)
             //
-            if (true) {
-                final double[] array = new double[] {source.x, source.y};
-                transform.transform(array, 0, array, 0, 1);
-                assertEquals(message, expected.x, array[0], EPS * expected.x);
-                assertEquals(message, expected.y, array[1], EPS * expected.y);
-            }
+            final double[] darray = new double[] {source.x, source.y};
+            transform.transform(darray, 0, darray, 0, 1);
+            assertEquals(message, expected.x, darray[0], EPS * expected.x);
+            assertEquals(message, expected.y, darray[1], EPS * expected.y);
             //
             // Tests inverse transform
             //

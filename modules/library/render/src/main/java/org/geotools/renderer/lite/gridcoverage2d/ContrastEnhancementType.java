@@ -21,6 +21,8 @@ import it.geosolutions.jaiext.lookup.LookupTableFactory;
 import it.geosolutions.jaiext.piecewise.DefaultPiecewiseTransform1D;
 import it.geosolutions.jaiext.piecewise.DefaultPiecewiseTransform1DElement;
 import it.geosolutions.jaiext.piecewise.PiecewiseTransform1D;
+import it.geosolutions.jaiext.range.NoDataContainer;
+import it.geosolutions.jaiext.range.Range;
 import it.geosolutions.jaiext.range.RangeFactory;
 import it.geosolutions.jaiext.utilities.ImageLayout2;
 import java.awt.RenderingHints;
@@ -144,7 +146,7 @@ public enum ContrastEnhancementType {
                                 }
                             });
 
-            return new DefaultPiecewiseTransform1D<DefaultPiecewiseTransform1DElement>(
+            return new DefaultPiecewiseTransform1D<>(
                     new DefaultPiecewiseTransform1DElement[] {mainElement}, 0);
         }
     },
@@ -239,7 +241,7 @@ public enum ContrastEnhancementType {
                                 }
                             });
 
-            return new DefaultPiecewiseTransform1D<DefaultPiecewiseTransform1DElement>(
+            return new DefaultPiecewiseTransform1D<>(
                     new DefaultPiecewiseTransform1DElement[] {mainElement}, 0);
         }
     },
@@ -259,7 +261,7 @@ public enum ContrastEnhancementType {
             final Histogram h = inputWorker.removeRenderingHints().getHistogram(null, null, null);
 
             // do the actual lookup
-            Map<String, Object> params = new HashMap<String, Object>();
+            Map<String, Object> params = new HashMap<>();
             params.put(KEY_HISTOGRAM, h);
             LookupTable table = createByteLookupTable(params);
             inputWorker.setRenderingHints(hints);
@@ -334,10 +336,12 @@ public enum ContrastEnhancementType {
                 return inputWorker.getRenderedImage();
             }
 
+            NoDataContainer destinationNoData = getDestinationNoData(inputWorker);
+            double offsetAdjustment = destinationNoData == null ? 0 : 1;
             // compute the scale factors
             final double delta = extrema[1][0] - extrema[0][0];
-            final double scale = (maximum - minimum) / delta;
-            final double offset = minimum - scale * extrema[0][0];
+            final double scale = (maximum - minimum - offsetAdjustment) / delta;
+            final double offset = minimum - scale * extrema[0][0] + offsetAdjustment;
 
             //
             // do the actual rescale
@@ -362,6 +366,11 @@ public enum ContrastEnhancementType {
             RenderingHints localHints = hints.clone();
             localHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
 
+            if (destinationNoData != null) {
+                // rescale op will fill pixel nodata value with background value
+                // let's use the destination nodata as new background.
+                inputWorker.setBackground(new double[] {destinationNoData.getAsSingleValue()});
+            }
             // rescale
             inputWorker.setRenderingHints(localHints);
             inputWorker.rescale(new double[] {scale}, new double[] {offset});
@@ -408,10 +417,12 @@ public enum ContrastEnhancementType {
                 return inputWorker.getRenderedImage();
             }
 
+            NoDataContainer destinationNoData = getDestinationNoData(inputWorker);
+            double offsetAdjustment = destinationNoData == null ? 0 : 1;
             // compute the scale factors
             final double delta = maxData - minData;
-            final double scale = (maximum - minimum) / delta;
-            final double offset = minimum - scale * minData;
+            final double scale = (maximum - minimum - offsetAdjustment) / delta;
+            final double offset = minimum - scale * minData + offsetAdjustment;
 
             //
             // do the actual rescale
@@ -433,7 +444,11 @@ public enum ContrastEnhancementType {
                             inputWorker.getRenderedImage().getHeight()));
             RenderingHints localHints = hints.clone();
             localHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
-
+            if (destinationNoData != null) {
+                // rescale op will fill pixel nodata value with background value
+                // let's use the destination nodata as new background.
+                inputWorker.setBackground(new double[] {destinationNoData.getAsSingleValue()});
+            }
             // rescale
             inputWorker.setRenderingHints(localHints);
             inputWorker.rescale(new double[] {scale}, new double[] {offset});
@@ -569,6 +584,15 @@ public enum ContrastEnhancementType {
         }
     };
 
+    private static NoDataContainer getDestinationNoData(ImageWorker inputWorker) {
+        Range nodata = inputWorker.extractNoDataProperty(inputWorker.getRenderedImage());
+        NoDataContainer imposedNoData = null;
+        if (nodata != null && !nodata.contains(0)) {
+            imposedNoData = new NoDataContainer(0);
+        }
+        return imposedNoData;
+    }
+
     /**
      * Return a Piecewise transform doing clamping outside the central range
      *
@@ -576,7 +600,6 @@ public enum ContrastEnhancementType {
      * @param maximum maximum valid value of the central range
      * @param minValue minValue to be returned from values outside (below) the central range
      * @param maxValue maxValue to be returned from values outside (above) the central range
-     * @return
      */
     private static PiecewiseTransform1D<DefaultPiecewiseTransform1DElement>
             generateClampingPiecewise(
@@ -593,7 +616,7 @@ public enum ContrastEnhancementType {
                         RangeFactory.create(maximum, false, Double.POSITIVE_INFINITY, true),
                         maxValue);
 
-        return new DefaultPiecewiseTransform1D<DefaultPiecewiseTransform1DElement>(
+        return new DefaultPiecewiseTransform1D<>(
                 new DefaultPiecewiseTransform1DElement[] {zeroElement, mainElement, maxElement}, 0);
     }
 
@@ -605,7 +628,7 @@ public enum ContrastEnhancementType {
             throw new IllegalArgumentException(
                     Errors.format(ErrorKeys.ILLEGAL_ARGUMENT_PARAMETERS_$2, KEY_MIN, KEY_MAX));
         }
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         Number minVal = min.evaluate(null, Double.class);
         Number maxVal = max.evaluate(null, Double.class);
         if (minVal == null || maxVal == null) {
@@ -620,53 +643,36 @@ public enum ContrastEnhancementType {
     /**
      * Create a LookupTable for passthrough mapping except for values outside [min,max] range which
      * should be mapped to newMin, newMax respectively.
-     *
-     * @param min
-     * @param max
-     * @param newMin
-     * @param newMax
-     * @return
      */
     private static byte[] createClampingLookupTableByte(
             double min, double max, byte newMin, byte newMax) {
         final byte[] lut = new byte[256];
         for (int i = 1; i < lut.length; i++) {
-            lut[i] = i < min ? (byte) newMin : (i > max ? (byte) newMax : (byte) i);
+            lut[i] = i < min ? newMin : (i > max ? newMax : (byte) i);
         }
         return lut;
     }
 
-    /**
-     * Return the max Value for the specified dataType
-     *
-     * @param dataType
-     * @return
-     */
+    /** Return the max Value for the specified dataType */
     private static double getMaxValue(int dataType) {
         switch (dataType) {
             case DataBuffer.TYPE_BYTE:
-                return (double) MAX_BYTE;
+                return MAX_BYTE;
             case DataBuffer.TYPE_SHORT:
-                return (double) Short.MAX_VALUE;
+                return Short.MAX_VALUE;
             case DataBuffer.TYPE_USHORT:
                 return 65535.0;
             case DataBuffer.TYPE_INT:
-                return (double) Integer.MAX_VALUE;
+                return Integer.MAX_VALUE;
             case DataBuffer.TYPE_FLOAT:
-                return (double) Float.MAX_VALUE;
+                return Float.MAX_VALUE;
             case DataBuffer.TYPE_DOUBLE:
-                return (double) Double.MAX_VALUE;
+                return Double.MAX_VALUE;
         }
         return Double.NaN;
     }
 
-    /**
-     * Simple utility method to check Double values equality.
-     *
-     * @param a
-     * @param b
-     * @return
-     */
+    /** Simple utility method to check Double values equality. */
     public static boolean areEqual(double a, double b) {
         if (!Double.isNaN(a) && !Double.isNaN(b)) {
             return Math.abs(a - b) < DELTA;
@@ -674,12 +680,7 @@ public enum ContrastEnhancementType {
         return false;
     }
 
-    /**
-     * Generate a Linear Byte LookupTable to map from [min,max] to [0, 255]
-     *
-     * @param params
-     * @return
-     */
+    /** Generate a Linear Byte LookupTable to map from [min,max] to [0, 255] */
     static LookupTable generateLinearByteLookupTable(Map<String, Object> params) {
         Utilities.ensureNonNull("params", params);
         double min = (double) params.get(KEY_MIN);
@@ -699,11 +700,6 @@ public enum ContrastEnhancementType {
     /**
      * Main processing methods to be implemented by specific contrast enhancement algorithm to
      * return an enhanced image.
-     *
-     * @param inputWorker
-     * @param hints
-     * @param processParams
-     * @return
      */
     abstract RenderedImage process(
             ImageWorker inputWorker, Hints hints, Map<String, Expression> parameters);
@@ -712,7 +708,6 @@ public enum ContrastEnhancementType {
      * Create a byte LookupTable, specific for optimized byte cases.
      *
      * @param params Parameters (when required) to be used by the specific implementation.
-     * @return
      */
     LookupTable createByteLookupTable(Map<String, Object> params) {
         throw new UnsupportedOperationException();
@@ -726,7 +721,6 @@ public enum ContrastEnhancementType {
      * @param params Parameters (when required) to be used by specific implementation. Different
      *     algorithm may requires different parameters. As an instance, some implementations
      *     requires min and max values whilst some other may require an Histogram.
-     * @return
      */
     PiecewiseTransform1D<DefaultPiecewiseTransform1DElement> generatePiecewise(
             Map<String, Object> params) {
@@ -777,14 +771,7 @@ public enum ContrastEnhancementType {
         return LookupTableFactory.create(lut, DataBuffer.TYPE_BYTE);
     }
 
-    /**
-     * Generate piecewise transformation for gamma correction
-     *
-     * @param minimum
-     * @param maximum
-     * @param gammaValue
-     * @return
-     */
+    /** Generate piecewise transformation for gamma correction */
     public static PiecewiseTransform1D<DefaultPiecewiseTransform1DElement>
             generateGammaCorrectedPiecewise(
                     final double minimum, final double maximum, final double gammaValue) {
@@ -813,29 +800,19 @@ public enum ContrastEnhancementType {
                             }
                         });
 
-        return new DefaultPiecewiseTransform1D<DefaultPiecewiseTransform1DElement>(
+        return new DefaultPiecewiseTransform1D<>(
                 new DefaultPiecewiseTransform1DElement[] {mainElement}, 0);
     }
 
-    /**
-     * Utility method setting up a Parameters Map containing minimum and maximum values.
-     *
-     * @param minData
-     * @param maxData
-     * @return
-     */
+    /** Utility method setting up a Parameters Map containing minimum and maximum values. */
     private static Map<String, Object> setMinMaxParams(double minData, double maxData) {
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, Object> params = new HashMap<>();
         params.put(KEY_MIN, minData);
         params.put(KEY_MAX, maxData);
         return params;
     }
 
-    /**
-     * Check the parameters map isn't null and contains valid entries
-     *
-     * @param parameters
-     */
+    /** Check the parameters map isn't null and contains valid entries */
     private static void checkParameters(
             Map<String, Expression> parameters, String parameter1, String parameter2) {
         if (parameters == null) {
@@ -852,9 +829,6 @@ public enum ContrastEnhancementType {
     /**
      * Return a proper {@link ContrastEnhancementType} instance depending on the provided {@link
      * AbstractContrastMethodStrategy}.
-     *
-     * @param method
-     * @return
      */
     public static ContrastEnhancementType getType(AbstractContrastMethodStrategy method) {
         if (method instanceof NormalizeContrastMethodStrategy) {
@@ -882,12 +856,7 @@ public enum ContrastEnhancementType {
         }
     }
 
-    /**
-     * Parse the algorithm expression
-     *
-     * @param algorithm
-     * @return
-     */
+    /** Parse the algorithm expression */
     private static String parseAlgorithm(Expression algorithm) {
         if (algorithm != null) {
             return algorithm.evaluate(null, String.class);

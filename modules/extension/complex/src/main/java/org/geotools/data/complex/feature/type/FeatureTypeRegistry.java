@@ -116,12 +116,12 @@ public class FeatureTypeRegistry {
             FeatureTypeRegistryConfiguration helper,
             boolean includeAttributes) {
 
-        schemas = new ArrayList<SchemaIndex>();
+        schemas = new ArrayList<>();
         this.typeFactory = typeFactory;
-        descriptorRegistry = new HashMap<Name, AttributeDescriptor>();
-        typeRegistry = new HashMap<Name, AttributeType>();
-        anonTypeRegistry = new HashMap<Name, AttributeType>();
-        processingTypes = new Stack<Name>();
+        descriptorRegistry = new HashMap<>();
+        typeRegistry = new HashMap<>();
+        anonTypeRegistry = new HashMap<>();
+        processingTypes = new Stack<>();
         this.helper = helper;
         this.includeAttributes = includeAttributes;
 
@@ -206,7 +206,7 @@ public class FeatureTypeRegistry {
             return;
         }
 
-        List<AttributeDescriptor> substitutionGroup = new ArrayList<AttributeDescriptor>();
+        List<AttributeDescriptor> substitutionGroup = new ArrayList<>();
         descriptor.getUserData().put("substitutionGroup", substitutionGroup);
 
         int minOccurs = Schemas.getMinOccurs(container, elemDecl);
@@ -391,12 +391,8 @@ public class FeatureTypeRegistry {
      * If the type of elemDecl is annonymous creates a new type with the same name than the
      * atrribute and returns it. If it is not anonymous, looks it up on the registry and in case the
      * type does not exists in the registry uses a proxy.
-     *
-     * @param elemDecl
-     * @return
      */
     private AttributeType getTypeOf(XSDElementDeclaration elemDecl, CoordinateReferenceSystem crs) {
-        XSDTypeDefinition typeDefinition;
 
         // TODO REVISIT, I'm not sure this is the way to find out if the
         // element's type is defined in line (an thus no need to register it
@@ -405,7 +401,7 @@ public class FeatureTypeRegistry {
             elemDecl = elemDecl.getResolvedElementDeclaration();
         }
         boolean hasToBeRegistered = false;
-        typeDefinition = elemDecl.getAnonymousTypeDefinition();
+        XSDTypeDefinition typeDefinition = elemDecl.getAnonymousTypeDefinition();
         if (typeDefinition == null) {
             // anonymous types already has type definition inline in the element
             // so the handling is different
@@ -495,10 +491,6 @@ public class FeatureTypeRegistry {
      * <p>If it is a complex attribute, it will contain all the properties declared in the <code>
      * typeDefinition</code>, as well as all the properties declared in its super types. TODO:
      * handle the case where the extension mechanism is restriction.
-     *
-     * @param assignedName
-     * @param typeDefinition
-     * @return
      */
     private AttributeType createType(
             final Name assignedName,
@@ -537,19 +529,17 @@ public class FeatureTypeRegistry {
         }
 
         if (typeDefinition instanceof XSDComplexTypeDefinition) {
-            XSDComplexTypeDefinition complexTypeDef;
-            complexTypeDef = (XSDComplexTypeDefinition) typeDefinition;
+            XSDComplexTypeDefinition complexTypeDef = (XSDComplexTypeDefinition) typeDefinition;
             boolean includeParents = true;
             List<XSDElementDeclaration> children =
                     Schemas.getChildElementDeclarations(typeDefinition, includeParents);
 
-            final Collection<PropertyDescriptor> schema =
-                    new ArrayList<PropertyDescriptor>(children.size());
+            final Collection<PropertyDescriptor> schema = new ArrayList<>(children.size());
 
             XSDElementDeclaration childDecl;
             AttributeDescriptor descriptor;
-            for (Iterator it = children.iterator(); it.hasNext(); ) {
-                childDecl = (XSDElementDeclaration) it.next();
+            for (XSDElementDeclaration child : children) {
+                childDecl = child;
                 try {
                     descriptor = createAttributeDescriptor(complexTypeDef, childDecl, crs);
                 } catch (NoSuchElementException e) {
@@ -636,15 +626,7 @@ public class FeatureTypeRegistry {
         return attType;
     }
 
-    /**
-     * NOTE: to be called only by {@link #createType(Name, XSDTypeDefinition)}
-     *
-     * @param assignedName
-     * @param schema
-     * @param typeDefinition
-     * @param superType
-     * @return
-     */
+    /** NOTE: to be called only by {@link #createType(Name, XSDTypeDefinition)} */
     private AttributeType createComplexAttributeType(
             final Name assignedName,
             final Collection<PropertyDescriptor> schema,
@@ -682,12 +664,15 @@ public class FeatureTypeRegistry {
     }
 
     /** Caches the basic types */
-    private static Map<Name, AttributeType> FOUNDATION_TYPES = new HashMap<Name, AttributeType>();
+    private static Map<Class<? extends FeatureTypeRegistryConfiguration>, Map<Name, AttributeType>>
+            FOUNDATION_TYPES = new HashMap<>();
 
     private void createFoundationTypes() {
-        synchronized (FOUNDATION_TYPES) {
-            if (!FOUNDATION_TYPES.isEmpty()) {
-                typeRegistry.putAll(FOUNDATION_TYPES);
+        Map<Name, AttributeType> foundationTypes =
+                FOUNDATION_TYPES.computeIfAbsent(helper.getClass(), o -> new HashMap<>());
+        synchronized (foundationTypes) {
+            if (!foundationTypes.isEmpty()) {
+                typeRegistry.putAll(foundationTypes);
                 return;
             }
 
@@ -701,14 +686,14 @@ public class FeatureTypeRegistry {
                 addSchemas(Schemas.findSchemas(config));
             }
 
-            FOUNDATION_TYPES.putAll(typeRegistry);
+            foundationTypes.putAll(typeRegistry);
         }
     }
 
     @SuppressWarnings("unchecked")
     protected void importSchema(Schema schema) {
-        for (Iterator it = schema.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Entry) it.next();
+        for (Entry<Name, AttributeType> nameAttributeTypeEntry : schema.entrySet()) {
+            Entry entry = (Entry) nameAttributeTypeEntry;
             Name key = (Name) entry.getKey();
             Object value = entry.getValue();
             if (typeRegistry.containsKey(key)) {
@@ -739,7 +724,7 @@ public class FeatureTypeRegistry {
                             String.class,
                             false,
                             false,
-                            Collections.<Filter>emptyList(),
+                            Collections.emptyList(),
                             null,
                             null);
         }

@@ -300,7 +300,7 @@ public final class Interpolator2D extends GridCoverage2D {
      * coverage. Other elements (if any) are fallbacks.
      */
     public Interpolation[] getInterpolations() {
-        final List<Interpolation> interp = new ArrayList<Interpolation>(4);
+        final List<Interpolation> interp = new ArrayList<>(4);
         Interpolator2D scan = this;
         do {
             interp.add(interpolation);
@@ -691,11 +691,7 @@ public final class Interpolator2D extends GridCoverage2D {
         return dest;
     }
 
-    /**
-     * @param samples
-     * @param gaps
-     * @return a boolean value indicating if the samples are valid
-     */
+    /** @return a boolean value indicating if the samples are valid */
     private boolean fixNoData(int[][] samples, boolean[][] gaps) {
         // First check if NoData check must be done
         if (!hasNoData) {
@@ -784,11 +780,7 @@ public final class Interpolator2D extends GridCoverage2D {
         return true;
     }
 
-    /**
-     * @param samples
-     * @param gaps
-     * @return a boolean value indicating if the samples are valid
-     */
+    /** @return a boolean value indicating if the samples are valid */
     private boolean fixNoData(float[][] samples, boolean[][] gaps) {
         // First check if NoData check must be done
         if (!hasNoData) {
@@ -877,11 +869,7 @@ public final class Interpolator2D extends GridCoverage2D {
         return true;
     }
 
-    /**
-     * @param samples
-     * @param gaps
-     * @return a boolean value indicating if the samples are valid
-     */
+    /** @return a boolean value indicating if the samples are valid */
     private boolean fixNoData(double[][] samples, boolean[][] gaps) {
         // First check if NoData check must be done
         if (!hasNoData) {

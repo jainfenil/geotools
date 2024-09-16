@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import net.opengis.wfs.GetFeatureType;
-import org.geotools.data.ows.HTTPResponse;
 import org.geotools.data.wfs.internal.GetFeatureRequest;
 import org.geotools.data.wfs.internal.GetFeatureResponse;
 import org.geotools.data.wfs.internal.GetParser;
@@ -28,6 +27,7 @@ import org.geotools.data.wfs.internal.WFSOperationType;
 import org.geotools.data.wfs.internal.WFSRequest;
 import org.geotools.data.wfs.internal.WFSResponse;
 import org.geotools.data.wfs.internal.WFSResponseFactory;
+import org.geotools.http.HTTPResponse;
 import org.geotools.ows.ServiceException;
 import org.opengis.feature.simple.SimpleFeature;
 
@@ -81,10 +81,7 @@ public abstract class AbstractGetFeatureResponseParserFactory extends AbstractWF
         }
     }
 
-    /**
-     * @param head The first couple of characters from the response, typically the first 512
-     * @return
-     */
+    /** @param head The first couple of characters from the response, typically the first 512 */
     protected boolean isValidResponseHead(String head) {
         return head.indexOf("FeatureCollection") > 0;
     }

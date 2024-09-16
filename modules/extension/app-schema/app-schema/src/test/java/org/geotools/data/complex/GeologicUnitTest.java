@@ -43,7 +43,6 @@ import org.geotools.xsd.SchemaIndex;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.opengis.feature.Feature;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.ComplexType;
 import org.opengis.feature.type.FeatureType;
@@ -81,7 +80,6 @@ public class GeologicUnitTest extends AppSchemaTestSupport {
      * Load schema
      *
      * @param location schema location path that can be found through getClass().getResource()
-     * @return
      */
     private SchemaIndex loadSchema(final String location) throws IOException {
         final URL catalogLocation = getClass().getResource(schemaBase + "mappedPolygons.oasis.xml");
@@ -92,8 +90,6 @@ public class GeologicUnitTest extends AppSchemaTestSupport {
     /**
      * Tests if the schema-to-FM parsing code developed for complex data store configuration loading
      * can parse the GeoSciML types
-     *
-     * @throws Exception
      */
     @Test
     public void testParseSchema() throws Exception {
@@ -118,11 +114,7 @@ public class GeologicUnitTest extends AppSchemaTestSupport {
         }
     }
 
-    /**
-     * Test that mappings are loaded OK.
-     *
-     * @throws Exception
-     */
+    /** Test that mappings are loaded OK. */
     @Test
     public void testLoadMappingsConfig() throws Exception {
         XMLConfigDigester reader = new XMLConfigDigester();
@@ -139,15 +131,13 @@ public class GeologicUnitTest extends AppSchemaTestSupport {
     /**
      * Tests that a {@link FeatureSource} can be obtained for all names returned by {@link
      * AppSchemaDataAccess#getNames()}.
-     *
-     * @throws Exception
      */
     @Test
     public void testGetNamesAndFeatureSources() throws Exception {
         /*
          * Initiate data accesses and make sure they have the mappings
          */
-        final Map<String, Serializable> dsParams = new HashMap<String, Serializable>();
+        final Map<String, Serializable> dsParams = new HashMap<>();
         URL url = getClass().getResource(schemaBase + "GeologicUnit.xml");
         assertNotNull(url);
         dsParams.put("dbtype", "app-schema");
@@ -162,17 +152,13 @@ public class GeologicUnitTest extends AppSchemaTestSupport {
         }
     }
 
-    /**
-     * Test that geologic unit features are returned correctly.
-     *
-     * @throws Exception
-     */
+    /** Test that geologic unit features are returned correctly. */
     @Test
     public void testGetFeatures() throws Exception {
         /*
          * Initiate data accesses and make sure they have the mappings
          */
-        final Map dsParams = new HashMap();
+        final Map<String, Serializable> dsParams = new HashMap<>();
         URL url = getClass().getResource(schemaBase + "GeologicUnit.xml");
         assertNotNull(url);
         dsParams.put("dbtype", "app-schema");
@@ -191,32 +177,28 @@ public class GeologicUnitTest extends AppSchemaTestSupport {
         DataAccess mfDataAccess = DataAccessFinder.getDataStore(dsParams);
         assertNotNull(mfDataAccess);
 
-        FeatureSource guSource =
-                (FeatureSource) guDataStore.getFeatureSource(FeatureChainingTest.GEOLOGIC_UNIT);
+        FeatureSource guSource = guDataStore.getFeatureSource(FeatureChainingTest.GEOLOGIC_UNIT);
 
-        FeatureCollection guFeatures = (FeatureCollection) guSource.getFeatures();
+        FeatureCollection guFeatures = guSource.getFeatures();
         assertEquals(3, size(guFeatures));
 
         FeatureSource cpSource =
                 DataAccessRegistry.getFeatureSource(FeatureChainingTest.COMPOSITION_PART);
-        FeatureCollection cpFeatures = (FeatureCollection) cpSource.getFeatures();
+        FeatureCollection cpFeatures = cpSource.getFeatures();
         assertEquals(4, size(cpFeatures));
 
         FeatureSource cgiSource =
                 DataAccessRegistry.getFeatureSource(FeatureChainingTest.CGI_TERM_VALUE);
-        FeatureCollection cgiFeatures = (FeatureCollection) cgiSource.getFeatures();
+        FeatureCollection cgiFeatures = cgiSource.getFeatures();
         assertEquals(6, size(cgiFeatures));
     }
 
-    private int size(FeatureCollection<FeatureType, Feature> features) {
+    private int size(FeatureCollection features) {
         int size = 0;
-        FeatureIterator<Feature> i = features.features();
-        try {
+        try (FeatureIterator i = features.features()) {
             for (; i.hasNext(); i.next()) {
                 size++;
             }
-        } finally {
-            i.close();
         }
         return size;
     }

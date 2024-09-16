@@ -44,21 +44,12 @@ public class SortedFeatureReader implements SimpleFeatureReader {
     /**
      * Checks if the schema and the sortBy are suitable for merge/sort. All attributes need to be
      * {@link Serializable}, all sorting attributes need to be {@link Comparable}
-     *
-     * @param schema
-     * @param sortBy
-     * @return
      */
-    public static final boolean canSort(SimpleFeatureType schema, SortBy[] sortBy) {
+    public static final boolean canSort(SimpleFeatureType schema, SortBy... sortBy) {
         return MergeSortDumper.canSort(schema, sortBy);
     }
 
-    /**
-     * Gets the max amount amount of features to keep in memory from the query and system hints
-     *
-     * @param query
-     * @return
-     */
+    /** Gets the max amount amount of features to keep in memory from the query and system hints */
     public static int getMaxFeaturesInMemory(Query q) {
         return MergeSortDumper.getMaxFeatures(q);
     }
@@ -80,7 +71,6 @@ public class SortedFeatureReader implements SimpleFeatureReader {
      * @param reader The reader to be sorted
      * @param sortBy The sorting directives
      * @param maxFeatures The maximum number of features to keep in memory
-     * @throws IOException
      */
     public SortedFeatureReader(SimpleFeatureReader reader, SortBy[] sortBy, int maxFeatures)
             throws IOException {
@@ -104,20 +94,21 @@ public class SortedFeatureReader implements SimpleFeatureReader {
         delegate.close();
     }
 
-    /**
-     * Builds a comparator that can be used to sort SimpleFeature instances in memory
-     *
-     * @param sortBy
-     * @return
-     */
-    public static Comparator<SimpleFeature> getComparator(SortBy[] sortBy) {
+    /** Builds a comparator that can be used to sort SimpleFeature instances in memory */
+    public static Comparator<SimpleFeature> getComparator(SortBy... sortBy) {
+        return getComparator(sortBy, null);
+    }
+
+    /** Builds a comparator that can be used to sort SimpleFeature instances in memory */
+    public static Comparator<SimpleFeature> getComparator(
+            SortBy[] sortBy, SimpleFeatureType schema) {
         // handle the easy cases, no sorting or natural sorting
         if (sortBy == SortBy.UNSORTED || sortBy == null) {
             return null;
         }
 
         // build a list of comparators
-        List<Comparator<SimpleFeature>> comparators = new ArrayList<Comparator<SimpleFeature>>();
+        List<Comparator<SimpleFeature>> comparators = new ArrayList<>();
         for (SortBy sb : sortBy) {
             if (sb == SortBy.NATURAL_ORDER) {
                 comparators.add(new FidComparator(true));
@@ -126,7 +117,14 @@ public class SortedFeatureReader implements SimpleFeatureReader {
             } else {
                 String name = sb.getPropertyName().getPropertyName();
                 boolean ascending = sb.getSortOrder() == SortOrder.ASCENDING;
-                comparators.add(new PropertyComparator(name, ascending));
+                Comparator<SimpleFeature> comparator;
+                if (schema == null) {
+                    comparator = new PropertyComparator(name, ascending);
+                } else {
+                    int idx = schema.indexOf(name);
+                    comparator = new IndexedPropertyComparator(idx, ascending);
+                }
+                comparators.add(comparator);
             }
         }
 

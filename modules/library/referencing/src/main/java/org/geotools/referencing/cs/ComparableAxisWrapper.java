@@ -29,7 +29,7 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
  * @version $Id$
  * @author Martin Desruisseaux
  */
-final class ComparableAxisWrapper implements Comparable {
+final class ComparableAxisWrapper implements Comparable<ComparableAxisWrapper> {
     /** The wrapped axis. */
     private final CoordinateSystemAxis axis;
 
@@ -51,8 +51,8 @@ final class ComparableAxisWrapper implements Comparable {
     /**
      * Compares with the specified object. See class javadoc for a description of the sorting order.
      */
-    public int compareTo(final Object other) {
-        final ComparableAxisWrapper that = (ComparableAxisWrapper) other;
+    public int compareTo(final ComparableAxisWrapper other) {
+        final ComparableAxisWrapper that = other;
         final AxisDirection d1 = this.axis.getDirection();
         final AxisDirection d2 = that.axis.getDirection();
         final int compass = DefaultCoordinateSystemAxis.getCompassAngle(d2, d1);
@@ -82,7 +82,7 @@ final class ComparableAxisWrapper implements Comparable {
      * Sorts the specified axis in an attempt to create a right-handed system. The sorting is
      * performed in place. This method returns {@code true} if at least one axis moved.
      */
-    public static boolean sort(final CoordinateSystemAxis[] axis) {
+    public static boolean sort(final CoordinateSystemAxis... axis) {
         final ComparableAxisWrapper[] wrappers = new ComparableAxisWrapper[axis.length];
         for (int i = 0; i < axis.length; i++) {
             wrappers[i] = new ComparableAxisWrapper(axis[i]);

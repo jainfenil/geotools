@@ -77,6 +77,7 @@ class CompositingGroup {
                         clone.setVisible(layer.isVisible());
                         clone.setSelected(layer.isSelected());
                         clone.getUserData().putAll(layer.getUserData());
+                        clone.setTitle(layer.getTitle());
                         layers.add(clone);
                     }
                 }
@@ -107,7 +108,7 @@ class CompositingGroup {
             List<Layer> layers,
             Composite composite) {
         Graphics2D cmcGraphic;
-        if (compositingContents.size() == 0 && !hasAlphaCompositing(layers)) {
+        if (compositingContents.isEmpty() && !hasAlphaCompositing(layers)) {
             cmcGraphic = graphics;
         } else {
             cmcGraphic = new DelayedBackbufferGraphic(graphics, screenSize);
@@ -126,21 +127,16 @@ class CompositingGroup {
         }
         Style styles = layer.getStyle();
         List<FeatureTypeStyle> featureTypeStyles = styles.featureTypeStyles();
-        if (featureTypeStyles.size() > 0) {
+        if (featureTypeStyles.isEmpty()) {
+            return null;
+        } else {
             FeatureTypeStyle firstFts = featureTypeStyles.get(0);
             Composite composite = SLDStyleFactory.getComposite(firstFts.getOptions());
             return composite;
-        } else {
-            return null;
         }
     }
 
-    /**
-     * Returns true if alpha compositing is used anywhere in the style
-     *
-     * @param currentFeature
-     * @return
-     */
+    /** Returns true if alpha compositing is used anywhere in the style */
     private static boolean hasAlphaCompositing(List<Layer> layers) {
         AlphaCompositeVisitor visitor = new AlphaCompositeVisitor();
         for (Layer layer : layers) {
@@ -165,6 +161,8 @@ class CompositingGroup {
         }
 
         addToStyles(styles, featureTypeStyles);
+        // move the background definition to the first element in the compositing stack
+        styles.get(0).setBackground(style.getBackground());
 
         return styles;
     }

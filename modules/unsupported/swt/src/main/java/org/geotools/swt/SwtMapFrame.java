@@ -118,8 +118,6 @@ public class SwtMapFrame extends ApplicationWindow {
      * Constructs a new {@code JMapFrame} object with specified context and a default renderer (an
      * instance of {@link StreamingRenderer}).
      *
-     * @param showLayerTable
-     * @param showStatusBar
      * @param content the map context with layers to be displayed
      */
     public SwtMapFrame(
@@ -140,8 +138,6 @@ public class SwtMapFrame extends ApplicationWindow {
     /**
      * Constructs a new {@code JMapFrame} object with specified context and renderer
      *
-     * @param showLayerTable
-     * @param showStatusBar
      * @param context the map context with layers to be displayed
      * @param renderer the renderer to be used
      */
@@ -166,7 +162,7 @@ public class SwtMapFrame extends ApplicationWindow {
         openShapeAction = new OpenShapefileAction();
         openCoverageAction = new OpenGeotiffAction();
 
-        toolSet = new HashSet<Tool>();
+        toolSet = new HashSet<>();
         toolSet.addAll(EnumSet.allOf(Tool.class));
         if (showToolBar) {
             addToolBar(SWT.FLAT | SWT.WRAP);

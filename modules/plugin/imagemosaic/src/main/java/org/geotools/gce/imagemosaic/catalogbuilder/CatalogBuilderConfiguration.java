@@ -74,12 +74,7 @@ public class CatalogBuilderConfiguration implements Cloneable {
         this.hints = hints;
     }
 
-    /**
-     * Get the schema with the specified name
-     *
-     * @param name
-     * @return
-     */
+    /** Get the schema with the specified name */
     public String getSchema(String name) {
         // return schema;
         SchemasType schemas = indexer.getSchemas();
@@ -94,12 +89,7 @@ public class CatalogBuilderConfiguration implements Cloneable {
         return null;
     }
 
-    /**
-     * Set the indexer parameter
-     *
-     * @param parameterName
-     * @param parameterValue
-     */
+    /** Set the indexer parameter */
     public void setParameter(String parameterName, String parameterValue) {
         List<Parameter> params = indexer.getParameters().getParameter();
         parameterValue = IndexerUtils.refineParameterValue(parameterName, parameterValue);
@@ -153,6 +143,7 @@ public class CatalogBuilderConfiguration implements Cloneable {
 
         if (!equalsParameter(this, that, Prop.CACHING)) return false;
         if (!equalsParameter(this, that, Prop.RECURSIVE)) return false;
+        if (!equalsParameter(this, that, Prop.COG)) return false;
         if (!equalsParameter(this, that, Prop.FOOTPRINT_MANAGEMENT)) return false;
         if (!equalsParameter(this, that, Prop.INDEX_NAME)) return false;
         if (!equalsParameter(this, that, Prop.LOCATION_ATTRIBUTE)) return false;
@@ -177,6 +168,7 @@ public class CatalogBuilderConfiguration implements Cloneable {
         int seed = 37;
         seed = Utilities.hash(Boolean.parseBoolean(getParameter(Prop.ABSOLUTE_PATH)), seed);
         seed = Utilities.hash(Boolean.parseBoolean(getParameter(Prop.RECURSIVE)), seed);
+        seed = Utilities.hash(Boolean.parseBoolean(getParameter(Prop.COG)), seed);
         seed = Utilities.hash(Boolean.parseBoolean(getParameter(Prop.CACHING)), seed);
         seed = Utilities.hash(Boolean.parseBoolean(getParameter(Prop.FOOTPRINT_MANAGEMENT)), seed);
         seed = Utilities.hash(getParameter(Prop.LOCATION_ATTRIBUTE), seed);

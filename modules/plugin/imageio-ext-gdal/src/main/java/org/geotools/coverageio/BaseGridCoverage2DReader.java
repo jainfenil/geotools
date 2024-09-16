@@ -131,7 +131,6 @@ public abstract class BaseGridCoverage2DReader extends AbstractGridCoverage2DRea
      * @param hints Hints to be used by this reader throughout his life.
      * @param worldFileExtension the specific world file extension of the underlying format
      * @param formatSpecificSpi an instance of a proper {@code ImageReaderSpi}.
-     * @throws DataSourceException
      */
     protected BaseGridCoverage2DReader(
             final Object input,
@@ -177,12 +176,7 @@ public abstract class BaseGridCoverage2DReader extends AbstractGridCoverage2DRea
             // //
             getResolutionInfo(reader);
 
-        } catch (IOException e) {
-            if (LOGGER.isLoggable(Level.SEVERE))
-                LOGGER.log(Level.SEVERE, e.getLocalizedMessage(), e);
-
-            throw new DataSourceException(e);
-        } catch (TransformException e) {
+        } catch (IOException | TransformException e) {
             if (LOGGER.isLoggable(Level.SEVERE))
                 LOGGER.log(Level.SEVERE, e.getLocalizedMessage(), e);
 
@@ -248,10 +242,6 @@ public abstract class BaseGridCoverage2DReader extends AbstractGridCoverage2DRea
      * @param input provided to this {@link BaseGridCoverage2DReader}. Actually supported input
      *     types for the underlying ImageIO-Ext GDAL framework are: {@code File}, {@code URL}
      *     pointing to a file and {@link AccessibleStream}
-     * @throws UnsupportedEncodingException
-     * @throws DataSourceException
-     * @throws IOException
-     * @throws FileNotFoundException
      */
     private void checkSource(Object input)
             throws UnsupportedEncodingException, IOException, FileNotFoundException {
@@ -337,9 +327,6 @@ public abstract class BaseGridCoverage2DReader extends AbstractGridCoverage2DRea
      * Gets resolution information about the coverage itself.
      *
      * @param reader an {@link ImageReader} to use for getting the resolution information.
-     * @throws IOException
-     * @throws TransformException
-     * @throws DataSourceException
      */
     private void getResolutionInfo(ImageReader reader) throws IOException, TransformException {
         // //
@@ -394,10 +381,9 @@ public abstract class BaseGridCoverage2DReader extends AbstractGridCoverage2DRea
      * looking for a related PRJ.
      */
     protected void parsePRJFile() {
-        String prjPath = null;
 
         this.crs = null;
-        prjPath = this.parentPath + File.separatorChar + coverageName + ".prj";
+        String prjPath = this.parentPath + File.separatorChar + coverageName + ".prj";
 
         // read the prj serviceInfo from the file
         PrjFileReader projReader = null;
@@ -415,15 +401,7 @@ public abstract class BaseGridCoverage2DReader extends AbstractGridCoverage2DRea
             }
             // If some exception occurs, warn about the error but proceed
             // using a default CRS
-        } catch (FileNotFoundException e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
-            }
-        } catch (IOException e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
-            }
-        } catch (FactoryException e) {
+        } catch (FactoryException | IOException e) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
             }
@@ -463,9 +441,6 @@ public abstract class BaseGridCoverage2DReader extends AbstractGridCoverage2DRea
     /**
      * Checks whether a world file is associated with the data source. If found, set a proper
      * envelope.
-     *
-     * @throws IllegalStateException
-     * @throws IOException
      */
     protected void parseWorldFile() {
         final String worldFilePath =
@@ -516,15 +491,7 @@ public abstract class BaseGridCoverage2DReader extends AbstractGridCoverage2DRea
                 final GeneralEnvelope coverageEnvelope = CRS.transform(tempTransform, gridRange);
                 originalEnvelope = coverageEnvelope;
                 return;
-            } catch (TransformException e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
-                }
-            } catch (IllegalStateException e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
-                }
-            } catch (IOException e) {
+            } catch (TransformException | IOException | IllegalStateException e) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
                 }

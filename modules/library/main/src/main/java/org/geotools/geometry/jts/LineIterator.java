@@ -106,14 +106,7 @@ public final class LineIterator extends AbstractLiteIterator {
     //
     //    }
 
-    /**
-     * @param ls a LineString
-     * @param at
-     * @param generalize
-     * @param maxDistance
-     * @param xScale
-     * @param yScale
-     */
+    /** @param ls a LineString */
     public void init(
             LineString ls,
             AffineTransform at,
@@ -127,12 +120,7 @@ public final class LineIterator extends AbstractLiteIterator {
         _init(ls, at, generalize, maxDistance);
     }
 
-    /**
-     * @param ls
-     * @param at
-     * @param generalize
-     * @param maxDistance
-     */
+    /** */
     public void init(LineString ls, AffineTransform at, boolean generalize, float maxDistance) {
         if (at == null) at = new AffineTransform();
         _init(ls, at, generalize, maxDistance);
@@ -149,12 +137,7 @@ public final class LineIterator extends AbstractLiteIterator {
                                         + (at.getShearY() * at.getShearY()));
     }
 
-    /**
-     * @param ls
-     * @param at
-     * @param generalize
-     * @param maxDistance
-     */
+    /** */
     private void _init(LineString ls, AffineTransform at, boolean generalize, float maxDistance) {
         if (at == null) {
             at = NO_TRANSFORM;
@@ -325,8 +308,8 @@ public final class LineIterator extends AbstractLiteIterator {
     /** @see java.awt.geom.PathIterator#currentSegment(double[]) */
     public int currentSegment(double[] coords) {
         if (currentCoord == 0) {
-            coords[0] = (double) coordinates.getX(0);
-            coords[1] = (double) coordinates.getY(0);
+            coords[0] = coordinates.getX(0);
+            coords[1] = coordinates.getY(0);
             at.transform(coords, 0, coords, 0, 1);
             return SEG_MOVETO;
         } else if ((currentCoord == coordinateCount) && isClosed) {

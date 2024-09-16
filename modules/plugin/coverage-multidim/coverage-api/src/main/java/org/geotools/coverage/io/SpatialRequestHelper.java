@@ -186,8 +186,6 @@ public class SpatialRequestHelper {
     /**
      * Compute this specific request settings all the parameters needed by a visiting {@link
      * RasterLayerResponse} object.
-     *
-     * @throws DataSourceException
      */
     public void prepare() throws DataSourceException {
         //
@@ -226,7 +224,6 @@ public class SpatialRequestHelper {
      * rectangle which is suitable for a successive read operation with {@link ImageIO} to do
      * crop-on-read.
      *
-     * @throws DataSourceException
      * @throws DataSourceException in case something bad occurs
      */
     private void computeRequestSpatialElements() throws DataSourceException {
@@ -335,9 +332,7 @@ public class SpatialRequestHelper {
                                             tempTransform,
                                             new GeneralEnvelope(requestedRasterArea)));
 
-                } catch (MismatchedDimensionException e) {
-                    throw new DataSourceException("Unable to inspect request CRS", e);
-                } catch (TransformException e) {
+                } catch (MismatchedDimensionException | TransformException e) {
                     throw new DataSourceException("Unable to inspect request CRS", e);
                 }
 
@@ -353,7 +348,6 @@ public class SpatialRequestHelper {
      * transformation.
      *
      * @throws TransformException in case a problem occurs when going back to raster space.
-     * @throws DataSourceException
      */
     private void computeCropRasterArea() throws DataSourceException {
 
@@ -397,9 +391,7 @@ public class SpatialRequestHelper {
                                         PixelInCell.CELL_CORNER,
                                         false)
                                 .toRectangle();
-            } catch (IllegalStateException e) {
-                throw new DataSourceException(e);
-            } catch (TransformException e) {
+            } catch (IllegalStateException | TransformException e) {
                 throw new DataSourceException(e);
             }
         } else {
@@ -425,8 +417,6 @@ public class SpatialRequestHelper {
                 // the requested raster area
                 XRectangle2D.intersect(
                         destinationRasterArea, requestedRasterArea, destinationRasterArea);
-            } catch (NoninvertibleTransformException e) {
-                throw new DataSourceException(e);
             } catch (TransformException e) {
                 throw new DataSourceException(e);
             }
@@ -582,7 +572,7 @@ public class SpatialRequestHelper {
 
             // intersect requested BBox in native CRS with coverage native bbox to get the crop bbox
             // intersect the requested area with the bounds of this layer in native crs
-            if (!cropBBox.intersects((BoundingBox) coverageProperties.bbox)) {
+            if (!cropBBox.intersects(coverageProperties.bbox)) {
                 if (LOGGER.isLoggable(Level.FINE)) {
                     LOGGER.fine(
                             new StringBuilder("The computed CropBoundingBox ")
@@ -664,14 +654,10 @@ public class SpatialRequestHelper {
                 return;
             }
 
-        } catch (TransformException te) {
+        } catch (TransformException | FactoryException te) {
             // something bad happened while trying to transform this
             // envelope. let's try with wgs84
             if (LOGGER.isLoggable(Level.FINE)) LOGGER.log(Level.FINE, te.getLocalizedMessage(), te);
-        } catch (FactoryException fe) {
-            // something bad happened while trying to transform this
-            // envelope. let's try with wgs84
-            if (LOGGER.isLoggable(Level.FINE)) LOGGER.log(Level.FINE, fe.getLocalizedMessage(), fe);
         }
 
         LOGGER.log(

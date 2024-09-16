@@ -110,7 +110,6 @@ public class SimpleFeaturePropertyAccessorFactory implements PropertyAccessorFac
      *   <li>AFTER: bar
      * </ul>
      *
-     * @param xpath
      * @return xpath with any XML prefixes removed
      */
     static String stripPrefixIndex(String xpath) {
@@ -135,9 +134,11 @@ public class SimpleFeaturePropertyAccessorFactory implements PropertyAccessorFac
             return object instanceof SimpleFeature && xpath.matches("@(\\w+:)?id");
         }
 
-        public Object get(Object object, String xpath, Class target) {
+        @SuppressWarnings("unchecked") // target can be null
+        public <T> T get(Object object, String xpath, Class<T> target)
+                throws IllegalArgumentException {
             SimpleFeature feature = (SimpleFeature) object;
-            return feature.getID();
+            return (T) feature.getID();
         }
 
         public void set(Object object, String xpath, Object value, Class target)
@@ -161,7 +162,9 @@ public class SimpleFeaturePropertyAccessorFactory implements PropertyAccessorFac
             return true;
         }
 
-        public Object get(Object object, String xpath, Class target) {
+        @SuppressWarnings("unchecked") // target can be null, cannot use target.cast
+        public <T> T get(Object object, String xpath, Class<T> target)
+                throws IllegalArgumentException {
             if (object instanceof SimpleFeature) {
                 SimpleFeature f = (SimpleFeature) object;
                 Object defaultGeometry = f.getDefaultGeometry();
@@ -176,7 +179,7 @@ public class SimpleFeaturePropertyAccessorFactory implements PropertyAccessorFac
                     }
                 }
 
-                return defaultGeometry;
+                return (T) defaultGeometry;
             }
 
             if (object instanceof SimpleFeatureType) {
@@ -187,12 +190,12 @@ public class SimpleFeaturePropertyAccessorFactory implements PropertyAccessorFac
                     // look for any geometry descriptor
                     for (AttributeDescriptor ad : ft.getAttributeDescriptors()) {
                         if (Geometry.class.isAssignableFrom(ad.getType().getBinding())) {
-                            return ad;
+                            return (T) ad;
                         }
                     }
                 }
 
-                return gd;
+                return (T) gd;
             }
 
             return null;
@@ -202,7 +205,7 @@ public class SimpleFeaturePropertyAccessorFactory implements PropertyAccessorFac
                 throws IllegalAttributeException {
 
             if (object instanceof SimpleFeature) {
-                ((SimpleFeature) object).setDefaultGeometry((Geometry) value);
+                ((SimpleFeature) object).setDefaultGeometry(value);
             }
             if (object instanceof SimpleFeatureType) {
                 throw new IllegalAttributeException("feature type is immutable");
@@ -212,28 +215,42 @@ public class SimpleFeaturePropertyAccessorFactory implements PropertyAccessorFac
 
     static class SimpleFeaturePropertyAccessor implements PropertyAccessor {
         public boolean canHandle(Object object, String xpath, Class target) {
-            xpath = stripPrefixIndex(xpath);
+            String stripped = stripPrefixIndex(xpath);
 
             if (object instanceof SimpleFeature) {
-                return ((SimpleFeature) object).getType().indexOf(xpath) >= 0;
+                SimpleFeatureType type = ((SimpleFeature) object).getType();
+                return type.indexOf(xpath) >= 0 || type.indexOf(stripped) >= 0;
             }
 
             if (object instanceof SimpleFeatureType) {
-                return ((SimpleFeatureType) object).indexOf(xpath) >= 0;
+                SimpleFeatureType type = (SimpleFeatureType) object;
+                return type.indexOf(xpath) >= 0 || type.indexOf(stripped) >= 0;
             }
 
             return false;
         }
 
-        public Object get(Object object, String xpath, Class target) {
-            xpath = stripPrefixIndex(xpath);
-
+        @SuppressWarnings("unchecked") // target can be null, cannot use target.cast
+        public <T> T get(Object object, String xpath, Class<T> target)
+                throws IllegalArgumentException {
             if (object instanceof SimpleFeature) {
-                return ((SimpleFeature) object).getAttribute(xpath);
+                SimpleFeatureType type = ((SimpleFeature) object).getType();
+                if (type.indexOf(xpath) >= 0) {
+                    return (T) ((SimpleFeature) object).getAttribute(xpath);
+                } else {
+                    String stripped = stripPrefixIndex(xpath);
+                    return (T) ((SimpleFeature) object).getAttribute(stripped);
+                }
             }
 
             if (object instanceof SimpleFeatureType) {
-                return ((SimpleFeatureType) object).getDescriptor(xpath);
+                SimpleFeatureType type = (SimpleFeatureType) object;
+                if (type.indexOf(xpath) >= 0) {
+                    return (T) type.getDescriptor(xpath);
+                } else {
+                    String stripped = stripPrefixIndex(xpath);
+                    return (T) type.getDescriptor(stripped);
+                }
             }
 
             return null;

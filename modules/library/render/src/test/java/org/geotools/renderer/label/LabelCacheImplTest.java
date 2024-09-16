@@ -1,6 +1,9 @@
 package org.geotools.renderer.label;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.Color;
 import java.awt.FontFormatException;
@@ -56,8 +59,7 @@ public class LabelCacheImplTest {
     StyleBuilder sb;
 
     NumberRange<Double> ALL_SCALES =
-            new NumberRange<Double>(
-                    Double.class, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+            new NumberRange<>(Double.class, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
 
     @Before
     public void setupSchema() {
@@ -172,7 +174,7 @@ public class LabelCacheImplTest {
 
     @Test
     public void testCustomBehaviour() throws TransformException, FactoryException {
-        final List<String> labels = new ArrayList<String>();
+        final List<String> labels = new ArrayList<>();
         Graphics2D graphics = Mockito.mock(Graphics2D.class);
         LabelCacheImpl myCache =
                 new LabelCacheImpl() {
@@ -213,7 +215,7 @@ public class LabelCacheImplTest {
     public void testRendererListener() throws Exception {
         TextSymbolizer ts = sb.createTextSymbolizer(Color.BLACK, (Font) null, "name");
 
-        AtomicReference<Exception> exception = new AtomicReference<Exception>(null);
+        AtomicReference<Exception> exception = new AtomicReference<>(null);
         RenderListener listener =
                 new RenderListener() {
 
@@ -272,7 +274,7 @@ public class LabelCacheImplTest {
         TextSymbolizer ts = sb.createTextSymbolizer(Color.BLACK, font, "name");
         ts.getOptions().put(TextSymbolizer.FOLLOW_LINE_KEY, "true");
 
-        AtomicReference<Exception> exception = new AtomicReference<Exception>(null);
+        AtomicReference<Exception> exception = new AtomicReference<>(null);
         RenderListener listener =
                 new RenderListener() {
 
@@ -301,6 +303,30 @@ public class LabelCacheImplTest {
         cache.end(graphics, new Rectangle(0, 0, 10, 10));
         // got here, no exception
         assertNull(exception.get());
+    }
+
+    @Test
+    public void testFollowLineAutoWrap() throws Exception {
+        // these two right now are not compatible
+        Font font = sb.createFont("Bitstream Vera Sans", 12);
+        TextSymbolizer ts = sb.createTextSymbolizer(Color.BLACK, font, "name");
+        ts.getOptions().put(TextSymbolizer.AUTO_WRAP_KEY, "10");
+        ts.getOptions().put(TextSymbolizer.FOLLOW_LINE_KEY, "true");
+
+        // put in cache
+        SimpleFeature f1 = createFeature("label1", L4);
+        cache.put(
+                LAYER_ID,
+                ts,
+                f1,
+                new LiteShape2((Geometry) f1.getDefaultGeometry(), null, null, false),
+                ALL_SCALES);
+
+        // check autowrap got disabled
+        List<LabelCacheItem> items = cache.getActiveLabels();
+        LabelCacheItem item = items.get(0);
+        assertTrue(item.isFollowLineEnabled());
+        assertEquals(0, item.getAutoWrap());
     }
 
     private SimpleFeature createFeature(String label, Geometry geom) {

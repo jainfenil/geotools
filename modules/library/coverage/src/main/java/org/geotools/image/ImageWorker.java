@@ -38,7 +38,12 @@ import it.geosolutions.jaiext.stats.Statistics;
 import it.geosolutions.jaiext.stats.Statistics.StatsType;
 import it.geosolutions.jaiext.utilities.ImageLayout2;
 import it.geosolutions.jaiext.vectorbin.ROIGeometry;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.HeadlessException;
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
@@ -63,7 +68,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.IIOException;
@@ -101,14 +105,24 @@ import javax.media.jai.Warp;
 import javax.media.jai.WarpAffine;
 import javax.media.jai.WarpGrid;
 import javax.media.jai.operator.AddDescriptor;
+import javax.media.jai.operator.BandCombineDescriptor;
+import javax.media.jai.operator.BandSelectDescriptor;
+import javax.media.jai.operator.BinarizeDescriptor;
+import javax.media.jai.operator.ColorConvertDescriptor;
 import javax.media.jai.operator.ConstantDescriptor;
+import javax.media.jai.operator.ErrorDiffusionDescriptor;
 import javax.media.jai.operator.ExtremaDescriptor;
+import javax.media.jai.operator.FormatDescriptor;
 import javax.media.jai.operator.HistogramDescriptor;
 import javax.media.jai.operator.InvertDescriptor;
+import javax.media.jai.operator.LookupDescriptor;
 import javax.media.jai.operator.MeanDescriptor;
 import javax.media.jai.operator.MosaicDescriptor;
 import javax.media.jai.operator.MosaicType;
 import javax.media.jai.operator.MultiplyConstDescriptor;
+import javax.media.jai.operator.MultiplyDescriptor;
+import javax.media.jai.operator.OrderedDitherDescriptor;
+import javax.media.jai.operator.RescaleDescriptor;
 import javax.media.jai.operator.SubtractDescriptor;
 import javax.media.jai.operator.XorConstDescriptor;
 import javax.media.jai.registry.RenderedRegistryMode;
@@ -510,8 +524,6 @@ public class ImageWorker {
 
     /**
      * The x-period used by statistical operations (e.g. extrema, mean, histogram). Defaults to 1.
-     *
-     * @return
      */
     public int getXPeriod() {
         return xPeriod;
@@ -529,8 +541,6 @@ public class ImageWorker {
 
     /**
      * The y-period used by statistical operations (e.g. extrema, mean, histogram). Defaults to 1.
-     *
-     * @return
      */
     public int getYPeriod() {
         return yPeriod;
@@ -1141,75 +1151,84 @@ public class ImageWorker {
     /** Returns the histogram of the image. */
     public Histogram getHistogram(int[] numBins, double[] lowValues, double[] highValues) {
         Object histogram = getComputedProperty(HISTOGRAM);
-        if (!(histogram instanceof Histogram)) {
-            // Create the parameterBlock
-            ParameterBlock pb = new ParameterBlock();
-            pb.setSource(image, 0);
-            if (JAIExt.isJAIExtOperation("Stats")) {
-                StatsType[] stats = new StatsType[] {StatsType.HISTOGRAM};
-                // Band definition
-                int numBands = getNumBands();
-                int[] bands = new int[numBands];
-                for (int i = 0; i < numBands; i++) {
-                    bands[i] = i;
-                }
-
-                // Image parameters
-                pb.set(xPeriod, 0); // xPeriod
-                pb.set(yPeriod, 1); // yPeriod
-                pb.set(roi, 2); // ROI
-                pb.set(nodata, 3); // NoData
-                pb.set(bands, 5); // band indexes
-                pb.set(stats, 6); // statistic operation
-                pb.set(numBins, 9); // Bin number.
-                pb.set(lowValues, 7); // Lower values per band.
-                pb.set(highValues, 8); // Higher values per band.
-                image = JAI.create("Stats", pb, getRenderingHints());
-                // Retrieving the statistics
-                Statistics[][] results =
-                        (Statistics[][]) getComputedProperty(Statistics.STATS_PROPERTY);
-                int[][] bins = new int[numBands][];
-
-                // Cycle on the bands
-                for (int i = 0; i < results.length; i++) {
-                    Statistics stat = results[i][0];
-                    double[] binsDouble = (double[]) stat.getResult();
-                    bins[i] = new int[binsDouble.length];
-                    for (int j = 0; j < binsDouble.length; j++) {
-                        bins[i][j] = (int) binsDouble[j];
-                    }
-                }
-                ParameterBlock parameterBlock = getRenderedOperation().getParameterBlock();
-                if (numBins == null) {
-                    numBins = (int[]) parameterBlock.getObjectParameter(9);
-                }
-                if (lowValues == null) {
-                    lowValues = (double[]) parameterBlock.getObjectParameter(7);
-                }
-                if (highValues == null) {
-                    highValues = (double[]) parameterBlock.getObjectParameter(8);
-                }
-                HistogramWrapper wrapper =
-                        new HistogramWrapper(numBins, lowValues, highValues, bins);
-                // Setting the property
-                if (image instanceof PlanarImage) {
-                    ((PlanarImage) image).setProperty(HISTOGRAM, wrapper);
-                } else {
-                    PlanarImage p = getPlanarImage();
-                    p.setProperty(HISTOGRAM, wrapper);
-                    image = p;
-                }
-            } else {
-                pb.set(roi, 0); // The region of the image to scan. Default to all.
-                pb.set(xPeriod, 1); // The horizontal sampling rate. Default to 1.
-                pb.set(yPeriod, 2); // The vertical sampling rate. Default to 1.
-                pb.set(numBins, 3); // Bin number.
-                pb.set(lowValues, 4); // Lower values per band.
-                pb.set(highValues, 5); // Higher values per band.
-                image = JAI.create("Histogram", pb, getRenderingHints());
+        // can reuse cached histogram only if the bucket definitions are the same
+        if (histogram instanceof HistogramWrapper) {
+            HistogramWrapper wrapper = (HistogramWrapper) histogram;
+            double[] prevHighs = wrapper.getHighValue();
+            double[] prevLows = wrapper.getLowValue();
+            int[] prevNumBins = wrapper.getNumBins();
+            if (Arrays.equals(prevHighs, highValues)
+                    && Arrays.equals(prevLows, lowValues)
+                    && Arrays.equals(prevNumBins, numBins)) {
+                return wrapper;
             }
-            histogram = getComputedProperty(HISTOGRAM);
         }
+        // Create the parameterBlock
+        ParameterBlock pb = new ParameterBlock();
+        pb.setSource(image, 0);
+        if (JAIExt.isJAIExtOperation("Stats")) {
+            StatsType[] stats = new StatsType[] {StatsType.HISTOGRAM};
+            // Band definition
+            int numBands = getNumBands();
+            int[] bands = new int[numBands];
+            for (int i = 0; i < numBands; i++) {
+                bands[i] = i;
+            }
+
+            // Image parameters
+            pb.set(xPeriod, 0); // xPeriod
+            pb.set(yPeriod, 1); // yPeriod
+            pb.set(roi, 2); // ROI
+            pb.set(nodata, 3); // NoData
+            pb.set(bands, 5); // band indexes
+            pb.set(stats, 6); // statistic operation
+            pb.set(numBins, 9); // Bin number.
+            pb.set(lowValues, 7); // Lower values per band.
+            pb.set(highValues, 8); // Higher values per band.
+            image = JAI.create("Stats", pb, getRenderingHints());
+            // Retrieving the statistics
+            Statistics[][] results =
+                    (Statistics[][]) getComputedProperty(Statistics.STATS_PROPERTY);
+            int[][] bins = new int[numBands][];
+
+            // Cycle on the bands
+            for (int i = 0; i < results.length; i++) {
+                Statistics stat = results[i][0];
+                double[] binsDouble = (double[]) stat.getResult();
+                bins[i] = new int[binsDouble.length];
+                for (int j = 0; j < binsDouble.length; j++) {
+                    bins[i][j] = (int) binsDouble[j];
+                }
+            }
+            ParameterBlock parameterBlock = getRenderedOperation().getParameterBlock();
+            if (numBins == null) {
+                numBins = (int[]) parameterBlock.getObjectParameter(9);
+            }
+            if (lowValues == null) {
+                lowValues = (double[]) parameterBlock.getObjectParameter(7);
+            }
+            if (highValues == null) {
+                highValues = (double[]) parameterBlock.getObjectParameter(8);
+            }
+            HistogramWrapper wrapper = new HistogramWrapper(numBins, lowValues, highValues, bins);
+            // Setting the property
+            if (image instanceof PlanarImage) {
+                ((PlanarImage) image).setProperty(HISTOGRAM, wrapper);
+            } else {
+                PlanarImage p = getPlanarImage();
+                p.setProperty(HISTOGRAM, wrapper);
+                image = p;
+            }
+        } else {
+            pb.set(roi, 0); // The region of the image to scan. Default to all.
+            pb.set(xPeriod, 1); // The horizontal sampling rate. Default to 1.
+            pb.set(yPeriod, 2); // The vertical sampling rate. Default to 1.
+            pb.set(numBins, 3); // Bin number.
+            pb.set(lowValues, 4); // Lower values per band.
+            pb.set(highValues, 5); // Higher values per band.
+            image = JAI.create("Histogram", pb, getRenderingHints());
+        }
+        histogram = getComputedProperty(HISTOGRAM);
         return (Histogram) histogram;
     }
 
@@ -1314,7 +1333,7 @@ public class ImageWorker {
     public final boolean isBytes() {
         final SampleModel sm = image.getSampleModel();
         final int[] sampleSize = sm.getSampleSize();
-        for (int i = 0; i < sampleSize.length; i++) if (sampleSize[i] != 8) return false;
+        for (int j : sampleSize) if (j != 8) return false;
         return true;
     }
 
@@ -1441,7 +1460,13 @@ public class ImageWorker {
 
         // this is to support 16 bits IndexColorModel
         forceComponentColorModel(true, true);
-
+        if (isBytes()) {
+            // there might be the case that we entered rescaleToBytes with a
+            // 16bits color-palette but the forceComponentColorModel call above
+            // already transformed it to RGB bytes, so no need to proceed with
+            // the rescale anymore
+            return this;
+        }
         final double[][] extrema = getExtremas();
         final int length = extrema[0].length;
         final double[] scale = new double[length];
@@ -1450,15 +1475,17 @@ public class ImageWorker {
                 (background != null && background.length > 0)
                         ? background[0]
                         : ((nodata != null && !nodata.contains(0)) ? 0d : Double.NaN);
+
         // If setting noData to zero, make sure the rescale doesn't map good values to zero.
         double offsetAdjustment = Math.abs(destNodata - 0) < 1E-6 ? 1 : 0;
 
         boolean computeRescale = false;
         for (int i = 0; i < length; i++) {
             final double delta = extrema[1][i] - extrema[0][i];
-            if (Math.abs(delta) > 1E-6 // maximum and minimum does not coincide
-                    && ((extrema[1][i] - 255 > 1E-6) // the maximum is greater than 255
-                            || (extrema[0][i] < -1E-6))) // the minimum is smaller than 0
+            if ((Math.abs(delta) > 1E-6 // maximum and minimum does not coincide
+                            && ((extrema[1][i] - 255 > 1E-6) // the maximum is greater than 255
+                                    || (extrema[0][i] < -1E-6))) // the minimum is smaller than 0
+                    || offsetAdjustment > 0) // noData has been remapped to byte
             {
                 // we need to rescale
                 computeRescale = true;
@@ -1824,9 +1851,6 @@ public class ImageWorker {
      *
      * <p>This code is adapted from jai-interests mailing list archive.
      *
-     * @param checkTransparent
-     * @param optimizeGray
-     * @param omitAlphaOnExpand
      * @return this {@link ImageWorker}.
      * @see FormatDescriptor
      */
@@ -1912,22 +1936,10 @@ public class ImageWorker {
                     break;
 
                 case DataBuffer.TYPE_USHORT:
-                    {
-                        final int mapSize = icm.getMapSize();
-                        final short[][] data = new short[numDestinationBands][mapSize];
-                        for (int i = 0; i < mapSize; i++) {
-                            data[0][i] = (short) icm.getRed(i);
-                            if (numDestinationBands >= 2)
-                                // remember to optimize for grayscale images
-                                if (!gray) data[1][i] = (short) icm.getGreen(i);
-                                else data[1][i] = (short) icm.getAlpha(i);
-                            if (numDestinationBands >= 3) data[2][i] = (short) icm.getBlue(i);
-                            if (numDestinationBands == 4) {
-                                data[3][i] = (short) icm.getAlpha(i);
-                            }
-                        }
-                        lut = LookupTableFactory.create(data, datatype == DataBuffer.TYPE_USHORT);
-                    }
+                    lut =
+                            gray
+                                    ? createGrayLookupTable(icm, numDestinationBands)
+                                    : createRGBLookupTable(icm, numDestinationBands);
                     break;
 
                 default:
@@ -1939,8 +1951,9 @@ public class ImageWorker {
             if (lut == null)
                 throw new IllegalStateException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "lut"));
             /*
-             * Get the default hints, which usually contains only informations about tiling. If the user override the rendering hints with an explicit
-             * color model, keep the user's choice.
+             * Get the default hints, which usually contains only information about tiling.
+             * If the user override the rendering hints with an explicit color model,
+             * keep the user's choice.
              */
             final RenderingHints hints = getRenderingHints();
             final ImageLayout layout;
@@ -1954,7 +1967,11 @@ public class ImageWorker {
 
             int[] bits = new int[numDestinationBands];
             // bits per component
-            for (int i = 0; i < numDestinationBands; i++) bits[i] = sm.getSampleSize(i);
+            for (int i = 0; i < numDestinationBands; i++) {
+                // When RGB(A), go to 8 bits, otherwise copy the sample size
+                // (might be 16 bits)
+                bits[i] = numDestinationBands >= 3 ? 8 : sm.getSampleSize(i);
+            }
             final ComponentColorModel destinationColorModel =
                     new ComponentColorModel(
                             numDestinationBands >= 3
@@ -2006,12 +2023,35 @@ public class ImageWorker {
         return this;
     }
 
+    private LookupTable createGrayLookupTable(IndexColorModel icm, int numDestinationBands) {
+        final int mapSize = icm.getMapSize();
+        final short[][] data = new short[numDestinationBands][mapSize];
+        for (int i = 0; i < mapSize; i++) {
+            data[0][i] = (short) (icm.getRed(i) & 0xFF);
+            if (numDestinationBands == 2) data[1][i] = (short) (icm.getAlpha(i) & 0xFF);
+        }
+        return LookupTableFactory.create(data, true);
+    }
+
+    private LookupTable createRGBLookupTable(IndexColorModel icm, int numDestinationBands) {
+        final int mapSize = icm.getMapSize();
+        // Even if starting from a 16bits paletted image, RGB will go to bytes
+        final byte[][] data = new byte[numDestinationBands][mapSize];
+        for (int i = 0; i < mapSize; i++) {
+            data[0][i] = (byte) (icm.getRed(i) & 0xFF);
+            data[1][i] = (byte) (icm.getGreen(i) & 0xFF);
+            data[2][i] = (byte) (icm.getBlue(i) & 0xFF);
+            if (numDestinationBands == 4) {
+                data[3][i] = (byte) (icm.getAlpha(i) & 0xFF);
+            }
+        }
+        return LookupTableFactory.create(data);
+    }
+
     /**
      * If the image has an indexed color model, removes it, and replaces it with a component color
      * model. can be useful before a band-merge if the image in question is not meant to be color
      * expanded.
-     *
-     * @return
      */
     public final ImageWorker removeIndexColorModel() {
         if (image.getColorModel() instanceof IndexColorModel) {
@@ -2256,6 +2296,9 @@ public class ImageWorker {
             if (background != null && background.length > 0) {
                 // Elaborating the final NoData value
                 pb.set(background[0], 1);
+            } else if (nodata != null) {
+                // default background value may screw up things, let's preserve nodata
+                pb.set(nodata.getMin().doubleValue(), 1);
             }
         }
         pb.set(roi, 3);
@@ -2303,8 +2346,10 @@ public class ImageWorker {
         pb.set(new Range[] {nodata, nodata2}, 0);
         if (isNoDataNeeded() || nodata2 != null) {
             if (background != null && background.length > 0) {
-                double dest = background[0];
-                pb.set(dest, 1);
+                pb.set(background[0], 1);
+            } else if (nodata != null) {
+                // default background value may screw up things, let's preserve nodata
+                pb.set(nodata.getMin().doubleValue(), 1);
             }
         }
         pb.set(roi, 3);
@@ -2354,8 +2399,10 @@ public class ImageWorker {
         pb.set(newRange, 0);
         if (isNoDataNeeded()) {
             if (background != null && background.length > 0) {
-                double dest = background[0];
-                pb.set(dest, 1);
+                pb.set(background[0], 1);
+            } else if (nodata != null) {
+                // default background value may screw up things, let's preserve nodata
+                pb.set(nodata.getMin().doubleValue(), 1);
             }
         }
         pb.set(transformationList, 3);
@@ -2753,7 +2800,7 @@ public class ImageWorker {
          * Find the index of the specified color. Most of the time, the color should appears only once, which will leads us to a BITMASK image.
          * However we allows more occurences, which will leads us to a TRANSLUCENT image.
          */
-        final List<Integer> transparentPixelsIndexes = new ArrayList<Integer>();
+        final List<Integer> transparentPixelsIndexes = new ArrayList<>();
         for (int i = 0; i < mapSize; i++) {
             // Gets the color for this pixel removing the alpha information.
             final int color = cm.getRGB(i) & 0xFFFFFF;
@@ -2792,8 +2839,8 @@ public class ImageWorker {
                     new IndexColorModel(
                             cm.getPixelSize(), mapSize, rgb[0], rgb[1], rgb[2], transparencyIndex);
         } else {
-            for (int k = 0; k < found; k++) {
-                rgb[3][transparentPixelsIndexes.get(k)] = (byte) 0;
+            for (Integer transparentPixelsIndex : transparentPixelsIndexes) {
+                rgb[3][transparentPixelsIndex] = (byte) 0;
             }
             cm = new IndexColorModel(cm.getPixelSize(), mapSize, rgb[0], rgb[1], rgb[2], rgb[3]);
         }
@@ -3375,11 +3422,11 @@ public class ImageWorker {
          * transparent index value can hold in the amount of bits allowed for this color model (the mapSize value may not use all bits). It works as
          * expected with the -1 special value. It also make sure that "transparent + 1" do not exeed the maximum map size allowed.
          */
-        final boolean forceBitmask;
         final IndexColorModel oldCM = (IndexColorModel) image.getColorModel();
         final int pixelSize = oldCM.getPixelSize();
         transparent &= (1 << pixelSize) - 1;
-        forceBitmask = !translucent && oldCM.getTransparency() == Transparency.TRANSLUCENT;
+        final boolean forceBitmask =
+                !translucent && oldCM.getTransparency() == Transparency.TRANSLUCENT;
         if (forceBitmask || oldCM.getTransparentPixel() != transparent) {
             final int mapSize = Math.max(oldCM.getMapSize(), transparent + 1);
             final byte[][] RGBA = new byte[translucent ? 4 : 3][mapSize];
@@ -3415,7 +3462,7 @@ public class ImageWorker {
         // All post conditions for this method contract.
         assert isIndexed();
         assert translucent || !isTranslucent() : translucent;
-        assert ((IndexColorModel) image.getColorModel()).getAlpha(transparent) == 0;
+        assert image.getColorModel().getAlpha(transparent) == 0;
         return this;
     }
 
@@ -3581,11 +3628,6 @@ public class ImageWorker {
     /**
      * Builds a lookup table that is the identity on all bands but the alpha one, where the opacity
      * is applied
-     *
-     * @param opacity
-     * @param bands
-     * @param alphaBand
-     * @return
      */
     LookupTable buildOpacityLookupTable(
             float opacity, final int bands, int alphaBand, int dataType) {
@@ -3785,50 +3827,47 @@ public class ImageWorker {
         LOGGER.fine("Setting write parameters for this writer");
 
         ImageWriteParam iwp = null;
-        final ImageOutputStream memOutStream =
-                ImageIOExt.createImageOutputStream(image, destination);
-        if (memOutStream == null) {
-            throw new IIOException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "stream"));
-        }
-        if (CLIB_PNG_IMAGE_WRITER_SPI != null
-                && originatingProvider.getClass().equals(CLIB_PNG_IMAGE_WRITER_SPI.getClass())) {
-            // Compressing with native.
-            LOGGER.fine("Writer is native");
-            iwp = writer.getDefaultWriteParam();
-            // Define compression mode
-            iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            // best compression
-            iwp.setCompressionType(compression);
-            // we can control quality here
-            iwp.setCompressionQuality(compressionRate);
-            // destination image type
-            iwp.setDestinationType(
-                    new ImageTypeSpecifier(image.getColorModel(), image.getSampleModel()));
-        } else {
-            // Compressing with pure Java.
-            LOGGER.fine("Writer is NOT native");
-
-            // Instantiating PNGImageWriteParam
-            iwp = new PNGImageWriteParam();
-            // Define compression mode
-            iwp.setCompressionMode(ImageWriteParam.MODE_DEFAULT);
-        }
-        LOGGER.fine("About to write png image");
-        try {
-            writer.setOutput(memOutStream);
-            writer.write(null, new IIOImage(image, null, null), iwp);
-        } finally {
-            try {
-                writer.dispose();
-            } catch (Throwable e) {
-                if (LOGGER.isLoggable(Level.FINEST))
-                    LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
+        try (ImageOutputStream memOutStream =
+                ImageIOExt.createImageOutputStream(image, destination)) {
+            if (memOutStream == null) {
+                throw new IIOException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "stream"));
             }
+            if (CLIB_PNG_IMAGE_WRITER_SPI != null
+                    && originatingProvider
+                            .getClass()
+                            .equals(CLIB_PNG_IMAGE_WRITER_SPI.getClass())) {
+                // Compressing with native.
+                LOGGER.fine("Writer is native");
+                iwp = writer.getDefaultWriteParam();
+                // Define compression mode
+                iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                // best compression
+                iwp.setCompressionType(compression);
+                // we can control quality here
+                iwp.setCompressionQuality(compressionRate);
+                // destination image type
+                iwp.setDestinationType(
+                        new ImageTypeSpecifier(image.getColorModel(), image.getSampleModel()));
+            } else {
+                // Compressing with pure Java.
+                LOGGER.fine("Writer is NOT native");
+
+                // Instantiating PNGImageWriteParam
+                iwp = new PNGImageWriteParam();
+                // Define compression mode
+                iwp.setCompressionMode(ImageWriteParam.MODE_DEFAULT);
+            }
+            LOGGER.fine("About to write png image");
             try {
-                memOutStream.close();
-            } catch (Throwable e) {
-                if (LOGGER.isLoggable(Level.FINEST))
-                    LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
+                writer.setOutput(memOutStream);
+                writer.write(null, new IIOImage(image, null, null), iwp);
+            } finally {
+                try {
+                    writer.dispose();
+                } catch (Throwable e) {
+                    if (LOGGER.isLoggable(Level.FINEST))
+                        LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
+                }
             }
         }
     }
@@ -3860,31 +3899,17 @@ public class ImageWorker {
         if (IMAGEIO_GIF_IMAGE_WRITER_SPI == null) {
             throw new IIOException(Errors.format(ErrorKeys.NO_IMAGE_WRITER));
         }
-        final ImageOutputStream stream = ImageIOExt.createImageOutputStream(image, destination);
-        if (stream == null)
-            throw new IIOException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "stream"));
-        final ImageWriter writer = IMAGEIO_GIF_IMAGE_WRITER_SPI.createWriterInstance();
-        final ImageWriteParam param = writer.getDefaultWriteParam();
-        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-        param.setCompressionType(compression);
-        param.setCompressionQuality(compressionRate);
+        try (ImageOutputStream stream = ImageIOExt.createImageOutputStream(image, destination)) {
+            if (stream == null)
+                throw new IIOException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "stream"));
+            final ImageWriter writer = IMAGEIO_GIF_IMAGE_WRITER_SPI.createWriterInstance();
+            final ImageWriteParam param = writer.getDefaultWriteParam();
+            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            param.setCompressionType(compression);
+            param.setCompressionQuality(compressionRate);
 
-        try {
             writer.setOutput(stream);
             writer.write(null, new IIOImage(image, null, null), param);
-        } finally {
-            try {
-                stream.close();
-            } catch (Throwable e) {
-                if (LOGGER.isLoggable(Level.FINEST))
-                    LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
-            }
-            try {
-                writer.dispose();
-            } catch (Throwable e) {
-                if (LOGGER.isLoggable(Level.FINEST))
-                    LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
-            }
         }
         return this;
     }
@@ -3957,62 +3982,58 @@ public class ImageWorker {
 
         // Compression is available on both lib
         final ImageWriteParam iwp = writer.getDefaultWriteParam();
-        final ImageOutputStream outStream = ImageIOExt.createImageOutputStream(image, destination);
-        if (outStream == null) {
-            throw new IIOException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "stream"));
-        }
 
-        iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-        iwp.setCompressionType(compression); // Lossy compression.
-        iwp.setCompressionQuality(compressionRate); // We can control quality here.
-        if (iwp instanceof JPEGImageWriteParam) {
-            final JPEGImageWriteParam param = (JPEGImageWriteParam) iwp;
-            param.setOptimizeHuffmanTables(true);
-            try {
-                param.setProgressiveMode(JPEGImageWriteParam.MODE_DEFAULT);
-            } catch (UnsupportedOperationException e) {
-                throw new IOException(e);
+        try (ImageOutputStream outStream = ImageIOExt.createImageOutputStream(image, destination)) {
+            if (outStream == null) {
+                throw new IIOException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "stream"));
             }
-        }
 
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Writing out...");
-        }
-
-        try {
-
-            writer.setOutput(outStream);
-            // the JDK writer has problems with images that do not start at minx==miny==0
-            // while the clib writer has issues with tiled images
-            if ((!nativeAcc && (image.getMinX() != 0 || image.getMinY() != 0))
-                    || (nativeAcc && (image.getNumXTiles() > 1 || image.getNumYTiles() > 1))) {
-                final BufferedImage finalImage =
-                        new BufferedImage(
-                                image.getColorModel(),
-                                ((WritableRaster) image.getData())
-                                        .createWritableTranslatedChild(0, 0),
-                                image.getColorModel().isAlphaPremultiplied(),
-                                null);
-
-                writer.write(null, new IIOImage(finalImage, null, null), iwp);
-            } else {
-                writer.write(null, new IIOImage(image, null, null), iwp);
+            iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            iwp.setCompressionType(compression); // Lossy compression.
+            iwp.setCompressionQuality(compressionRate); // We can control quality here.
+            if (iwp instanceof JPEGImageWriteParam) {
+                final JPEGImageWriteParam param = (JPEGImageWriteParam) iwp;
+                param.setOptimizeHuffmanTables(true);
+                try {
+                    param.setProgressiveMode(JPEGImageWriteParam.MODE_DEFAULT);
+                } catch (UnsupportedOperationException e) {
+                    throw new IOException(e);
+                }
             }
-        } finally {
-            try {
-                writer.dispose();
-            } catch (Throwable e) {
-                if (LOGGER.isLoggable(Level.FINEST))
-                    LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
-            }
-            try {
-                outStream.close();
-            } catch (Throwable e) {
-                if (LOGGER.isLoggable(Level.FINEST))
-                    LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
-            }
+
             if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Writing out... Done!");
+                LOGGER.fine("Writing out...");
+            }
+
+            try {
+
+                writer.setOutput(outStream);
+                // the JDK writer has problems with images that do not start at minx==miny==0
+                // while the clib writer has issues with tiled images
+                if ((!nativeAcc && (image.getMinX() != 0 || image.getMinY() != 0))
+                        || (nativeAcc && (image.getNumXTiles() > 1 || image.getNumYTiles() > 1))) {
+                    final BufferedImage finalImage =
+                            new BufferedImage(
+                                    image.getColorModel(),
+                                    ((WritableRaster) image.getData())
+                                            .createWritableTranslatedChild(0, 0),
+                                    image.getColorModel().isAlphaPremultiplied(),
+                                    null);
+
+                    writer.write(null, new IIOImage(finalImage, null, null), iwp);
+                } else {
+                    writer.write(null, new IIOImage(image, null, null), iwp);
+                }
+            } finally {
+                try {
+                    writer.dispose();
+                } catch (Throwable e) {
+                    if (LOGGER.isLoggable(Level.FINEST))
+                        LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
+                }
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("Writing out... Done!");
+                }
             }
         }
     }
@@ -4065,43 +4086,38 @@ public class ImageWorker {
         }
 
         final ImageWriteParam iwp = writer.getDefaultWriteParam();
-        final ImageOutputStream outStream = ImageIOExt.createImageOutputStream(image, destination);
-        if (outStream == null) {
-            throw new IIOException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "stream"));
-        }
-
-        if (compression != null) {
-            iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            iwp.setCompressionType(compression);
-            iwp.setCompressionQuality(compressionRate); // We can control quality here.
-        } else {
-            iwp.setCompressionMode(ImageWriteParam.MODE_DEFAULT);
-        }
-        if (tileSizeX > 0 && tileSizeY > 0) {
-            iwp.setTilingMode(ImageWriteParam.MODE_EXPLICIT);
-            iwp.setTiling(tileSizeX, tileSizeY, 0, 0);
-        }
-
-        if (LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.finer("Writing out...");
-        }
-
-        try {
-
-            writer.setOutput(outStream);
-            writer.write(null, new IIOImage(image, null, null), iwp);
-        } finally {
-            try {
-                writer.dispose();
-            } catch (Throwable e) {
-                if (LOGGER.isLoggable(Level.FINEST))
-                    LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
+        try (ImageOutputStream outStream = ImageIOExt.createImageOutputStream(image, destination)) {
+            if (outStream == null) {
+                throw new IIOException(Errors.format(ErrorKeys.NULL_ARGUMENT_$1, "stream"));
             }
+
+            if (compression != null) {
+                iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                iwp.setCompressionType(compression);
+                iwp.setCompressionQuality(compressionRate); // We can control quality here.
+            } else {
+                iwp.setCompressionMode(ImageWriteParam.MODE_DEFAULT);
+            }
+            if (tileSizeX > 0 && tileSizeY > 0) {
+                iwp.setTilingMode(ImageWriteParam.MODE_EXPLICIT);
+                iwp.setTiling(tileSizeX, tileSizeY, 0, 0);
+            }
+
+            if (LOGGER.isLoggable(Level.FINER)) {
+                LOGGER.finer("Writing out...");
+            }
+
             try {
-                outStream.close();
-            } catch (Throwable e) {
-                if (LOGGER.isLoggable(Level.FINEST))
-                    LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
+
+                writer.setOutput(outStream);
+                writer.write(null, new IIOImage(image, null, null), iwp);
+            } finally {
+                try {
+                    writer.dispose();
+                } catch (Throwable e) {
+                    if (LOGGER.isLoggable(Level.FINEST))
+                        LOGGER.log(Level.FINEST, e.getLocalizedMessage(), e);
+                }
             }
         }
     }
@@ -4110,11 +4126,6 @@ public class ImageWorker {
      * Performs an affine transform on the image, applying optimization such as affine removal in
      * case the affine is an identity, affine merging if the affine is applied on top of another
      * affine, and using optimized operations for integer translates
-     *
-     * @param tx
-     * @param interpolation
-     * @param bgValues
-     * @return
      */
     public ImageWorker affine(AffineTransform tx, Interpolation interpolation, double[] bgValues) {
         // identity elimination -> check the tx params against the image size to see if
@@ -4164,12 +4175,11 @@ public class ImageWorker {
             // check if we can do a warp-affine reduction
             final ParameterBlock sourceParamBlock = op.getParameterBlock();
 
-            RenderingHints hints = getRenderingHints();
             boolean preserveChainedAffines = false;
-            if (hints != null && hints.containsKey(PRESERVE_CHAINED_AFFINES)) {
-                preserveChainedAffines = (boolean) hints.get(PRESERVE_CHAINED_AFFINES);
+            Object preserveHints = getRenderingHint(PRESERVE_CHAINED_AFFINES);
+            if (preserveHints != null && preserveHints instanceof Boolean) {
+                preserveChainedAffines = (Boolean) preserveHints;
             }
-
             if (WARP_REDUCTION_ENABLED
                     && "Warp".equals(opName)
                     && mtProperty instanceof MathTransform2D
@@ -4196,6 +4206,13 @@ public class ImageWorker {
                     }
                     if (tolerance == null) {
                         tolerance = 0.333;
+                    }
+
+                    // in case of oversampling, reduce the tolerance by the oversampling factor
+                    // as the oversampling magnifies errors that would not be otherwise visible
+                    if (tx.getScaleX() > 1 || tx.getScaleY() > 1) {
+                        double factor = Math.max(tx.getScaleX(), tx.getScaleY());
+                        tolerance = tolerance / factor;
                     }
 
                     // setup a warp builder that is not gong to use too much memory
@@ -4234,12 +4251,16 @@ public class ImageWorker {
                     }
                     Warp warp = wb.buildWarp(chained, mappingBB);
 
-                    // do the switch only if we get a warp that is as fast as the original one
+                    // do the switch only if we get a warp that is as fast as the original one,
+                    // of if we are upsampling, in which case the merge is required to preserve
+                    // good image quality (warp on NN produces pixels that are aligned to the axis
+                    // and then scaled, while the pixels should appear rotated instead)
                     Warp sourceWarp = (Warp) sourceParamBlock.getObjectParameter(0);
                     if (warp instanceof WarpGrid
                             || warp instanceof WarpAffine
-                            || !(sourceWarp instanceof WarpGrid
-                                    || sourceWarp instanceof WarpAffine)) {
+                            || !(sourceWarp instanceof WarpGrid || sourceWarp instanceof WarpAffine)
+                            || tx.getScaleX() > 1
+                            || tx.getScaleY() > 1) {
                         // and then the JAI Operation
                         PlanarImage sourceImage = op.getSourceImage(0);
                         final ParameterBlock paramBlk = new ParameterBlock().addSource(sourceImage);
@@ -4557,14 +4578,7 @@ public class ImageWorker {
         return this;
     }
 
-    /**
-     * Perform scaling
-     *
-     * @param pb
-     * @param scalingParams
-     * @param interpolation
-     * @param hints
-     */
+    /** Perform scaling */
     private void scale(
             ParameterBlock pb,
             double[] scalingParams,
@@ -4664,7 +4678,7 @@ public class ImageWorker {
             if (localImage instanceof RenderedOp) {
                 String operationName = ((RenderedOp) localImage).getOperationName();
                 if ("BandMerge".equalsIgnoreCase(operationName)) {
-                    Vector<RenderedImage> sources = localImage.getSources();
+                    List<RenderedImage> sources = localImage.getSources();
                     if (!sources.isEmpty()) {
                         localImage = sources.get(0);
                     }
@@ -4727,12 +4741,6 @@ public class ImageWorker {
      * Crops the image to the specified bounds. Will use an internal operation that ensures the tile
      * cache and tile scheduler hints are used, and will perform operation elimination in case the
      * crop is doing nothing, or in case the crop is performed over another crop
-     *
-     * @param x
-     * @param y
-     * @param width
-     * @param height
-     * @return
      */
     public ImageWorker crop(float x, float y, float width, float height) {
         // no op elimination
@@ -4832,16 +4840,13 @@ public class ImageWorker {
     /**
      * Returns the background colors as a value, if at all possible (3 or 4 values in the right
      * range)
-     *
-     * @return
      */
     private Color getBackgroundColor() {
         if (background == null || background.length < 3 || background.length > 4) {
             return null;
         }
 
-        for (int i = 0; i < background.length; i++) {
-            double component = background[i];
+        for (double component : background) {
             if (component < 0 || component > 255) {
                 return null;
             }
@@ -4908,9 +4913,9 @@ public class ImageWorker {
         int srcNum = 0;
         // pb.addSource(image);
         if (images != null && images.length > 0) {
-            for (int i = 0; i < images.length; i++) {
-                if (images[i] != null) {
-                    pb.addSource(images[i]);
+            for (RenderedImage renderedImage : images) {
+                if (renderedImage != null) {
+                    pb.addSource(renderedImage);
                     srcNum++;
                 }
             }
@@ -4978,7 +4983,7 @@ public class ImageWorker {
         return this;
     }
 
-    private ROI mosaicROIs(Vector sources, ROI... roiArray) {
+    private ROI mosaicROIs(List sources, ROI... roiArray) {
         if (roiArray == null) {
             return null;
         }
@@ -5016,7 +5021,7 @@ public class ImageWorker {
         for (ROI roi : rois) {
             if (roi instanceof ROIShape || roi instanceof ROIGeometry) {
                 if (vectorReference == null && roi instanceof ROIGeometry) {
-                    vectorReference = (ROIGeometry) roi;
+                    vectorReference = roi;
                 } else {
                     vectorROIs.add(roi);
                 }
@@ -5024,7 +5029,7 @@ public class ImageWorker {
                 rasterROIs.add(roi);
             }
         }
-        if (vectorReference == null && vectorROIs.size() > 0) {
+        if (vectorReference == null && !vectorROIs.isEmpty()) {
             vectorReference = vectorROIs.remove(0);
         }
         // accumulate the vector ROIs, if any
@@ -5033,7 +5038,7 @@ public class ImageWorker {
         }
 
         // optimization in case we end up with just one ROI, no need to mosaic
-        if (rasterROIs.size() == 0) {
+        if (rasterROIs.isEmpty()) {
             return vectorReference;
         } else if (rasterROIs.size() == 1 && vectorReference == null) {
             return rasterROIs.get(0);
@@ -5107,7 +5112,7 @@ public class ImageWorker {
         pb.add(nodata);
         if (isNoDataNeeded()) {
             if (background != null && background.length > 0) {
-                pb.add(background);
+                pb.add(background[0]);
             }
         }
         image = JAI.create("Border", pb, getRenderingHints());
@@ -5240,13 +5245,25 @@ public class ImageWorker {
         pb.set(offset, 1); // The per-band offsets to be added.
         pb.set(roi, 2); // ROI
         pb.set(nodata, 3); // NoData range
+
+        double destNodata = Double.NaN;
         if (isNoDataNeeded()) {
             if (background != null && background.length > 0) {
-                pb.set(background[0], 5); // destination No Data value
+                destNodata = background[0];
+            } else if (nodata != null) {
+                // preserve nodata to avoid the destination nodata fall
+                // in the range of valid values
+                destNodata = nodata.getMin().doubleValue();
             }
         }
 
+        if (!Double.isNaN(destNodata)) {
+            pb.set(destNodata, 5);
+        }
         image = JAI.create("Rescale", pb, getRenderingHints());
+        if (!Double.isNaN(destNodata)) {
+            setNoData(RangeFactory.create((byte) destNodata, (byte) destNodata));
+        }
         return this;
     }
 
@@ -5323,8 +5340,7 @@ public class ImageWorker {
         if (cm instanceof IndexColorModel) {
             IndexColorModel icm = (IndexColorModel) cm;
             // try to find the index that matches the requested background color
-            final int bgColorIndex;
-            bgColorIndex = icm.getTransparentPixel();
+            final int bgColorIndex = icm.getTransparentPixel();
 
             // we did not find the background color, well we have to expand to RGB and then tell
             // Mosaic to use the RGB(A) color as the
@@ -5420,7 +5436,8 @@ public class ImageWorker {
                 } else {
                     if (nodata != null) {
                         // must map nodata to alpha
-                        RangeLookupTable.Builder builder = new RangeLookupTable.Builder();
+                        RangeLookupTable.Builder<Byte, Byte> builder =
+                                new RangeLookupTable.Builder<>();
                         if (nodata.getMin().doubleValue() != Double.NEGATIVE_INFINITY) {
                             builder.add(
                                     RangeFactory.create(
@@ -5510,8 +5527,6 @@ public class ImageWorker {
     /**
      * Adds an extra channel to the image, with a value of 255 (not public yet because it won't work
      * with all image types)
-     *
-     * @return
      */
     private ImageWorker addAlphaChannel() {
         final ImageLayout tempLayout = new ImageLayout(image);
@@ -5564,23 +5579,26 @@ public class ImageWorker {
                  * Now try to set the output directly (if possible), or as an ImageOutputStream if the encoder doesn't accept directly the specified
                  * output. Note that some formats like HDF may not support ImageOutputStream.
                  */
-                final ImageOutputStream stream;
-                if (acceptInputType(outputTypes, output.getClass())) {
-                    writer.setOutput(output);
-                    stream = null;
-                } else if (acceptInputType(outputTypes, ImageOutputStream.class)) {
-                    stream = ImageIOExt.createImageOutputStream(image, output);
-                    writer.setOutput(stream);
-                } else {
-                    continue;
-                }
-                /*
-                 * Now saves the image.
-                 */
-                writer.write(image);
-                writer.dispose();
-                if (stream != null) {
-                    stream.close();
+                ImageOutputStream stream = null;
+                try {
+                    if (acceptInputType(outputTypes, output.getClass())) {
+                        writer.setOutput(output);
+                        stream = null;
+                    } else if (acceptInputType(outputTypes, ImageOutputStream.class)) {
+                        stream = ImageIOExt.createImageOutputStream(image, output);
+                        writer.setOutput(stream);
+                    } else {
+                        continue;
+                    }
+                    /*
+                     * Now saves the image.
+                     */
+                    writer.write(image);
+                    writer.dispose();
+                } finally {
+                    if (stream != null) {
+                        stream.close();
+                    }
                 }
                 return this;
             }
@@ -5638,8 +5656,8 @@ public class ImageWorker {
         try {
             c = Class.forName("org.geotools.gui.swing.image.OperationTreeBrowser");
         } catch (ClassNotFoundException cause) {
-            final HeadlessException e;
-            e = new HeadlessException("The \"gt2-widgets-swing.jar\" file is required.");
+            final HeadlessException e =
+                    new HeadlessException("The \"gt2-widgets-swing.jar\" file" + " is required.");
             e.initCause(cause);
             throw e;
         }
@@ -5727,9 +5745,7 @@ public class ImageWorker {
                  * TIP: Tests operations here (before the call to 'show()'), if wanted.
                  */
                 worker.show();
-            } catch (FileNotFoundException e) {
-                arguments.printSummary(e);
-            } catch (NoSuchMethodException e) {
+            } catch (FileNotFoundException | NoSuchMethodException e) {
                 arguments.printSummary(e);
             } catch (Exception e) {
                 java.util.logging.Logger.getGlobal().log(java.util.logging.Level.INFO, "", e);

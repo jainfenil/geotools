@@ -20,7 +20,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import javax.measure.Unit;
@@ -28,14 +38,28 @@ import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
 import org.geotools.metadata.i18n.LoggingKeys;
 import org.geotools.metadata.i18n.Loggings;
+import org.geotools.referencing.AbstractIdentifiedObject;
 import org.geotools.referencing.ReferencingFactoryFinder;
+import org.geotools.referencing.datum.AbstractDatum;
 import org.geotools.util.LocalName;
 import org.geotools.util.NameFactory;
 import org.geotools.util.XArray;
 import org.opengis.metadata.Identifier;
+import org.opengis.referencing.AuthorityFactory;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.IdentifiedObject;
-import org.opengis.referencing.datum.*;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.datum.Datum;
+import org.opengis.referencing.datum.DatumFactory;
+import org.opengis.referencing.datum.Ellipsoid;
+import org.opengis.referencing.datum.EngineeringDatum;
+import org.opengis.referencing.datum.GeodeticDatum;
+import org.opengis.referencing.datum.ImageDatum;
+import org.opengis.referencing.datum.PixelInCell;
+import org.opengis.referencing.datum.PrimeMeridian;
+import org.opengis.referencing.datum.TemporalDatum;
+import org.opengis.referencing.datum.VerticalDatum;
+import org.opengis.referencing.datum.VerticalDatumType;
 import org.opengis.util.GenericName;
 import org.opengis.util.ScopedName;
 
@@ -95,7 +119,7 @@ public class DatumAliases extends ReferencingFactory implements DatumFactory {
      * values are initially {@code String[]} objects. They are converted to {@code GenericName[]}
      * only when first needed.
      */
-    private final Map<String, Object[]> aliasMap = new HashMap<String, Object[]>();
+    private final Map<String, Object[]> aliasMap = new HashMap<>();
 
     /**
      * The authorities. This is the first line in the alias table. This array is constructed by
@@ -205,75 +229,75 @@ public class DatumAliases extends ReferencingFactory implements DatumFactory {
                 Loggings.format(Level.FINE, LoggingKeys.LOADING_DATUM_ALIASES_$1, aliasURL);
         record.setLoggerName(LOGGER.getName());
         LOGGER.log(record);
-        final BufferedReader in = new BufferedReader(new InputStreamReader(aliasURL.openStream()));
-        /*
-         * Parses the title line. This line contains authority names as column titles.
-         * The authority names will be used as the scope for each identifiers to be
-         * created.
-         */
-        String line = readLine(in);
-        if (line != null) {
-            final List<Object> elements = new ArrayList<Object>();
-            StringTokenizer st = new StringTokenizer(line, SEPARATORS);
-            while (st.hasMoreTokens()) {
-                final String name = st.nextToken().trim();
-                elements.add(name.length() != 0 ? new LocalName(name) : null);
-            }
-            authorities = elements.toArray(new LocalName[elements.size()]);
-            final Map<String, String> canonical = new HashMap<String, String>();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(aliasURL.openStream()))) {
             /*
-             * Parses all aliases. They are stored as arrays of strings for now, but will be
-             * converted to array of generic names by {@link #getAliases} when first needed.
-             * If the alias belong to an authority (which should be true in most cases), a
-             * scoped name will be created at this time.
+             * Parses the title line. This line contains authority names as column titles.
+             * The authority names will be used as the scope for each identifiers to be
+             * created.
              */
-            while ((line = readLine(in)) != null) {
-                elements.clear();
-                canonical.clear();
-                st = new StringTokenizer(line, SEPARATORS);
+            String line = readLine(in);
+            if (line != null) {
+                final List<Object> elements = new ArrayList<>();
+                StringTokenizer st = new StringTokenizer(line, SEPARATORS);
                 while (st.hasMoreTokens()) {
-                    String alias = st.nextToken().trim();
-                    if (alias.length() != 0) {
-                        final String previous = canonical.put(alias, alias);
-                        if (previous != null) {
-                            canonical.put(previous, previous);
-                            alias = previous;
+                    final String name = st.nextToken().trim();
+                    elements.add(name.length() != 0 ? new LocalName(name) : null);
+                }
+                authorities = elements.toArray(new LocalName[elements.size()]);
+                final Map<String, String> canonical = new HashMap<>();
+                /*
+                 * Parses all aliases. They are stored as arrays of strings for now, but will be
+                 * converted to array of generic names by {@link #getAliases} when first needed.
+                 * If the alias belong to an authority (which should be true in most cases), a
+                 * scoped name will be created at this time.
+                 */
+                while ((line = readLine(in)) != null) {
+                    elements.clear();
+                    canonical.clear();
+                    st = new StringTokenizer(line, SEPARATORS);
+                    while (st.hasMoreTokens()) {
+                        String alias = st.nextToken().trim();
+                        if (alias.length() != 0) {
+                            final String previous = canonical.put(alias, alias);
+                            if (previous != null) {
+                                canonical.put(previous, previous);
+                                alias = previous;
+                            }
+                        } else {
+                            alias = null;
                         }
-                    } else {
-                        alias = null;
+                        elements.add(alias);
                     }
-                    elements.add(alias);
-                }
-                // Trim trailing null values only (we must keep other null values).
-                for (int i = elements.size(); --i >= 0; ) {
-                    if (elements.get(i) != null) break;
-                    elements.remove(i);
-                }
-                if (!elements.isEmpty()) {
-                    /*
-                     * Copies the aliases array in the aliases map for all local names. If a
-                     * previous value is found as an array of GenericName objects, those generic
-                     * names are conserved in the map (instead of the string values parsed above)
-                     * in order to avoid constructing them again when they will be needed.
-                     */
-                    final String[] names = elements.toArray(new String[elements.size()]);
-                    for (int i = 0; i < names.length; i++) {
-                        final String name = names[i];
-                        final String key = toCaseless(name);
-                        final Object[] previous = aliasMap.put(key, names);
-                        if (previous != null && previous != NEED_LOADING) {
-                            if (previous instanceof GenericName[]) {
-                                aliasMap.put(key, previous);
-                            } else if (!Arrays.equals(previous, names)) {
-                                // TODO: localize
-                                LOGGER.warning("Inconsistent aliases for datum \"" + name + "\".");
+                    // Trim trailing null values only (we must keep other null values).
+                    for (int i = elements.size(); --i >= 0; ) {
+                        if (elements.get(i) != null) break;
+                        elements.remove(i);
+                    }
+                    if (!elements.isEmpty()) {
+                        /*
+                         * Copies the aliases array in the aliases map for all local names. If a
+                         * previous value is found as an array of GenericName objects, those generic
+                         * names are conserved in the map (instead of the string values parsed above)
+                         * in order to avoid constructing them again when they will be needed.
+                         */
+                        final String[] names = elements.toArray(new String[elements.size()]);
+                        for (final String name : names) {
+                            final String key = toCaseless(name);
+                            final Object[] previous = aliasMap.put(key, names);
+                            if (previous != null && previous != NEED_LOADING) {
+                                if (previous instanceof GenericName[]) {
+                                    aliasMap.put(key, previous);
+                                } else if (!Arrays.equals(previous, names)) {
+                                    // TODO: localize
+                                    LOGGER.warning(
+                                            "Inconsistent aliases for datum \"" + name + "\".");
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        in.close();
     }
 
     /** Logs an {@link IOException}. */
@@ -343,8 +367,8 @@ public class DatumAliases extends ReferencingFactory implements DatumFactory {
          */
         int count = 0;
         GenericName[] names = new GenericName[aliases.length];
-        for (int i = 0; i < aliases.length; i++) {
-            final CharSequence alias = (CharSequence) aliases[i];
+        for (Object o : aliases) {
+            final CharSequence alias = (CharSequence) o;
             if (alias != null) {
                 if (count < authorities.length) {
                     final LocalName authority = authorities[count];
@@ -357,8 +381,8 @@ public class DatumAliases extends ReferencingFactory implements DatumFactory {
             }
         }
         names = XArray.resize(names, count);
-        for (int i = 0; i < names.length; i++) {
-            final String alias = names[i].tip().toString();
+        for (GenericName genericName : names) {
+            final String alias = genericName.tip().toString();
             final Object[] previous = aliasMap.put(toCaseless(alias), names);
             assert previous == names || Arrays.equals(aliases, previous) : alias;
         }
@@ -397,7 +421,7 @@ public class DatumAliases extends ReferencingFactory implements DatumFactory {
             int count = aliases.length;
             value = properties.get(IdentifiedObject.ALIAS_KEY);
             if (value != null) {
-                final Map<String, GenericName> merged = new LinkedHashMap<String, GenericName>();
+                final Map<String, GenericName> merged = new LinkedHashMap<>();
                 putAll(NameFactory.toArray(value), merged);
                 count -= putAll(aliases, merged);
                 final Collection<GenericName> c = merged.values();
@@ -408,7 +432,7 @@ public class DatumAliases extends ReferencingFactory implements DatumFactory {
              * all our aliases were replaced by user's aliases (count <= 0).
              */
             if (count > 0) {
-                final Map<String, Object> copy = new HashMap<String, Object>(properties);
+                final Map<String, Object> copy = new HashMap<>(properties);
                 copy.put(IdentifiedObject.ALIAS_KEY, aliases);
                 properties = copy;
             }
@@ -424,8 +448,7 @@ public class DatumAliases extends ReferencingFactory implements DatumFactory {
      */
     private static final int putAll(final GenericName[] names, final Map<String, GenericName> map) {
         int ignored = 0;
-        for (int i = 0; i < names.length; i++) {
-            final GenericName name = names[i];
+        for (final GenericName name : names) {
             final GenericName scoped = name.toFullyQualifiedName();
             final String key = toCaseless(scoped.toString());
             final GenericName old = map.put(key, name);

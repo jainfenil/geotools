@@ -62,11 +62,7 @@ public class TestLinearClassifier extends Assert {
 
     private static final int TEST_NUM = 1;
 
-    /**
-     * Synthetic with Double Sample Model!
-     *
-     * @throws IOException
-     */
+    /** Synthetic with Double Sample Model! */
     @Test
     public void Synthetic_Double() throws IOException {
 
@@ -184,7 +180,6 @@ public class TestLinearClassifier extends Assert {
      * Building a synthetic image upon a DOUBLE sample-model.
      *
      * @return {@linkplain BufferedImage}
-     * @throws IOException
      */
     @Test
     public void Synthetic_Float() throws IOException {
@@ -293,11 +288,7 @@ public class TestLinearClassifier extends Assert {
         return image;
     }
 
-    /**
-     * Spearfish test-case.
-     *
-     * @throws IOException
-     */
+    /** Spearfish test-case. */
     @Test
     public void spearfish() throws IOException {
 
@@ -366,8 +357,6 @@ public class TestLinearClassifier extends Assert {
      * Building an image based on Spearfish data.
      *
      * @return {@linkplain BufferedImage}
-     * @throws IOException
-     * @throws FileNotFoundException
      */
     private RenderedImage getSpearfhisDemo() throws IOException, FileNotFoundException {
         final AsciiGridsImageReader reader =
@@ -377,11 +366,7 @@ public class TestLinearClassifier extends Assert {
         return image;
     }
 
-    /**
-     * SWAN test-case.
-     *
-     * @throws IOException
-     */
+    /** SWAN test-case. */
     @Test
     public void SWAN() throws IOException {
         // /////////////////////////////////////////////////////////////////////
@@ -424,8 +409,8 @@ public class TestLinearClassifier extends Assert {
             final LinearColorMapElement c1c =
                     LinearColorMapElement.create(
                             "c2", Color.yellow, RangeFactory.create(0.3, false, 0.6, true), 1);
-            assertFalse(c1.equals(c1b));
-            assertTrue(c1.equals(c1c));
+            assertNotEquals(c1, c1b);
+            assertEquals(c1, c1c);
 
             final LinearColorMapElement c3 =
                     LinearColorMapElement.create(
@@ -483,11 +468,7 @@ public class TestLinearClassifier extends Assert {
         }
     }
 
-    /**
-     * SWAN test-case.
-     *
-     * @throws IOException
-     */
+    /** SWAN test-case. */
     @Test
     public void SWANGAP() throws IOException {
 
@@ -580,8 +561,6 @@ public class TestLinearClassifier extends Assert {
      * Building an image based on SWAN data.
      *
      * @return {@linkplain BufferedImage}
-     * @throws IOException
-     * @throws FileNotFoundException
      */
     private RenderedImage getSWAN() throws IOException, FileNotFoundException {
         final AsciiGridsImageReader reader =
@@ -593,13 +572,7 @@ public class TestLinearClassifier extends Assert {
         return image;
     }
 
-    /**
-     * NoData only test-case.
-     *
-     * @throws IOException
-     * @throws TransformException
-     * @throws TransformationException
-     */
+    /** NoData only test-case. */
     @Test
     public void noDataOnly() throws IOException, TransformException, TransformationException {
 
@@ -630,7 +603,7 @@ public class TestLinearClassifier extends Assert {
             double testNum = Math.random();
             try {
                 assertEquals(list.transform(testNum), testNum, 0.0);
-                assertTrue(false);
+                fail();
             } catch (Exception e) {
                 // TODO: handle exception
             }

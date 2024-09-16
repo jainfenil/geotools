@@ -19,7 +19,7 @@ package org.geotools.geometry.jts;
 // J2SE dependencies
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotSame;
 
 import java.util.Random;
@@ -51,10 +51,9 @@ public class CoordinateSequenceTransformerTest {
     /** Compares the current implementation with a simplier one. */
     @Test
     public void testTransform() throws FactoryException, TransformException {
-        final MathTransform2D t;
-        final CoordinateReferenceSystem crs;
-        crs = ReferencingFactoryFinder.getCRSFactory(null).createFromWKT(JTSTest.UTM_ZONE_10N);
-        t =
+        final CoordinateReferenceSystem crs =
+                ReferencingFactoryFinder.getCRSFactory(null).createFromWKT(JTSTest.UTM_ZONE_10N);
+        final MathTransform2D t =
                 (MathTransform2D)
                         ReferencingFactoryFinder.getCoordinateOperationFactory(null)
                                 .createOperation(DefaultGeographicCRS.WGS84, crs)
@@ -63,8 +62,8 @@ public class CoordinateSequenceTransformerTest {
 
         // Tries with different coordinate sequence length.
         final int[] size = {12, 1000};
-        for (int j = 0; j < size.length; j++) {
-            final Coordinate[] source = new Coordinate[size[j]];
+        for (int k : size) {
+            final Coordinate[] source = new Coordinate[k];
             for (int i = 0; i < source.length; i++) {
                 source[i] =
                         new Coordinate(
@@ -77,7 +76,7 @@ public class CoordinateSequenceTransformerTest {
             assertNotSame(sourceCS, targetCS);
             assertEquals(sourceCS.size(), targetCS.size());
             for (int i = sourceCS.size(); --i >= 0; ) {
-                assertFalse(sourceCS.getCoordinate(i).equals(targetCS.getCoordinate(i)));
+                assertNotEquals(sourceCS.getCoordinate(i), targetCS.getCoordinate(i));
             }
 
             final CoordinateSequenceTransformer transformer =
@@ -99,8 +98,8 @@ public class CoordinateSequenceTransformerTest {
         CoordinateReferenceSystem sourceCrs = CRS.parseWKT(JTSTest.UTM_ZONE_10N);
         CoordinateReferenceSystem destCrs = DefaultGeographicCRS.WGS84;
 
-        DefaultCoordinateSequenceTransformer cst;
-        cst = new DefaultCoordinateSequenceTransformer(new LiteCoordinateSequenceFactory());
+        DefaultCoordinateSequenceTransformer cst =
+                new DefaultCoordinateSequenceTransformer(new LiteCoordinateSequenceFactory());
         MathTransform tx = CRS.findMathTransform(sourceCrs, destCrs, true);
         LiteCoordinateSequence transformed = (LiteCoordinateSequence) cst.transform(cs, tx);
 
@@ -115,8 +114,8 @@ public class CoordinateSequenceTransformerTest {
         CoordinateReferenceSystem sourceCrs = CRS.parseWKT(JTSTest.UTM_ZONE_10N);
         CoordinateReferenceSystem destCrs = DefaultGeographicCRS.WGS84;
 
-        DefaultCoordinateSequenceTransformer cst;
-        cst = new DefaultCoordinateSequenceTransformer(/* standard cs factory */ );
+        DefaultCoordinateSequenceTransformer cst = new DefaultCoordinateSequenceTransformer(/*
+        standard cs factory */ );
         MathTransform tx = CRS.findMathTransform(sourceCrs, destCrs, true);
         CoordinateSequence transformed = cst.transform(cs, tx);
         CoordinateSequence reference = transform(cs, tx);

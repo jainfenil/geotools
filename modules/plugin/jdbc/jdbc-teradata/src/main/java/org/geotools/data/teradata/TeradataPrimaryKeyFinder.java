@@ -64,7 +64,7 @@ class TeradataPrimaryKeyFinder extends PrimaryKeyFinder {
 
     private List<PrimaryKeyColumn> tryAsView(String schema, String table, Connection cx)
             throws SQLException {
-        List<PrimaryKeyColumn> columns = new ArrayList<PrimaryKeyColumn>();
+        List<PrimaryKeyColumn> columns = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT RequestText FROM DBC.tables WHERE ");
         if (schema != null) {
             sql.append("DatabaseName = '").append(schema).append("' AND ");
@@ -103,9 +103,8 @@ class TeradataPrimaryKeyFinder extends PrimaryKeyFinder {
 
                     for (int i = 1; i <= md.getColumnCount(); i++) {
                         if (md.isAutoIncrement(i)) {
-                            String columnLabel;
                             //                        columnLabel = viewColumnNames[i - 1];
-                            columnLabel = md.getColumnLabel(i);
+                            String columnLabel = md.getColumnLabel(i);
                             Class<?> columnType;
                             try {
                                 columnType =
@@ -136,7 +135,7 @@ class TeradataPrimaryKeyFinder extends PrimaryKeyFinder {
 
     private List<PrimaryKeyColumn> tryForSequence(String schema, String table, Connection cx)
             throws SQLException {
-        List<PrimaryKeyColumn> columns = new ArrayList<PrimaryKeyColumn>();
+        List<PrimaryKeyColumn> columns = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT DISTINCT ColumnName FROM DBC.columns WHERE ");
         if (schema != null) {
             sql.append("DatabaseName = '").append(schema).append("' AND ");
@@ -166,7 +165,7 @@ class TeradataPrimaryKeyFinder extends PrimaryKeyFinder {
 
     private List<PrimaryKeyColumn> tryForPrimaryKey(String schema, String table, Connection cx)
             throws SQLException {
-        List<PrimaryKeyColumn> columns = new ArrayList<PrimaryKeyColumn>();
+        List<PrimaryKeyColumn> columns = new ArrayList<>();
         StringBuilder sql =
                 new StringBuilder("select ColumnName,ColumnPosition from dbc.indices WHERE ");
         if (schema != null) {
@@ -197,7 +196,7 @@ class TeradataPrimaryKeyFinder extends PrimaryKeyFinder {
 
     private List<PrimaryKeyColumn> tryForPrimaryKey1(String schema, String table, Connection cx)
             throws SQLException {
-        List<PrimaryKeyColumn> columns = new ArrayList<PrimaryKeyColumn>();
+        List<PrimaryKeyColumn> columns = new ArrayList<>();
         try (ResultSet md = cx.getMetaData().getPrimaryKeys(null, schema, table)) {
             boolean next = md.next();
             if (next) {

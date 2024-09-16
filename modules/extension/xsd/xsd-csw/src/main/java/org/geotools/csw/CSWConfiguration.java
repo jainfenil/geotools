@@ -59,7 +59,7 @@ public class CSWConfiguration extends Configuration {
      *
      * @generated
      */
-    protected void registerBindings(Map bindings) {
+    protected void registerBindings(Map<QName, Object> bindings) {
         // generated code, see the main method
         bindings.put(
                 CSW.AbstractQueryType,
@@ -219,11 +219,7 @@ public class CSWConfiguration extends Configuration {
         container.registerComponentInstance(Csw20Factory.eINSTANCE);
     }
 
-    /**
-     * Generates the bindings registrations for this class
-     *
-     * @param args
-     */
+    /** Generates the bindings registrations for this class */
     @SuppressWarnings("PMD.SystemPrintln")
     public static void main(String[] args) {
         for (Field f : CSW.class.getFields()) {

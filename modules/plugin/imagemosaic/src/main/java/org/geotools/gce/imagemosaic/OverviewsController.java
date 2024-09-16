@@ -31,7 +31,7 @@ import org.geotools.util.Utilities;
  */
 final class OverviewsController {
 
-    final ArrayList<OverviewLevel> resolutionsLevels = new ArrayList<OverviewLevel>();
+    final ArrayList<OverviewLevel> resolutionsLevels = new ArrayList<>();
 
     private int numberOfOverviews;
 
@@ -73,8 +73,6 @@ final class OverviewsController {
      * Given a specified {@link OverviewPolicy} and a {@link RasterLayerRequest}, suggest the proper
      * overview level index.
      *
-     * @param policy
-     * @param request
      * @return the OverviewLevel index
      */
     int pickOverviewLevel(
@@ -89,7 +87,7 @@ final class OverviewsController {
         // Future versions should use both.
         //
         // //
-        if (resolutionsLevels == null || resolutionsLevels.size() <= 0) return 0;
+        if (resolutionsLevels == null || resolutionsLevels.isEmpty()) return 0;
 
         // Now search for the best matching resolution.
         // Check also for the "perfect match"... unlikely in practice unless someone
@@ -97,7 +95,7 @@ final class OverviewsController {
         // the overviews, something a perf sensitive person might do in fact
 
         // requested scale factor for least reduced axis
-        final OverviewLevel max = (OverviewLevel) resolutionsLevels.get(0);
+        final OverviewLevel max = resolutionsLevels.get(0);
 
         // the requested resolutions (even virtual)
         boolean useVirtual = false;
@@ -106,8 +104,6 @@ final class OverviewsController {
         }
 
         // the requested resolutions
-        double requestedScaleFactorX;
-        double requestedScaleFactorY;
         double virtualRequestedScaleFactorX;
         double virtualRequestedScaleFactorY;
         double virtualRequestedScaleFactor = Double.NaN;
@@ -133,8 +129,8 @@ final class OverviewsController {
             return 0;
         }
 
-        requestedScaleFactorX = reqx / max.resolutionX;
-        requestedScaleFactorY = reqy / max.resolutionY;
+        double requestedScaleFactorX = reqx / max.resolutionX;
+        double requestedScaleFactorY = reqy / max.resolutionY;
 
         final int leastReduceAxis = requestedScaleFactorX <= requestedScaleFactorY ? 0 : 1;
         final double requestedScaleFactor =
@@ -145,8 +141,7 @@ final class OverviewsController {
             return max.imageChoice;
         }
 
-        final OverviewLevel min =
-                (OverviewLevel) resolutionsLevels.get(resolutionsLevels.size() - 1);
+        final OverviewLevel min = resolutionsLevels.get(resolutionsLevels.size() - 1);
         if (requestedScaleFactor >= min.scaleFactor) {
             // are we looking for a resolution even lower than the smallest overview?
             if (useVirtual && min.imageChoice != 0) {
@@ -255,12 +250,7 @@ final class OverviewsController {
 
         int imageChoice;
 
-        /**
-         * @param scaleFactor
-         * @param resolutionX
-         * @param resolutionY
-         * @param imageChoice
-         */
+        /** */
         public OverviewLevel(
                 final double scaleFactor,
                 final double resolutionX,

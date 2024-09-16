@@ -20,7 +20,13 @@
  */
 package org.geotools.referencing.operation.projection;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.atan2;
+import static java.lang.Math.cos;
+import static java.lang.Math.hypot;
+import static java.lang.Math.sin;
+import static java.lang.Math.toDegrees;
 
 import java.awt.geom.Point2D;
 import java.util.Collection;
@@ -124,10 +130,9 @@ public class EquidistantConic extends MapProjection {
             rho0 = c - latitudeOfOrigin;
             en0 = en1 = en2 = en3 = en4 = 0.0;
         } else {
-            double ml1, m1;
-            m1 = msfn(sinphi, cosphi);
+            double m1 = msfn(sinphi, cosphi);
 
-            ml1 = mlfn(phi1, sinphi, cosphi);
+            double ml1 = mlfn(phi1, sinphi, cosphi);
             if (secant) {
                 sinphi = sin(phi2);
                 cosphi = cos(phi2);

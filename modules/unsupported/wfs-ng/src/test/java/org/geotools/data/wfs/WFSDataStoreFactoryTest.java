@@ -29,10 +29,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
-import org.geotools.data.ows.HTTPClient;
-import org.geotools.data.ows.SimpleHttpClient;
 import org.geotools.data.wfs.internal.Versions;
 import org.geotools.data.wfs.internal.WFSClient;
+import org.geotools.http.HTTPClient;
+import org.geotools.http.SimpleHttpClient;
+import org.geotools.http.commons.MultithreadedHttpClient;
 import org.geotools.util.Version;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +48,7 @@ public class WFSDataStoreFactoryTest {
     @Before
     public void setUp() throws Exception {
         dsf = new WFSDataStoreFactory();
-        params = new HashMap<String, Serializable>();
+        params = new HashMap<>();
     }
 
     @After
@@ -108,7 +109,7 @@ public class WFSDataStoreFactoryTest {
     private WFSDataStore testCreateDataStore(
             final String capabilitiesFile, final Version expectedVersion) throws IOException {
 
-        Map<String, Serializable> params = new HashMap<String, Serializable>();
+        Map<String, Serializable> params = new HashMap<>();
         params.put("TESTING", Boolean.TRUE);
 
         final URL capabilitiesUrl = getClass().getResource("test-data/" + capabilitiesFile);
@@ -142,8 +143,6 @@ public class WFSDataStoreFactoryTest {
     /**
      * Test for GZIP settings, backwards compatibility: If no gzip settings is present, client has
      * to enable gzip
-     *
-     * @throws IOException
      */
     @Test
     public void testHttpClientGzipEncodingDefault() throws IOException {
@@ -152,11 +151,7 @@ public class WFSDataStoreFactoryTest {
         assertExpectForGzipParam(expectedGzipOnClient, tryGzip);
     }
 
-    /**
-     * Test for GZIP settings: Ensure "true" is passed to http client.
-     *
-     * @throws IOException
-     */
+    /** Test for GZIP settings: Ensure "true" is passed to http client. */
     @Test
     public void testHttpClientGzipEncodingTrue() throws IOException {
         Boolean tryGzip = true;
@@ -164,11 +159,7 @@ public class WFSDataStoreFactoryTest {
         assertExpectForGzipParam(expectedGzipOnClient, tryGzip);
     }
 
-    /**
-     * Test for GZIP settings: Ensure "false" is passed to http client.
-     *
-     * @throws IOException
-     */
+    /** Test for GZIP settings: Ensure "false" is passed to http client. */
     @Test
     public void testHttpClientGzipEncodingFalse() throws IOException {
         Boolean tryGzip = false;

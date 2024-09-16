@@ -16,7 +16,12 @@
  */
 package org.geotools.referencing.epsg.esri;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -102,9 +107,8 @@ public class UnnamedExtensionTest {
     /** Tests the {@code 41001} code. */
     @Test
     public void test41001() throws FactoryException {
-        CoordinateReferenceSystem actual, expected;
-        expected = factory.createCoordinateReferenceSystem("41001");
-        actual = CRS.decode("EPSG:41001");
+        CoordinateReferenceSystem expected = factory.createCoordinateReferenceSystem("41001");
+        CoordinateReferenceSystem actual = CRS.decode("EPSG:41001");
         assertSame(expected, actual);
         assertTrue(actual instanceof ProjectedCRS);
         Collection<ReferenceIdentifier> ids = actual.getIdentifiers();
@@ -152,8 +156,7 @@ public class UnnamedExtensionTest {
     @Test
     public void test900913() {
         try {
-            CoordinateReferenceSystem sourceCRS;
-            sourceCRS = CRS.decode("EPSG:4326");
+            CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:4326");
             CoordinateReferenceSystem googleCRS = CRS.decode("EPSG:900913");
             CoordinateReferenceSystem officialCRS = CRS.decode("EPSG:3857");
 

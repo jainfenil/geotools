@@ -14,6 +14,7 @@ import org.opengis.filter.expression.PropertyName;
 import org.opengis.filter.spatial.Beyond;
 import org.opengis.filter.spatial.DWithin;
 
+@SuppressWarnings("PMD.JUnit4TestShouldUseTestAnnotation") // not yet a JUnit4 test
 public abstract class JDBCDistanceFiltersTest extends JDBCTestSupport {
 
     // a point far away from all others (100+ km)
@@ -94,11 +95,7 @@ public abstract class JDBCDistanceFiltersTest extends JDBCTestSupport {
         assertBeyondFilter(0, pointDistance * 3.1, "ft");
     }
 
-    /**
-     * Subclasses testing for "proper" distance calculations should return true
-     *
-     * @return
-     */
+    /** Subclasses testing for "proper" distance calculations should return true */
     protected boolean areDistanceUnitsSupported() {
         LOGGER.info("Skipping dWithin with unit of measure calculation tests");
         return false;

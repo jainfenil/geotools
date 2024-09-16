@@ -69,8 +69,6 @@ public class Collection_AverageFunction extends FunctionExpressionImpl {
      * @param collection collection to calculate the average
      * @param expression Single Expression argument
      * @return An object containing the average value of the attributes
-     * @throws IllegalFilterException
-     * @throws IOException
      */
     static CalcResult calculateAverage(
             FeatureCollection<? extends FeatureType, ? extends Feature> collection,
@@ -91,14 +89,13 @@ public class Collection_AverageFunction extends FunctionExpressionImpl {
      * <p>To refer to all 'X': <code>featureMember/asterisk/X</code>
      *
      * @param params function parameters
-     * @throws IllegalArgumentException
      */
-    public void setParameters(List params) {
+    public void setParameters(List<Expression> params) {
         super.setParameters(params);
         if (params.size() != 1) {
             throw new IllegalArgumentException("Require a single argument for average");
         }
-        expr = (Expression) getExpression(0);
+        expr = getExpression(0);
         // if we see "featureMembers/*/ATTRIBUTE" change to "ATTRIBUTE"
         expr = (Expression) expr.accept(new CollectionFeatureMemberFilterVisitor(), null);
     }
@@ -119,9 +116,7 @@ public class Collection_AverageFunction extends FunctionExpressionImpl {
                     if (result != null) {
                         average = result.getValue();
                     }
-                } catch (IllegalFilterException e) {
-                    LOGGER.log(Level.FINER, e.getLocalizedMessage(), e);
-                } catch (IOException e) {
+                } catch (IllegalFilterException | IOException e) {
                     LOGGER.log(Level.FINER, e.getLocalizedMessage(), e);
                 }
             }

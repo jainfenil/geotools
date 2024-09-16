@@ -16,7 +16,8 @@
  */
 package org.geotools.process.vector;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -211,11 +212,6 @@ public class PointStackerProcessTest {
     /**
      * Tests point stacking when output CRS is different to data CRS. The result data should be
      * reprojected.
-     *
-     * @throws NoSuchAuthorityCodeException
-     * @throws FactoryException
-     * @throws TransformException
-     * @throws ProcessException
      */
     @Test
     public void testReprojected()
@@ -313,46 +309,34 @@ public class PointStackerProcessTest {
                 inBounds.getCoordinateReferenceSystem(),
                 result.getBounds().getCoordinateReferenceSystem());
         checkResultPoint(result, new Coordinate(-121.813201, 48.777343), 2, 2, null, null);
-
-        return;
     }
 
-    /**
-     * Get the stacked point closest to the provided coordinate
-     *
-     * @param result
-     * @param coordinate
-     * @param i
-     * @param j
-     */
+    /** Get the stacked point closest to the provided coordinate */
     private SimpleFeature getResultPoint(SimpleFeatureCollection result, Coordinate testPt) {
         /** Find closest point to loc pt, then check that the attributes match */
         double minDist = Double.MAX_VALUE;
 
         // find nearest result to testPt
         SimpleFeature closest = null;
-        for (SimpleFeatureIterator it = result.features(); it.hasNext(); ) {
-            SimpleFeature f = it.next();
-            Coordinate outPt = ((Point) f.getDefaultGeometry()).getCoordinate();
-            double dist = outPt.distance(testPt);
-            if (dist < minDist) {
-                closest = f;
-                minDist = dist;
+        try (SimpleFeatureIterator it = result.features()) {
+            while (it.hasNext()) {
+                SimpleFeature f = it.next();
+                Coordinate outPt = ((Point) f.getDefaultGeometry()).getCoordinate();
+                double dist = outPt.distance(testPt);
+                if (dist < minDist) {
+                    closest = f;
+                    minDist = dist;
+                }
             }
-        }
 
-        return closest;
+            return closest;
+        }
     }
 
     /**
      * Check that a result set contains a stacked point in the right cell with expected attribute
      * values. Because it's not known in advance what the actual location of a stacked point will
      * be, a nearest-point strategy is used.
-     *
-     * @param result
-     * @param coordinate
-     * @param i
-     * @param j
      */
     private void checkResultPoint(
             SimpleFeatureCollection result,

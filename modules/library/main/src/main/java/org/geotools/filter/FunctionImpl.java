@@ -86,7 +86,7 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
 
     /** Returns the function parameters. */
     public List<Expression> getParameters() {
-        return new ArrayList<Expression>(params);
+        return new ArrayList<>(params);
     }
 
     /**
@@ -101,13 +101,14 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
         if (fallbackValue != null) {
             return fallbackValue.evaluate(object);
         }
-        throw new UnsupportedOperationException("Function " + name + " not implemented");
+        throw new UnsupportedOperationException(
+                "Function " + name + "(" + this.getClass() + ") not implemented");
     }
 
     /** Sets the function parameters. */
     @SuppressWarnings("unchecked")
     public void setParameters(List<Expression> params) {
-        this.params = params == null ? Collections.EMPTY_LIST : new ArrayList<Expression>(params);
+        this.params = params == null ? Collections.emptyList() : new ArrayList<>(params);
     }
 
     public void setFallbackValue(Literal fallbackValue) {
@@ -152,10 +153,6 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
     /**
      * Evaluates a specific argument against the context, checking for required values and proper
      * conversion.
-     *
-     * @param object
-     * @param argumentIndex
-     * @return
      */
     protected Object getParameterValue(Object object, int argumentIndex) {
         Parameter<?> parameter = getFunctionName().getArguments().get(argumentIndex);
@@ -187,11 +184,6 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
     /**
      * Evaluates a specific argument against the context, checking for required values and proper
      * conversion. This version accepts a default value
-     *
-     * @param object
-     * @param argumentIndex
-     * @param defaultValue
-     * @return
      */
     protected Object getParameterValue(Object object, int argumentIndex, Object defaultValue) {
         Object value = getParameterValue(object, argumentIndex);
@@ -210,7 +202,7 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
      * function can be variable.
      */
     protected LinkedHashMap<String, Object> dispatchArguments(Object obj) {
-        LinkedHashMap<String, Object> prepped = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> prepped = new LinkedHashMap<>();
 
         List<Parameter<?>> args = getFunctionName().getArguments();
         List<Expression> expr = getParameters();
@@ -252,12 +244,13 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
 
                 // if there is already a value for this argument it is a multi argument which
                 // means a list
-                List l = (List) prepped.get(argName);
+                @SuppressWarnings("unchecked")
+                List<Object> l = (List<Object>) prepped.get(argName);
                 l.add(o);
             } else {
                 // check for variable argument, use a list if maxOccurs > 1
                 if (arg.getMaxOccurs() < 0 || arg.getMaxOccurs() > 1) {
-                    List l = new ArrayList();
+                    List<Object> l = new ArrayList<>();
                     l.add(o);
                     prepped.put(argName, l);
                 } else {
@@ -320,7 +313,7 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
      * @param args The argument specifications of the function arguments
      */
     protected static FunctionName functionName(String name, String ret, String... args) {
-        List<Parameter<?>> list = new ArrayList<Parameter<?>>();
+        List<Parameter<?>> list = new ArrayList<>();
         for (String arg : args) {
             list.add(toParameter(arg));
         }
@@ -328,14 +321,14 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
         return ff.functionName(name, list, toParameter(ret));
     }
 
-    static Parameter toParameter(String param) throws IllegalArgumentException {
+    static Parameter<?> toParameter(String param) throws IllegalArgumentException {
         Matcher m = PARAM.matcher(param);
         if (!m.matches()) {
             throw new IllegalArgumentException("Illegal parameter syntax: " + param);
         }
 
         String name = m.group(1);
-        Class type = null;
+        Class<? extends Object> type = null;
         int min = 1;
         int max = 1;
 
@@ -384,7 +377,7 @@ public class FunctionImpl extends ExpressionAbstract implements Function {
             max = !"".equals(grp) ? Integer.parseInt(grp) : -1;
         }
 
-        return new org.geotools.data.Parameter(name, type, min, max);
+        return new org.geotools.data.Parameter<>(name, type, min, max);
     }
 
     @Override

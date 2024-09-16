@@ -61,7 +61,7 @@ public class ReTypingFeatureCollection extends DecoratingSimpleFeatureCollection
     }
 
     public FeatureReader<SimpleFeatureType, SimpleFeature> reader() throws IOException {
-        return new DelegateFeatureReader<SimpleFeatureType, SimpleFeature>(getSchema(), features());
+        return new DelegateFeatureReader<>(getSchema(), features());
     }
 
     public SimpleFeatureIterator features() {
@@ -76,10 +76,6 @@ public class ReTypingFeatureCollection extends DecoratingSimpleFeatureCollection
     /**
      * Checks if the visitor is accessing only properties available in the specified feature type,
      * or as a special case, if it's a count visitor accessing no properties at all
-     *
-     * @param visitor
-     * @param featureType
-     * @return
      */
     public static boolean isTypeCompatible(FeatureVisitor visitor, SimpleFeatureType featureType) {
         if (visitor instanceof FeatureAttributeVisitor) {

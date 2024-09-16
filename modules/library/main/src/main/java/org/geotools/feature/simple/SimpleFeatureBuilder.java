@@ -159,11 +159,7 @@ public class SimpleFeatureBuilder extends FeatureBuilder<FeatureType, Feature> {
         featureUserData = null;
     }
 
-    /**
-     * Returns the simple feature type used by this builder as a feature template
-     *
-     * @return
-     */
+    /** Returns the simple feature type used by this builder as a feature template */
     public SimpleFeatureType getFeatureType() {
         return featureType;
     }
@@ -183,7 +179,7 @@ public class SimpleFeatureBuilder extends FeatureBuilder<FeatureType, Feature> {
             System.arraycopy(impl.values, 0, values, 0, impl.values.length);
 
             if (impl.userData != null) {
-                featureUserData = new HashMap(impl.userData);
+                featureUserData = new HashMap<>(impl.userData);
             }
         } else {
             for (Object value : feature.getAttributes()) {
@@ -191,7 +187,7 @@ public class SimpleFeatureBuilder extends FeatureBuilder<FeatureType, Feature> {
             }
 
             if (!feature.getUserData().isEmpty()) {
-                featureUserData = new HashMap(feature.getUserData());
+                featureUserData = new HashMap<>(feature.getUserData());
             }
         }
     }
@@ -209,13 +205,13 @@ public class SimpleFeatureBuilder extends FeatureBuilder<FeatureType, Feature> {
 
     /** Adds a list of attributes. */
     public void addAll(List<Object> values) {
-        for (int i = 0; i < values.size(); i++) {
-            add(values.get(i));
+        for (Object value : values) {
+            add(value);
         }
     }
 
     /** Adds an array of attributes. */
-    public void addAll(Object[] values) {
+    public void addAll(Object... values) {
         addAll(Arrays.asList(values));
     }
 
@@ -327,14 +323,8 @@ public class SimpleFeatureBuilder extends FeatureBuilder<FeatureType, Feature> {
         return sf;
     }
 
-    /**
-     * Quickly builds the feature using the specified values and id
-     *
-     * @param id
-     * @param values
-     * @return
-     */
-    public SimpleFeature buildFeature(String id, Object[] values) {
+    /** Quickly builds the feature using the specified values and id */
+    public SimpleFeature buildFeature(String id, Object... values) {
         addAll(values);
         return buildFeature(id);
     }
@@ -419,13 +409,7 @@ public class SimpleFeatureBuilder extends FeatureBuilder<FeatureType, Feature> {
         return builder.buildFeature(original.getID());
     }
 
-    /**
-     * Builds a new feature whose attribute values are the default ones
-     *
-     * @param featureType
-     * @param featureId
-     * @return
-     */
+    /** Builds a new feature whose attribute values are the default ones */
     public static SimpleFeature template(SimpleFeatureType featureType, String featureId) {
         SimpleFeatureBuilder builder = new SimpleFeatureBuilder(featureType);
         for (AttributeDescriptor ad : featureType.getAttributeDescriptors()) {
@@ -481,7 +465,7 @@ public class SimpleFeatureBuilder extends FeatureBuilder<FeatureType, Feature> {
     }
 
     /**
-     * Adds some user data to the next attributed added to the feature.
+     * Adds some user data to the next attribute added to the feature.
      *
      * <p>This value is reset when the next attribute is added.
      *
@@ -492,29 +476,44 @@ public class SimpleFeatureBuilder extends FeatureBuilder<FeatureType, Feature> {
         return setUserData(next, key, value);
     }
 
+    /**
+     * Set user data for a specific attribute.
+     *
+     * @param index The index of the attribute.
+     * @param key The key of the user data.
+     * @param value The value of the user data.
+     */
     @SuppressWarnings("unchecked")
     public SimpleFeatureBuilder setUserData(int index, Object key, Object value) {
         if (userData == null) {
             userData = new Map[values.length];
         }
         if (userData[index] == null) {
-            userData[index] = new HashMap<Object, Object>();
+            userData[index] = new HashMap<>();
         }
         userData[index].put(key, value);
+        return this;
+    }
+
+    /** Sets the feature wide user data copying them from the template feature provided */
+    public SimpleFeatureBuilder featureUserData(SimpleFeature source) {
+        Map<Object, Object> sourceUserData = source.getUserData();
+        if (sourceUserData != null && !sourceUserData.isEmpty()) {
+            if (featureUserData == null) {
+                featureUserData = new HashMap<>();
+            }
+            featureUserData.putAll(sourceUserData);
+        }
         return this;
     }
 
     /**
      * Sets a feature wide use data key/value pair. The user data map is reset when the feature is
      * built
-     *
-     * @param key
-     * @param value
-     * @return
      */
     public SimpleFeatureBuilder featureUserData(Object key, Object value) {
         if (featureUserData == null) {
-            featureUserData = new HashMap<Object, Object>();
+            featureUserData = new HashMap<>();
         }
         featureUserData.put(key, value);
         return this;

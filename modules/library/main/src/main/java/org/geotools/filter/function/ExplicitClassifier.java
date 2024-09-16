@@ -27,7 +27,7 @@ public final class ExplicitClassifier extends Classifier {
 
     Set[] values = null; // the contents of each bin (set of objects)
 
-    public ExplicitClassifier(Set[] values) {
+    public ExplicitClassifier(Set... values) {
         this.values = values;
         // initialize titles
         this.titles = new String[values.length];
@@ -53,7 +53,6 @@ public final class ExplicitClassifier extends Classifier {
     /**
      * Returns all the unique values for a particular slot.
      *
-     * @param index
      * @return all applicable values for a slot
      */
     public Set getValues(int index) {

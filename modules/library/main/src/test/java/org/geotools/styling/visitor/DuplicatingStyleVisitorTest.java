@@ -16,14 +16,17 @@
  */
 package org.geotools.styling.visitor;
 
-import java.awt.*;
+import static org.junit.Assert.assertEquals;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
-import javax.swing.*;
-import junit.framework.TestCase;
+import javax.swing.Icon;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.NameImpl;
 import org.geotools.filter.IllegalFilterException;
@@ -60,6 +63,8 @@ import org.geotools.styling.TextSymbolizer;
 import org.geotools.styling.TextSymbolizer2;
 import org.geotools.styling.UomOgcMapping;
 import org.geotools.util.Utilities;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Expression;
@@ -75,23 +80,21 @@ import org.opengis.util.Cloneable;
  *
  * @author Cory Horner, Refractions Research Inc.
  */
-public class DuplicatingStyleVisitorTest extends TestCase {
+public class DuplicatingStyleVisitorTest {
     StyleBuilder sb;
     StyleFactory sf;
     FilterFactory2 ff;
     DuplicatingStyleVisitor visitor;
 
-    public DuplicatingStyleVisitorTest(String testName) {
-        super(testName);
-    }
-
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         sf = CommonFactoryFinder.getStyleFactory(null);
         ff = CommonFactoryFinder.getFilterFactory2(null);
         sb = new StyleBuilder(sf, ff);
         visitor = new DuplicatingStyleVisitor(sf, ff);
     }
 
+    @Test
     public void testRasterSymbolizerDuplication() {
         // create a default RasterSymbolizer
         RasterSymbolizer original = sb.createRasterSymbolizer();
@@ -101,10 +104,11 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         RasterSymbolizer copy = (RasterSymbolizer) visitor.getCopy();
 
         // compare it
-        assertNotNull(copy);
+        Assert.assertNotNull(copy);
         assertEquals(original, copy);
     }
 
+    @Test
     public void testStyleDuplication() throws IllegalFilterException {
         // create a style
         Style oldStyle = sb.createStyle("FTSName", sf.createPolygonSymbolizer());
@@ -120,10 +124,11 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         Style newStyle = (Style) visitor.getCopy();
 
         // compare it
-        assertNotNull(newStyle);
+        Assert.assertNotNull(newStyle);
         assertEquals(2, newStyle.featureTypeStyles().get(0).semanticTypeIdentifiers().size());
     }
 
+    @Test
     public void testStyle() throws Exception {
         FeatureTypeStyle fts = sf.createFeatureTypeStyle();
         fts.featureTypeNames().add(new NameImpl("feature-type-1"));
@@ -157,14 +162,13 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         return fts2;
     }
 
+    @Test
     public void testFeatureTypeStyle() throws Exception {
         FeatureTypeStyle fts = sf.createFeatureTypeStyle();
         fts.featureTypeNames().add(new NameImpl("feature-type"));
         fts.getOptions().put("key", "value");
 
-        Rule rule1;
-
-        rule1 = sf.createRule();
+        Rule rule1 = sf.createRule();
         rule1.setName("rule1");
         rule1.setFilter(ff.id(Collections.singleton(ff.featureId("FID"))));
 
@@ -196,6 +200,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(fts, clone);
     }
 
+    @Test
     public void testRule() throws Exception {
         Symbolizer symb1 = sf.createLineSymbolizer(sf.getDefaultStroke(), "geometry");
 
@@ -218,9 +223,10 @@ public class DuplicatingStyleVisitorTest extends TestCase {
 
         symb1 = sf.createLineSymbolizer(sf.getDefaultStroke(), "geometry");
         clone.symbolizers().add(symb1);
-        assertTrue(!rule.equals(clone));
+        Assert.assertFalse(rule.equals(clone));
     }
 
+    @Test
     public void testPointSymbolizer() throws Exception {
         URL urlExternal = getClass().getResource("/data/sld/blob.gif");
         ExternalGraphic extg = sb.createExternalGraphic(urlExternal, "image/svg+xml");
@@ -238,6 +244,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, pointSymb);
     }
 
+    @Test
     public void testRasterSymbolizerWithUOM() throws Exception {
         RasterSymbolizer rasterSymb = sf.createRasterSymbolizer();
         rasterSymb.setUnitOfMeasure(UomOgcMapping.FOOT.getUnit());
@@ -248,9 +255,11 @@ public class DuplicatingStyleVisitorTest extends TestCase {
 
         RasterSymbolizer notEq = sf.createRasterSymbolizer();
 
-        assertFalse(Utilities.equals(notEq.getUnitOfMeasure(), rasterSymb.getUnitOfMeasure()));
+        Assert.assertFalse(
+                Utilities.equals(notEq.getUnitOfMeasure(), rasterSymb.getUnitOfMeasure()));
     }
 
+    @Test
     public void testRasterSymbolizerWithOverlapBehavior() throws Exception {
         RasterSymbolizer rasterSymb1 = sf.createRasterSymbolizer();
         rasterSymb1.setOverlapBehavior(OverlapBehavior.AVERAGE);
@@ -275,14 +284,16 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         } catch (IllegalArgumentException e) {
             // Expected result
         } catch (Exception e) {
-            fail();
+            Assert.fail();
         }
 
         // Compare rastersymbolizer overlap behaviour
         RasterSymbolizer notEq = sf.createRasterSymbolizer();
-        assertFalse(Utilities.equals(notEq.getOverlapBehavior(), rasterSymb1.getOverlapBehavior()));
+        Assert.assertFalse(
+                Utilities.equals(notEq.getOverlapBehavior(), rasterSymb1.getOverlapBehavior()));
     }
 
+    @Test
     public void testPointSymbolizerWithUOM() throws Exception {
         PointSymbolizer pointSymb = sf.createPointSymbolizer();
         pointSymb.setUnitOfMeasure(UomOgcMapping.FOOT.getUnit());
@@ -296,6 +307,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, pointSymb);
     }
 
+    @Test
     public void testTextSymbolizer() {
         TextSymbolizer textSymb = sf.createTextSymbolizer();
         Expression offset = ff.literal(10);
@@ -315,6 +327,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, textSymb);
     }
 
+    @Test
     public void testTextSymbolizerVendorParams() {
         TextSymbolizer textSymb = sf.createTextSymbolizer();
         textSymb.getOptions().put("autoWrap", "100");
@@ -328,6 +341,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEquals("100", clone.getOptions().get("autoWrap"));
     }
 
+    @Test
     public void testTextSymbolizerVendorOptions() {
         TextSymbolizer textSymb = sf.createTextSymbolizer();
         textSymb.getOptions().put("autoWrap", "100");
@@ -338,6 +352,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(textSymb, clone);
     }
 
+    @Test
     public void testTextSymbolizerWithUOM() {
         TextSymbolizer textSymb = sf.createTextSymbolizer();
         textSymb.setUnitOfMeasure(UomOgcMapping.METRE.getUnit());
@@ -358,6 +373,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, textSymb);
     }
 
+    @Test
     public void testFont() {
         Font font = sf.getDefaultFont();
         Font clone = visitor.copy(font);
@@ -374,6 +390,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, other, font);
     }
 
+    @Test
     public void testHalo() {
         Halo halo = sf.createHalo(sf.getDefaultFill(), ff.literal(10));
 
@@ -386,12 +403,12 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, other, halo);
     }
 
+    @Test
     public void testLinePlacement() throws Exception {
         LinePlacement linePlacement = sf.createLinePlacement(ff.literal(12));
 
         linePlacement.accept(visitor);
         LinePlacement clone = (LinePlacement) visitor.getCopy();
-        ;
 
         assertCopy(linePlacement, clone);
 
@@ -399,6 +416,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, other, linePlacement);
     }
 
+    @Test
     public void testAnchorPoint() {
         AnchorPoint anchorPoint = sf.createAnchorPoint(ff.literal(1), ff.literal(2));
         anchorPoint.accept(visitor);
@@ -410,6 +428,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, other, anchorPoint);
     }
 
+    @Test
     public void testDisplacement() {
         Displacement displacement = sf.createDisplacement(ff.literal(1), ff.literal(2));
 
@@ -421,6 +440,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, other, displacement);
     }
 
+    @Test
     public void testPointPlacement() {
         PointPlacement pointPl = sf.getDefaultPointPlacement();
 
@@ -432,6 +452,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, other, pointPl);
     }
 
+    @Test
     public void testPolygonSymbolizer() {
         try {
             // visitor.setStrict(true);
@@ -448,6 +469,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         }
     }
 
+    @Test
     public void testPolygonSymbolizerWithUOM() {
         try {
             // visitor.setStrict(true);
@@ -465,6 +487,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         }
     }
 
+    @Test
     public void testLineSymbolizer() {
         LineSymbolizer lineSymb = sf.createLineSymbolizer();
         LineSymbolizer clone = (LineSymbolizer) visitor.copy(lineSymb);
@@ -475,6 +498,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, lineSymb);
     }
 
+    @Test
     public void testLineSymbolizerWithUOM() {
         LineSymbolizer lineSymb = sf.createLineSymbolizer();
         LineSymbolizer clone = (LineSymbolizer) visitor.copy(lineSymb);
@@ -485,11 +509,12 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, lineSymb);
     }
 
+    @Test
     public void testGraphic() {
         Graphic graphic = sf.getDefaultGraphic();
         graphic.graphicalSymbols().add(sf.getDefaultMark());
 
-        Graphic clone = (Graphic) visitor.copy(graphic);
+        Graphic clone = visitor.copy(graphic);
         assertCopy(graphic, clone);
         assertEqualsContract(clone, graphic);
         assertEquals(clone.graphicalSymbols().size(), graphic.graphicalSymbols().size());
@@ -498,6 +523,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, graphic);
     }
 
+    @Test
     public void testExternalGraphic() {
         ExternalGraphic exGraphic = sf.createExternalGraphic("http://somewhere", "image/png");
         ExternalGraphic clone = visitor.copy(exGraphic);
@@ -512,6 +538,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq2, exGraphic);
     }
 
+    @Test
     public void testExternalGraphicWithInlineContent() {
         Icon icon =
                 new Icon() {
@@ -532,7 +559,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         ExternalGraphic exGraphic = sf.createExternalGraphic(icon, "image/png");
         ExternalGraphic clone = visitor.copy(exGraphic);
         assertCopy(exGraphic, clone);
-        assertSame(exGraphic.getInlineContent(), clone.getInlineContent());
+        Assert.assertSame(exGraphic.getInlineContent(), clone.getInlineContent());
 
         ExternalGraphic notEq = sf.createExternalGraphic(icon, "image/jpeg");
         assertEqualsContract(clone, notEq, exGraphic);
@@ -543,6 +570,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq2, exGraphic);
     }
 
+    @Test
     public void testMark() {
         Mark mark = sf.getCircleMark();
         Mark clone = visitor.copy(mark);
@@ -552,6 +580,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, mark);
     }
 
+    @Test
     public void testExternalMark() throws URISyntaxException {
         OnLineResourceImpl or = new OnLineResourceImpl();
         or.setLinkage(new URI("ttf://wingdings"));
@@ -567,6 +596,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEquals(15, emCopy.getMarkIndex());
     }
 
+    @Test
     public void testFill() {
         Fill fill = sf.getDefaultFill();
         Fill clone = visitor.copy(fill);
@@ -576,6 +606,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
         assertEqualsContract(clone, notEq, fill);
     }
 
+    @Test
     public void testStroke() {
         Stroke stroke = sf.getDefaultStroke();
         Stroke clone = visitor.copy(stroke);
@@ -594,62 +625,56 @@ public class DuplicatingStyleVisitorTest extends TestCase {
     }
 
     private static void assertCopy(Object real, Object clone) {
-        assertNotNull("Real was null", real);
-        assertNotNull("Clone was null", clone);
-        assertTrue("" + real.getClass().getName() + " was not cloned", real != clone);
+        Assert.assertNotNull("Real was null", real);
+        Assert.assertNotNull("Clone was null", clone);
+        Assert.assertNotSame("" + real.getClass().getName() + " was not cloned", real, clone);
     }
 
     private static void assertEqualsContract(Object controlEqual, Object controlNe, Object test) {
-        assertNotNull(controlEqual);
-        assertNotNull(controlNe);
-        assertNotNull(test);
+        Assert.assertNotNull(controlEqual);
+        Assert.assertNotNull(controlNe);
+        Assert.assertNotNull(test);
 
         // check reflexivity
-        assertTrue("Reflexivity test failed", test.equals(test));
+        assertEquals("Reflexivity test failed", test, test);
 
         // check symmetric
-        assertTrue("Symmetry test failed", controlEqual.equals(test));
-        assertTrue("Symmetry test failed", test.equals(controlEqual));
-        assertTrue("Symmetry test failed", !test.equals(controlNe));
-        assertTrue("Symmetry test failed", !controlNe.equals(test));
+        assertEquals("Symmetry test failed", controlEqual, test);
+        assertEquals("Symmetry test failed", test, controlEqual);
+        Assert.assertFalse("Symmetry test failed", test.equals(controlNe));
+        Assert.assertFalse("Symmetry test failed", controlNe.equals(test));
 
         // check transitivity
-        assertTrue("Transitivity test failed", !controlEqual.equals(controlNe));
-        assertTrue("Transitivity test failed", !test.equals(controlNe));
-        assertTrue("Transitivity test failed", !controlNe.equals(controlEqual));
-        assertTrue("Transitivity test failed", !controlNe.equals(test));
+        Assert.assertFalse("Transitivity test failed", controlEqual.equals(controlNe));
+        Assert.assertFalse("Transitivity test failed", test.equals(controlNe));
+        Assert.assertFalse("Transitivity test failed", controlNe.equals(controlEqual));
+        Assert.assertFalse("Transitivity test failed", controlNe.equals(test));
 
         // check non-null
-        assertTrue("Non-null test failed", !test.equals(null));
-
-        // assertHashcode equality
-        int controlEqHash = controlEqual.hashCode();
-        int testHash = test.hashCode();
-        if (controlEqHash != testHash) {
-            // System.out.println("Warning  - Equal objects should return equal hashcodes");
-        }
+        Assert.assertFalse("Non-null test failed", test.equals(null));
     }
 
     private static void assertEqualsContract(Object controlEqual, Object test) {
-        assertNotNull(controlEqual);
-        assertNotNull(test);
+        Assert.assertNotNull(controlEqual);
+        Assert.assertNotNull(test);
 
         // check reflexivity
-        assertTrue("Reflexivity test failed", test.equals(test));
+        assertEquals("Reflexivity test failed", test, test);
 
         // check symmetric
-        assertTrue("Symmetry test failed", controlEqual.equals(test));
-        assertTrue("Symmetry test failed", test.equals(controlEqual));
+        assertEquals("Symmetry test failed", controlEqual, test);
+        assertEquals("Symmetry test failed", test, controlEqual);
 
         // check non-null
-        assertTrue("Non-null test failed", !test.equals(null));
+        Assert.assertFalse("Non-null test failed", test.equals(null));
 
         // assertHashcode equality
         int controlEqHash = controlEqual.hashCode();
         int testHash = test.hashCode();
-        assertTrue("Equal objects should return equal hashcodes", controlEqHash == testHash);
+        assertEquals("Equal objects should return equal hashcodes", controlEqHash, testHash);
     }
 
+    @Test
     public void testContrastEnhancementDuplication() throws Exception {
 
         ContrastEnhancement ce = sf.createContrastEnhancement();
@@ -667,6 +692,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
                 "ContrastMethod must be equal after duplication ", ce.getMethod(), ce2.getMethod());
     }
 
+    @Test
     public void testColorMapEntryDuplication() throws Exception {
 
         ColorMapEntry cme = sf.createColorMapEntry();
@@ -697,6 +723,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
                 cme2.getOpacity());
     }
 
+    @Test
     public void testPointSymbolizerWithGeomFunction() throws Exception {
         URL urlExternal = getClass().getResource("/data/sld/blob.gif");
         ExternalGraphic extg = sb.createExternalGraphic(urlExternal, "image/svg+xml");
@@ -716,6 +743,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
                 copy.getGeometry());
     }
 
+    @Test
     public void testRasterSymbolizerDuplicationWithGeometryFunction() {
         // create a default RasterSymbolizer
         RasterSymbolizer original = sb.createRasterSymbolizer();
@@ -735,6 +763,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
                 copy.getGeometry());
     }
 
+    @Test
     public void testLineSymbolizerWithGeometryFunction() {
         LineSymbolizer lineSymb = sf.createLineSymbolizer();
 
@@ -751,6 +780,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
                 copy.getGeometry());
     }
 
+    @Test
     public void testPolygonSymbolizerWithGeometryFunction() {
         PolygonSymbolizer symb = sf.createPolygonSymbolizer();
 
@@ -767,6 +797,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
                 copy.getGeometry());
     }
 
+    @Test
     public void testTextSymbolizerWithGeometryFunction() {
         TextSymbolizer symb = sf.createTextSymbolizer();
 
@@ -788,6 +819,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
      *
      * @author Stefan Tzeggai, June 29th 2010
      */
+    @Test
     public void testTextSymbolizer2() {
         TextSymbolizer2 symb = (TextSymbolizer2) sf.createTextSymbolizer();
 
@@ -842,6 +874,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
     /*
      * Tests that perpendicularOffset for LineSymbolizer is duplicated correctly
      */
+    @Test
     public void testLineSymbolizerWithPerpendicularOffset() {
         LineSymbolizer ls = sf.createLineSymbolizer();
         ls.setPerpendicularOffset(ff.literal(0.88));
@@ -856,11 +889,7 @@ public class DuplicatingStyleVisitorTest extends TestCase {
                 copy.getPerpendicularOffset());
     }
 
-    /**
-     * Test SelectedChannelType copy with Expression
-     *
-     * @throws Exception
-     */
+    /** Test SelectedChannelType copy with Expression */
     @Test
     public void testSelectedChannelTypeDuplication() throws Exception {
         final String b1 = "b1";

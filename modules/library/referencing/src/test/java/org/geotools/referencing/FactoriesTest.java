@@ -16,7 +16,10 @@
  */
 package org.geotools.referencing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
 import java.util.Collection;
@@ -35,10 +38,11 @@ import org.geotools.referencing.factory.ReferencingObjectFactory;
 import org.geotools.referencing.operation.DefiningConversion;
 import org.geotools.referencing.operation.projection.MapProjection;
 import org.geotools.util.factory.Hints;
-import org.junit.*;
+import org.junit.Test;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CRSFactory;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.cs.AxisDirection;
@@ -95,32 +99,31 @@ public final class FactoriesTest {
         final MathTransformFactory mtFactory =
                 ReferencingFactoryFinder.getMathTransformFactory(null);
 
-        final Ellipsoid airy1830;
         final Unit<Length> meters = SI.METRE;
-        airy1830 = datumFactory.createEllipsoid(name("Airy1830"), 6377563.396, 6356256.910, meters);
+        final Ellipsoid airy1830 =
+                datumFactory.createEllipsoid(name("Airy1830"), 6377563.396, 6356256.910, meters);
         out.println();
         out.println("create Coodinate Reference System....2: ");
         out.println(airy1830.toWKT());
 
-        final PrimeMeridian greenwich;
         final Unit<Angle> degrees = NonSI.DEGREE_ANGLE;
-        greenwich = datumFactory.createPrimeMeridian(name("Greenwich"), 0, degrees);
+        final PrimeMeridian greenwich =
+                datumFactory.createPrimeMeridian(name("Greenwich"), 0, degrees);
         out.println();
         out.println("create Coodinate Reference System....3: ");
         out.println(greenwich.toWKT());
 
         // NOTE: we could use the following pre-defined constant instead:
         //       DefaultPrimeMeridian.GREENWICH;
-        final GeodeticDatum datum;
-        datum = datumFactory.createGeodeticDatum(name("Airy1830"), airy1830, greenwich);
+        final GeodeticDatum datum =
+                datumFactory.createGeodeticDatum(name("Airy1830"), airy1830, greenwich);
         out.println();
         out.println("create Coodinate Reference System....4: ");
         out.println(datum.toWKT());
 
         // NOTE: we could use the following pre-defined constant instead:
         //       DefaultEllipsoidalCS.GEODETIC_2D;
-        final EllipsoidalCS ellCS;
-        ellCS =
+        final EllipsoidalCS ellCS =
                 csFactory.createEllipsoidalCS(
                         name("Ellipsoidal"),
                         csFactory.createCoordinateSystemAxis(
@@ -131,13 +134,12 @@ public final class FactoriesTest {
         out.println("create Coodinate Reference System....5: ");
         out.println(ellCS); // No WKT for coordinate systems
 
-        final GeographicCRS geogCRS;
-        geogCRS = crsFactory.createGeographicCRS(name("Airy1830"), datum, ellCS);
+        final GeographicCRS geogCRS =
+                crsFactory.createGeographicCRS(name("Airy1830"), datum, ellCS);
         out.println();
         out.println("create Coodinate Reference System....6: ");
         out.println(geogCRS.toWKT());
 
-        final MathTransform p;
         final ParameterValueGroup param = mtFactory.getDefaultParameters("Transverse_Mercator");
         param.parameter("semi_major").setValue(airy1830.getSemiMajorAxis());
         param.parameter("semi_minor").setValue(airy1830.getSemiMinorAxis());
@@ -151,8 +153,7 @@ public final class FactoriesTest {
 
         // NOTE: we could use the following pre-defined constant instead:
         //       DefaultCartesianCS.PROJECTED;
-        final CartesianCS cartCS;
-        cartCS =
+        final CartesianCS cartCS =
                 csFactory.createCartesianCS(
                         name("Cartesian"),
                         csFactory.createCoordinateSystemAxis(
@@ -211,10 +212,8 @@ public final class FactoriesTest {
             final MathTransform mt;
             try {
                 mt = mtFactory.createParameterizedTransform(param);
-            } catch (FactoryException e) {
+            } catch (FactoryException | UnsupportedOperationException e) {
                 // Probably not a map projection. This test is mostly about projection, so ignore.
-                continue;
-            } catch (UnsupportedOperationException e) {
                 continue;
             }
             if (mt instanceof MapProjection) {
@@ -307,7 +306,7 @@ public final class FactoriesTest {
                 factory.createGeodeticDatum(
                         Collections.singletonMap("name", "_toKyo  _"), ellipsoid, meridian);
         assertEquals(4, datum.getAlias().size());
-        assertTrue(aliases.equals(datum.getAlias()));
+        assertEquals(aliases, datum.getAlias());
 
         datum =
                 factory.createGeodeticDatum(

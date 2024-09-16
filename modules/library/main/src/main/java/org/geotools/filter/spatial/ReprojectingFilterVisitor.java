@@ -79,9 +79,6 @@ public class ReprojectingFilterVisitor extends DuplicatingFilterVisitor {
     /**
      * Returns the CRS associated to a property in the feature type. May be null if the property is
      * not geometric, or if the CRS is not set
-     *
-     * @param propertyName
-     * @return
      */
     private CoordinateReferenceSystem findPropertyCRS(PropertyName propertyName) {
         if (propertyName == null) {
@@ -131,9 +128,7 @@ public class ReprojectingFilterVisitor extends DuplicatingFilterVisitor {
             ReferencedEnvelope envelope = ReferencedEnvelope.reference(boundaries);
             try {
                 envelope = envelope.transform(targetCrs, true);
-            } catch (TransformException e) {
-                throw new RuntimeException(e);
-            } catch (FactoryException e) {
+            } catch (TransformException | FactoryException e) {
                 throw new RuntimeException(e);
             }
             boundaries = envelope;
@@ -322,7 +317,7 @@ public class ReprojectingFilterVisitor extends DuplicatingFilterVisitor {
     public Object visit(Literal expression, Object extraData) {
         Object value = expression.getValue();
         if (value instanceof Geometry) {
-            value = reproject((Geometry) value, featureType.getCoordinateReferenceSystem());
+            value = reproject(value, featureType.getCoordinateReferenceSystem());
         }
 
         return getFactory(extraData).literal(value);
@@ -370,7 +365,7 @@ public class ReprojectingFilterVisitor extends DuplicatingFilterVisitor {
             return new FunctionReprojector(propertyCrs, delegate);
         } else if (expression instanceof Literal) {
             // second expression is a geometry literal
-            Object value = ((Literal) expression).getValue();
+            Geometry value = (Geometry) ((Literal) expression).getValue();
             return ff.literal(reproject(value, propertyCrs));
         } else if (forceReprojection) {
             throw new IllegalArgumentException(
@@ -419,24 +414,10 @@ public class ReprojectingFilterVisitor extends DuplicatingFilterVisitor {
             return cloneFilter(filter, extraData, ex1, ex2);
         }
 
-        /**
-         * Straight cloning using cascaded visit
-         *
-         * @param filter
-         * @param extraData
-         * @return
-         */
+        /** Straight cloning using cascaded visit */
         abstract Object cloneFilter(BinarySpatialOperator filter, Object extraData);
 
-        /**
-         * Clone with the provided parameters as first and second expressions
-         *
-         * @param filter
-         * @param extraData
-         * @param ex1
-         * @param ex2
-         * @return
-         */
+        /** Clone with the provided parameters as first and second expressions */
         abstract Object cloneFilter(
                 BinarySpatialOperator filter, Object extraData, Expression ex1, Expression ex2);
     }
@@ -478,24 +459,10 @@ public class ReprojectingFilterVisitor extends DuplicatingFilterVisitor {
             return cloneFilter(filter, extraData, ex1, ex2);
         }
 
-        /**
-         * Straight cloning using cascaded visit
-         *
-         * @param filter
-         * @param extraData
-         * @return
-         */
+        /** Straight cloning using cascaded visit */
         abstract Object cloneFilter(BinaryComparisonOperator filter, Object extraData);
 
-        /**
-         * Clone with the provided parameters as first and second expressions
-         *
-         * @param filter
-         * @param extraData
-         * @param ex1
-         * @param ex2
-         * @return
-         */
+        /** Clone with the provided parameters as first and second expressions */
         abstract Object cloneFilter(
                 BinaryComparisonOperator filter, Object extraData, Expression ex1, Expression ex2);
     }
@@ -535,7 +502,9 @@ public class ReprojectingFilterVisitor extends DuplicatingFilterVisitor {
 
         public <T> T evaluate(Object object, Class<T> context) {
             T value = delegate.evaluate(object, context);
-            return (T) reproject(value, propertyCrs);
+            @SuppressWarnings("unchecked")
+            T reprojected = (T) reproject(value, propertyCrs);
+            return reprojected;
         }
 
         public Literal getFallbackValue() {

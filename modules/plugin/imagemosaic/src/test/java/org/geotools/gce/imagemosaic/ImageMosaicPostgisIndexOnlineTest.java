@@ -136,11 +136,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
 
     private final String noGeomLast = "zNotGeom";
 
-    /**
-     * Complex test for Postgis indexing on db.
-     *
-     * @throws Exception
-     */
+    /** Complex test for Postgis indexing on db. */
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
     public void testPostgisIndexing() throws Exception {
@@ -161,7 +157,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
 
         final String[] metadataNames = reader.getMetadataNames();
         assertNotNull(metadataNames);
-        assertEquals(12, metadataNames.length);
+        assertEquals(13, metadataNames.length);
 
         assertEquals("true", reader.getMetadataValue("HAS_TIME_DOMAIN"));
         final String timeMetadata = reader.getMetadataValue("TIME_DOMAIN");
@@ -198,7 +194,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
 
         // use imageio with defined tiles
         final ParameterValue<List> time = ImageMosaicFormat.TIME.createValue();
-        final List<Date> timeValues = new ArrayList<Date>();
+        final List<Date> timeValues = new ArrayList<>();
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss'Z'");
         sdf.setTimeZone(TimeZone.getTimeZone("GMT+0"));
         Date date = sdf.parse("2008-10-31T00:00:00.000Z");
@@ -232,11 +228,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
         reader.dispose();
     }
 
-    /**
-     * Complex test for Postgis indexing on db.
-     *
-     * @throws Exception
-     */
+    /** Complex test for Postgis indexing on db. */
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
     public void testPostgisIndexingNoEpsgCode() throws Exception {
@@ -279,9 +271,9 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
         reader.delete(true);
         boolean dropSuccessfull = false;
         try {
-            dropTables(new String[] {tempFolderName4}, "samplecreate2");
+            dropTables(new String[] {tempFolderName4}, fixture.getProperty("database"));
             dropSuccessfull = true;
-        } catch (SQLException E) {
+        } catch (SQLException e) {
             // The tables have been already deleted with the database drop performed
             // by the delete operation.
             assertFalse(dropSuccessfull);
@@ -298,9 +290,9 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
             for (Object key : keyset) {
                 final String key_ = (String) key;
                 String value = fixture.getProperty(key_);
-                if (key_.equalsIgnoreCase("database")) {
+                /*if (key_.equalsIgnoreCase("database")) {
                     value = "samplecreate2";
-                }
+                }*/
 
                 out.write(key_.replace(" ", "\\ ") + "=" + value.replace(" ", "\\ ") + "\n");
             }
@@ -308,11 +300,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
         }
     }
 
-    /**
-     * Complex test for Postgis indexing on db.
-     *
-     * @throws Exception
-     */
+    /** Complex test for Postgis indexing on db. */
     @Test
     public void testSortingAndLimiting() throws Exception {
         final File workDir = new File(TestData.file(this, "."), tempFolderName2);
@@ -332,7 +320,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
 
         final String[] metadataNames = reader.getMetadataNames();
         assertNotNull(metadataNames);
-        assertEquals(12, metadataNames.length);
+        assertEquals(13, metadataNames.length);
 
         assertEquals("true", reader.getMetadataValue("HAS_TIME_DOMAIN"));
         assertEquals("true", reader.getMetadataValue("HAS_ELEVATION_DOMAIN"));
@@ -368,7 +356,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
         }
 
         // checking that we get a single feature and that feature is correct
-        final Collection<GranuleDescriptor> features = new ArrayList<GranuleDescriptor>();
+        final Collection<GranuleDescriptor> features = new ArrayList<>();
         rasterManager.getGranuleDescriptors(
                 query,
                 new GranuleCatalogVisitor() {
@@ -462,6 +450,8 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
             for (String table : tables) {
                 st.execute("DROP TABLE IF EXISTS \"" + table + "\"");
             }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, e.getLocalizedMessage(), e);
         } finally {
 
             if (st != null) {
@@ -482,11 +472,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
         }
     }
 
-    /**
-     * Complex test for Postgis store wrapping.
-     *
-     * @throws Exception
-     */
+    /** Complex test for Postgis store wrapping. */
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
     public void testPostgisWrapping() throws Exception {
@@ -520,7 +506,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
         }
 
         assertNotNull(metadataNames);
-        assertEquals(12, metadataNames.length);
+        assertEquals(13, metadataNames.length);
 
         assertEquals("true", reader.getMetadataValue("HAS_TIME_DOMAIN"));
         final String timeMetadata = reader.getMetadataValue("TIME_DOMAIN");
@@ -557,7 +543,7 @@ public class ImageMosaicPostgisIndexOnlineTest extends OnlineTestCase {
 
         // use imageio with defined tiles
         final ParameterValue<List> time = ImageMosaicFormat.TIME.createValue();
-        final List<Date> timeValues = new ArrayList<Date>();
+        final List<Date> timeValues = new ArrayList<>();
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss'Z'");
         sdf.setTimeZone(TimeZone.getTimeZone("GMT+0"));
         Date date = sdf.parse("2008-10-31T00:00:00.000Z");

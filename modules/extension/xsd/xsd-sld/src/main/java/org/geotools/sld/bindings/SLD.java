@@ -133,6 +133,9 @@ public final class SLD extends XSD {
     public static final QName FILL = new QName("http://www.opengis.net/sld", "Fill");
 
     /** @generated */
+    public static final QName BACKGROUND = new QName("http://www.opengis.net/sld", "Background");
+
+    /** @generated */
     public static final QName FONT = new QName("http://www.opengis.net/sld", "Font");
 
     /** @generated */
@@ -337,7 +340,7 @@ public final class SLD extends XSD {
         return instance;
     }
 
-    protected void addDependencies(Set dependencies) {
+    protected void addDependencies(Set<XSD> dependencies) {
         dependencies.add(OGC.getInstance());
     }
 

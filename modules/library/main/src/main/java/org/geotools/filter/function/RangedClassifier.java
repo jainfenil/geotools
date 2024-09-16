@@ -33,6 +33,7 @@ package org.geotools.filter.function;
  *
  * @author Cory Horner, Refractions Research
  */
+@SuppressWarnings("unchecked") // for the life of me I cannot turn this into a type safe thing
 public final class RangedClassifier extends Classifier {
 
     Comparable<?> min[];
@@ -50,8 +51,6 @@ public final class RangedClassifier extends Classifier {
     /**
      * Null safe title generation.
      *
-     * @param min
-     * @param max
      * @return generated title
      */
     private String generateTitle(Comparable<?> min, Comparable<?> max) {
@@ -68,7 +67,6 @@ public final class RangedClassifier extends Classifier {
     /**
      * Used to remove trailing zeros; preventing out put like 1.00000.
      *
-     * @param str
      * @return origional string with any trailing decimal places removed.
      */
     private String truncateZeros(String str) {

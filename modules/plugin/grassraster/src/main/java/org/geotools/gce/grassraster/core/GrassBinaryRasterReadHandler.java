@@ -21,6 +21,7 @@ import java.awt.image.DataBuffer;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -28,11 +29,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 import javax.imageio.ImageIO;
@@ -68,7 +68,7 @@ import org.opengis.util.ProgressListener;
  * @see GrassBinaryImageReadParam
  * @see GrassBinaryImageMetadata
  */
-public class GrassBinaryRasterReadHandler {
+public class GrassBinaryRasterReadHandler implements Closeable {
 
     /** The flag that defines whether to abort or not. */
     private boolean abortRequired = false;
@@ -86,7 +86,7 @@ public class GrassBinaryRasterReadHandler {
     private JGrassMapEnvironment readerGrassEnv = null;
 
     /** the vector representing the reclass table. */
-    private Vector<Object> reclassTable = null;
+    private List<Object> reclassTable = null;
 
     /** the region of the native grass raster. */
     private JGrassRegion nativeRasterRegion = null;
@@ -158,10 +158,7 @@ public class GrassBinaryRasterReadHandler {
      * @param castDoubleToFloating a flag that gives the possibility to force the reading of a map
      *     as a floating point map. This is necessary right now because of a imageio bug:
      *     https://jai-imageio-core.dev.java.net /issues/show_bug.cgi?id=180
-     * @param monitor
      * @return the read {@link WritableRaster raster}
-     * @throws IOException
-     * @throws DataFormatException
      */
     public WritableRaster readRaster(
             ImageReadParam param,
@@ -183,8 +180,6 @@ public class GrassBinaryRasterReadHandler {
      *
      * @param param the read parameters.
      * @return the read raster
-     * @throws IOException
-     * @throws DataFormatException
      */
     public WritableRaster readRaster(ImageReadParam param) throws IOException, DataFormatException {
 
@@ -385,19 +380,18 @@ public class GrassBinaryRasterReadHandler {
      *
      * <p><b>INFO:</b> this is a reader method.
      */
-    @SuppressWarnings("nls")
+    @SuppressWarnings({"nls", "PMD.CloseResource"})
     public void parseHeaderAndAccessoryFiles() throws IOException {
         try {
-            LinkedHashMap<String, String> readerFileHeaderMap = new LinkedHashMap<String, String>();
+            LinkedHashMap<String, String> readerFileHeaderMap = new LinkedHashMap<>();
             /* Read contents of 'cellhd/name' file from the current mapset */
             String line;
-            BufferedReader cellhead;
             String reclassedFile = null;
             String reclassedMapset = null;
 
             reclassTable = null;
             File cellhd = readerGrassEnv.getCELLHD();
-            cellhead = new BufferedReader(new FileReader(cellhd));
+            BufferedReader cellhead = new BufferedReader(new FileReader(cellhd));
             cellhead.mark(128);
             /*
              * Read first line to determine if file is a reclasses file. If it
@@ -424,7 +418,7 @@ public class GrassBinaryRasterReadHandler {
                     }
                 }
                 /* Instantiate the reclass table */
-                reclassTable = new Vector<Object>();
+                reclassTable = new ArrayList<>();
                 /* The next line holds the start value for categories */
                 if ((line = cellhead.readLine()) == null) {
                     throw new IOException(
@@ -434,15 +428,15 @@ public class GrassBinaryRasterReadHandler {
                     int reclassFirstCategory = Integer.parseInt(line.trim().substring(1));
                     /* Pad reclass table until the first reclass category */
                     for (int i = 0; i < reclassFirstCategory; i++) {
-                        reclassTable.addElement("");
+                        reclassTable.add("");
                     }
                 } else {
                     /* Add an empty element for the 0th category */
-                    reclassTable.addElement("");
+                    reclassTable.add("");
                 }
                 /* Now read the reclass table */
                 while ((line = cellhead.readLine()) != null) {
-                    reclassTable.addElement(Integer.valueOf(line));
+                    reclassTable.add(Integer.valueOf(line));
                 }
                 // set new reclass environment and check for new reclass header
                 readerGrassEnv.setReclassed(reclassedMapset, reclassedFile);
@@ -475,10 +469,8 @@ public class GrassBinaryRasterReadHandler {
                     // n-s resol: 0:00:00.055381
                     String key = lineSplit[0].trim();
 
-                    double value = 0.0;
-
                     String degrees = lineSplit[1];
-                    value = Double.parseDouble(degrees);
+                    double value = Double.parseDouble(degrees);
 
                     String minutes = lineSplit[2];
                     if (minutes.lastIndexOf('N') != -1
@@ -656,8 +648,6 @@ public class GrassBinaryRasterReadHandler {
      * Extract the row addresses from the header information of the file.
      *
      * <p><b>INFO:</b> this is a reader method.
-     *
-     * @throws IOException
      */
     private void parseHeader() throws IOException {
 
@@ -707,8 +697,6 @@ public class GrassBinaryRasterReadHandler {
      * @param rowDataCache the byte array to store the unpacked row data
      * @param activeReadRegion the region defining the portion of raster to be read
      * @return boolean TRUE for success, FALSE for failure.
-     * @throws IOException
-     * @throws DataFormatException
      */
     private boolean readRasterRow(
             int currentfilerow, byte[] rowDataCache, JGrassRegion activeReadRegion)
@@ -782,7 +770,7 @@ public class GrassBinaryRasterReadHandler {
                     } else {
                         /* If map is a reclass then get the reclassed value */
                         if (reclassTable != null) {
-                            cell = ((Integer) reclassTable.elementAt(cell)).intValue();
+                            cell = ((Integer) reclassTable.get(cell)).intValue();
                         }
                         rowBuffer.putInt(cell);
                     }
@@ -790,14 +778,14 @@ public class GrassBinaryRasterReadHandler {
                     /* Floating point map with float values. */
                     float cell = rowCache.getFloat();
                     if (reclassTable != null) {
-                        cell = ((Integer) reclassTable.elementAt((int) cell)).floatValue();
+                        cell = ((Integer) reclassTable.get((int) cell)).floatValue();
                     }
                     rowBuffer.putFloat(cell);
                 } else if (readerMapType == -2) {
                     /* Floating point map with double values. */
                     double cell = rowCache.getDouble();
                     if (reclassTable != null) {
-                        cell = ((Integer) reclassTable.elementAt((int) cell)).doubleValue();
+                        cell = ((Integer) reclassTable.get((int) cell)).doubleValue();
                     }
                     rowBuffer.putDouble(cell);
                 }
@@ -846,8 +834,6 @@ public class GrassBinaryRasterReadHandler {
      *
      * @param currentrow the index of the row to read.
      * @param rowdata the buffer to hold the read row.
-     * @throws IOException
-     * @throws DataFormatException
      */
     private void getMapRow(int currentrow, ByteBuffer rowdata)
             throws IOException, DataFormatException {
@@ -881,8 +867,6 @@ public class GrassBinaryRasterReadHandler {
      *
      * @param rowdata the buffer to hold the read row.
      * @param currentrow the index of the row to read.
-     * @throws DataFormatException
-     * @throws IOException
      */
     private void readCompressedFPRowByNumber(ByteBuffer rowdata, int currentrow)
             throws DataFormatException, IOException {
@@ -919,8 +903,6 @@ public class GrassBinaryRasterReadHandler {
      *
      * @param rowdata the buffer to hold the read row.
      * @param currentrow the index of the row to read.
-     * @throws IOException
-     * @throws DataFormatException
      */
     private void readUncompressedFPRowByNumber(ByteBuffer rowdata, int currentrow)
             throws IOException, DataFormatException {
@@ -936,7 +918,6 @@ public class GrassBinaryRasterReadHandler {
      *
      * @param rowdata the buffer to hold the read row.
      * @param currentrow the index of the row to read.
-     * @throws IOException
      */
     private void readCompressedIntegerRowByNumber(ByteBuffer rowdata, int currentrow)
             throws IOException, DataFormatException {
@@ -1033,8 +1014,6 @@ public class GrassBinaryRasterReadHandler {
      *
      * @param rowdata the buffer to hold the read row.
      * @param currentrow the index of the row to read.
-     * @throws IOException
-     * @throws DataFormatException
      */
     private void readUncompressedIntegerRowByNumber(ByteBuffer rowdata, int currentrow)
             throws IOException, DataFormatException {
@@ -1139,7 +1118,6 @@ public class GrassBinaryRasterReadHandler {
      * <p><b>INFO:</b> this is a reader method.
      *
      * @return the list of single colorrules.
-     * @throws IOException
      */
     public List<String> getColorRules(double[] range) throws IOException {
         JGrassColorTable colorTable = new JGrassColorTable(readerGrassEnv, range);
@@ -1152,7 +1130,6 @@ public class GrassBinaryRasterReadHandler {
      * <p><b>INFO:</b> this is a reader method.
      *
      * @return the attribute table as read in the categories file
-     * @throws IOException
      */
     public List<String> getCategories() throws IOException {
 
@@ -1160,8 +1137,7 @@ public class GrassBinaryRasterReadHandler {
          * File is a standard file where the categories values are stored in
          * the cats directory.
          */
-        BufferedReader rdr = new BufferedReader(new FileReader(readerGrassEnv.getCATS()));
-        try {
+        try (BufferedReader rdr = new BufferedReader(new FileReader(readerGrassEnv.getCATS()))) {
 
             /* Instantiate attribute table */
             AttributeTable attTable = new AttributeTable();
@@ -1189,17 +1165,14 @@ public class GrassBinaryRasterReadHandler {
                 }
             }
 
-            List<String> attrs = new ArrayList<String>();
-            Enumeration<CellAttribute> categories = attTable.getCategories();
-            while (categories.hasMoreElements()) {
-                AttributeTable.CellAttribute object = categories.nextElement();
+            List<String> attrs = new ArrayList<>();
+            Iterator<CellAttribute> categories = attTable.getCategories();
+            while (categories.hasNext()) {
+                AttributeTable.CellAttribute object = categories.next();
                 attrs.add(object.toString());
             }
 
             return attrs;
-
-        } finally {
-            rdr.close();
         }
     }
 
@@ -1278,8 +1251,7 @@ public class GrassBinaryRasterReadHandler {
     public CoordinateReferenceSystem getCrs() throws IOException {
         String locationPath = readerGrassEnv.getLOCATION().getAbsolutePath();
         CoordinateReferenceSystem readCrs = null;
-        String projWtkFilePath;
-        projWtkFilePath =
+        String projWtkFilePath =
                 locationPath
                         + File.separator
                         + JGrassConstants.PERMANENT_MAPSET

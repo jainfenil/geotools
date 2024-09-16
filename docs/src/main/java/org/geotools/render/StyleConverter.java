@@ -29,7 +29,6 @@ import javax.xml.transform.TransformerException;
 import net.miginfocom.swing.MigLayout;
 import org.geotools.data.Parameter;
 import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.styling.FeatureTypeConstraint;
 import org.geotools.styling.StyleFactory;
 import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.UserLayer;
@@ -248,12 +247,7 @@ public class StyleConverter extends JFrame {
         }
     }
 
-    /**
-     * Update displayed text and format.
-     *
-     * @param document
-     * @param format
-     */
+    /** Update displayed text and format. */
     public void display(String document, String format) {
         if (document == null) {
             text.setText("<!-- copy or import style document here -->");
@@ -296,7 +290,7 @@ public class StyleConverter extends JFrame {
 
         // FeatureTypeConstraint ftc =
         // styleFactory.createFeatureTypeConstraint(null, Filter.INCLUDE, null);
-        layer.setLayerFeatureConstraints(new FeatureTypeConstraint[] {null});
+        layer.setLayerFeatureConstraints(null);
         sld.addStyledLayer(layer);
         layer.addUserStyle((org.geotools.styling.Style) style);
 

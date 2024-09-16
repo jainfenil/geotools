@@ -18,16 +18,20 @@
 package org.geotools.gce.imagemosaic;
 
 import static org.geotools.referencing.crs.DefaultGeographicCRS.WGS84;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.sun.media.jai.operator.ImageReadDescriptor;
 import it.geosolutions.imageio.stream.input.FileImageInputStreamExtImpl;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
+import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -36,17 +40,28 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.Interpolation;
 import javax.media.jai.PlanarImage;
+import javax.media.jai.RenderedOp;
 import org.apache.commons.io.FileUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
+import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.DimensionDescriptor;
 import org.geotools.coverage.grid.io.GranuleSource;
@@ -62,6 +77,7 @@ import org.geotools.image.test.ImageAssert;
 import org.geotools.image.util.ImageUtilities;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.geotools.referencing.operation.matrix.XAffineTransform;
 import org.geotools.referencing.operation.projection.MapProjection;
 import org.geotools.test.TestData;
 import org.geotools.util.factory.Hints;
@@ -79,11 +95,14 @@ import org.opengis.filter.Filter;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.parameter.ParameterValue;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 
 /** Testing whether a simple mosaic correctly has its elements reprojected */
 public class HeterogenousCRSTest {
 
+    public static final double DELTA = 1E-6;
     @Rule public TemporaryFolder crsMosaicFolder = new TemporaryFolder();
 
     @BeforeClass
@@ -278,6 +297,85 @@ public class HeterogenousCRSTest {
         final String expectedResultLocation = "hetero_utm_results/full.png";
         assertExpectedMosaic(imReader, expectedResultLocation);
         imReader.dispose();
+    }
+
+    @Test
+    public void testConcurrentHeteroUTMH2FullArea() throws Exception {
+        runConcurrentHeteroUTMH2(r -> null);
+    }
+
+    @Test
+    public void testConcurrentHeteroUTMH2Across() throws Exception {
+        runConcurrentHeteroUTMH2(
+                r -> {
+                    ParameterValue<GridGeometry2D> ggp =
+                            AbstractGridFormat.READ_GRIDGEOMETRY2D.createValue();
+                    GridEnvelope range = r.getOriginalGridRange();
+                    // move read area partially outside
+                    ReferencedEnvelope bounds =
+                            ReferencedEnvelope.reference(r.getOriginalEnvelope());
+                    bounds.translate(bounds.getWidth() / 2, 0);
+                    GridGeometry2D gg = new GridGeometry2D(range, bounds);
+                    ggp.setValue(gg);
+                    return new GeneralParameterValue[] {ggp};
+                });
+    }
+
+    @Test
+    public void testConcurrentHeteroUTMH2NoGranules() throws Exception {
+        runConcurrentHeteroUTMH2(
+                r -> {
+                    ParameterValue<Filter> filter = ImageMosaicFormat.FILTER.createValue();
+                    filter.setValue(Filter.EXCLUDE);
+                    return new GeneralParameterValue[] {filter};
+                });
+    }
+
+    private void runConcurrentHeteroUTMH2(
+            Function<ImageMosaicReader, GeneralParameterValue[]> parameters)
+            throws URISyntaxException, IOException, InterruptedException,
+                    java.util.concurrent.ExecutionException, java.util.concurrent.TimeoutException {
+        String testLocation = "hetero_utm";
+        URL storeUrl = TestData.url(this, testLocation);
+
+        File testDataFolder = new File(storeUrl.toURI());
+        File testDirectory = crsMosaicFolder.newFolder(testLocation);
+        FileUtils.copyDirectory(testDataFolder, testDirectory);
+
+        // to similate the deadlock we need a connection pool with just one connection,
+        // a single request will cause the deadlock in this case (but we try with a pool
+        // nevertheless, to be extra sure)
+        File datastoreProperties = new File(testDirectory, "datastore.properties");
+        try (FileWriter out = new FileWriter(datastoreProperties)) {
+            out.write("database=hetero_concurrent\n");
+            out.write(
+                    "SPI=org.geotools.data.h2.H2DataStoreFactory\n"
+                            + "dbtype=h2\n"
+                            + "user=gs\n"
+                            + "passwd=gs\n"
+                            + "Connection\\ timeout=3600\n"
+                            + "max \\connections=1"
+                            + "min \\connections=1");
+            out.flush();
+        }
+
+        final ExecutorService executors = Executors.newFixedThreadPool(4);
+        ImageMosaicReader reader = new ImageMosaicReader(testDirectory, null);
+        try {
+            List<Future> futures = new ArrayList<>();
+            for (int i = 0; i < 20; i++) {
+                Future<GridCoverage2D> future =
+                        executors.submit(() -> reader.read(parameters.apply(reader)));
+                futures.add(future);
+            }
+            for (Future future : futures) {
+                // just to make sure it cannot get stuck forever, but allow execution on
+                // very slow runtimes
+                future.get(120, TimeUnit.SECONDS);
+            }
+        } finally {
+            reader.dispose();
+        }
     }
 
     @Test
@@ -644,6 +742,7 @@ public class HeterogenousCRSTest {
         return getInputFileNames(ri);
     }
 
+    @SuppressWarnings("PMD.CloseResource") // image stream closed along the reader
     private List<String> getInputFileNames(RenderedImage inputImage) {
         List<String> files = new ArrayList<>();
         if (inputImage instanceof PlanarImage) {
@@ -682,5 +781,181 @@ public class HeterogenousCRSTest {
             }
         }
         return files;
+    }
+
+    @Test
+    public void testHeterogeneousCRSReadInGranulesCRS() throws Exception {
+
+        // Sample mosaic is made of 3 different UTM zones and mosaicCRS is 4326.
+        // Each granule is filled with a color and have a white stripe in the middle.
+        // red: EPSG:32631
+        // green: EPSG:32632
+        // blue: EPSG:32633
+        String testLocation = "heterogeneous_crs_2";
+        URL storeUrl = TestData.url(this, testLocation);
+
+        File testDataFolder = new File(storeUrl.toURI());
+        File testDirectory = crsMosaicFolder.newFolder(testLocation);
+        FileUtils.copyDirectory(testDataFolder, testDirectory);
+
+        ImageMosaicReader imReader = new ImageMosaicReader(testDirectory, null);
+        CoordinateReferenceSystem utmZone32N = CRS.decode("EPSG:32632", true);
+        GeneralEnvelope envelope =
+                new GeneralEnvelope(new double[] {150000, 600000}, new double[] {850000, 1200000});
+        envelope.setCoordinateReferenceSystem(utmZone32N);
+        GridEnvelope2D gridRange = new GridEnvelope2D(0, 0, 700, 600);
+
+        // Setting up an UTM gridGeometry
+        GridGeometry2D readingGridGeometry = new GridGeometry2D(gridRange, envelope);
+        ParameterValue<GridGeometry2D> ggParam =
+                AbstractGridFormat.READ_GRIDGEOMETRY2D.createValue();
+        ggParam.setValue(readingGridGeometry);
+
+        GridCoverage2D gc = imReader.read(new GeneralParameterValue[] {ggParam});
+
+        // Check that we get back ImageMosaic on its "common" CRS (4326)
+        CoordinateReferenceSystem wgs84 = DefaultGeographicCRS.WGS84;
+        assertTrue(CRS.equalsIgnoreMetadata(wgs84, gc.getCoordinateReferenceSystem()));
+        RenderedImage ri = gc.getRenderedImage();
+        Map<String, Set<RenderedOp>> operationsGroups = new HashMap<>();
+        groupOperations(ri, operationsGroups);
+
+        Set<RenderedOp> imageReads = operationsGroups.get("ImageRead");
+        int granulesRead = imageReads.size();
+        // All the 3 granules have been reprojected
+        assertEquals(3, granulesRead);
+        assertEquals(granulesRead, operationsGroups.get("Warp").size());
+        gc.dispose(true);
+
+        //
+        // Repeat the TEST by setting the flag to provide the output in alternative CRS.
+        //
+
+        // Test the metadata value
+        String epsgCodes =
+                imReader.getMetadataValue(AbstractGridCoverage2DReader.MULTICRS_EPSGCODES);
+
+        // The reader supports EPSG:32632
+        assertTrue(epsgCodes.contains("EPSG:32632"));
+        assertTrue(Utils.isSupportedCRS(imReader, utmZone32N));
+
+        ParameterValue<Boolean> useAlternativeCRS =
+                ImageMosaicFormat.OUTPUT_TO_ALTERNATIVE_CRS.createValue();
+        useAlternativeCRS.setValue(true);
+        gc = imReader.read(new GeneralParameterValue[] {ggParam, useAlternativeCRS});
+
+        // Check that the output is in the requested CRS (no 4326 anymore)
+        assertTrue(CRS.equalsIgnoreMetadata(utmZone32N, gc.getCoordinateReferenceSystem()));
+        MathTransform transform = gc.getGridGeometry().getGridToCRS();
+        AffineTransform tx = (AffineTransform) transform;
+
+        // Check that we are getting the original resolution
+        // of the granule in that projection
+        assertEquals(1000, XAffineTransform.getScaleX0(tx), DELTA);
+        assertEquals(1000, XAffineTransform.getScaleY0(tx), DELTA);
+
+        ri = gc.getRenderedImage();
+        operationsGroups.clear();
+        groupOperations(ri, operationsGroups);
+        // Check that all the 3 granules have been read but only 2
+        // of them have been warped
+        imageReads = operationsGroups.get("ImageRead");
+        Set<RenderedOp> warps = operationsGroups.get("Warp");
+        granulesRead = imageReads.size();
+        assertEquals(3, granulesRead);
+        assertEquals(2, warps.size());
+        for (RenderedOp warp : warps) {
+            removeImagesBeingWarped(warp, imageReads);
+        }
+        // get the only imageRead not being warped along the chain
+        assertEquals(1, imageReads.size());
+        RenderedOp unwarpedImage = imageReads.iterator().next();
+        final ParameterBlock block = unwarpedImage.getParameterBlock();
+        List<Object> paramValues = block.getParameters();
+        // The green.tif is the image with native CRS = 32632 so the only one not being reprojected
+        assertTrue(
+                ((FileImageInputStreamExtImpl) paramValues.get(0))
+                        .getFile()
+                        .getAbsolutePath()
+                        .contains("green.tif"));
+        imReader.dispose();
+    }
+
+    private void removeImagesBeingWarped(RenderedOp image, Set<RenderedOp> imageReads) {
+        List sources = image.getSources();
+        Iterator it = sources.iterator();
+        while (it.hasNext()) {
+            Object source = it.next();
+            if (source instanceof RenderedOp) {
+                RenderedOp op = (RenderedOp) source;
+                String opName = op.getOperationName();
+                if (opName.equalsIgnoreCase("ImageRead")) {
+                    imageReads.remove(op);
+                    return;
+                } else {
+                    removeImagesBeingWarped(op, imageReads);
+                }
+            }
+        }
+    }
+
+    private void groupOperations(Object ri, Map<String, Set<RenderedOp>> operationsSet) {
+        if (ri instanceof RenderedOp) {
+            RenderedOp op = (RenderedOp) ri;
+            String opName = op.getOperationName();
+            Set<RenderedOp> set = operationsSet.get(opName);
+            if (set == null) {
+                set = new HashSet<>();
+            }
+            set.add(op);
+            operationsSet.put(opName, set);
+            List sources = op.getSources();
+            Iterator it = sources.iterator();
+            while (it.hasNext()) {
+                Object source = it.next();
+                groupOperations(source, operationsSet);
+            }
+            return;
+        }
+    }
+
+    @Test
+    public void testNativeEnvelope() throws Exception {
+        String testLocation = "heterogeneous_crs_2";
+        URL storeUrl = TestData.url(this, testLocation);
+
+        File testDataFolder = new File(storeUrl.toURI());
+        File testDirectory = crsMosaicFolder.newFolder(testLocation);
+        FileUtils.copyDirectory(testDataFolder, testDirectory);
+
+        ImageMosaicReader imReader = new ImageMosaicReader(testDirectory, null);
+        GranuleSource source = imReader.getGranules(imReader.getGridCoverageNames()[0], true);
+
+        // no decoration requested, no time should be spent adding native bounds
+        SimpleFeatureCollection fc = source.getGranules(Query.ALL);
+        try (SimpleFeatureIterator fi = fc.features()) {
+            while (fi.hasNext()) {
+                SimpleFeature f = fi.next();
+                assertThat(f.getUserData(), not(hasKey(GranuleSource.NATIVE_BOUNDS_KEY)));
+            }
+        }
+
+        // decoration requested this time
+        Query q = new Query();
+        q.getHints().put(GranuleSource.NATIVE_BOUNDS, true);
+        SimpleFeatureCollection fcb = source.getGranules(q);
+        try (SimpleFeatureIterator fi = fcb.features()) {
+            while (fi.hasNext()) {
+                SimpleFeature f = fi.next();
+                assertThat(f.getUserData(), hasKey(GranuleSource.NATIVE_BOUNDS_KEY));
+                // check the native bounds are reported in the native CRS
+                String crs = (String) f.getAttribute("crs");
+                ReferencedEnvelope envelope =
+                        (ReferencedEnvelope) f.getUserData().get(GranuleSource.NATIVE_BOUNDS_KEY);
+                assertTrue(
+                        CRS.equalsIgnoreMetadata(
+                                CRS.decode(crs, true), envelope.getCoordinateReferenceSystem()));
+            }
+        }
     }
 }

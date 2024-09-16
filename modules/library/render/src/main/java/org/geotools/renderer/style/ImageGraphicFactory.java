@@ -48,11 +48,11 @@ public class ImageGraphicFactory implements ExternalGraphicFactory, GraphicCache
 
     /** Current way to load images */
     static Map<URL, BufferedImage> imageCache =
-            Collections.synchronizedMap(new SoftValueHashMap<URL, BufferedImage>());
+            Collections.synchronizedMap(new SoftValueHashMap<>());
 
     /** Holds the of graphic formats supported by the current jdk */
     static Set<String> supportedGraphicFormats =
-            new HashSet<String>(Arrays.asList(ImageIO.getReaderMIMETypes()));
+            new HashSet<>(Arrays.asList(ImageIO.getReaderMIMETypes()));
 
     public Icon getIcon(Feature feature, Expression url, String format, int size) {
         // check we do support the format
@@ -78,7 +78,7 @@ public class ImageGraphicFactory implements ExternalGraphicFactory, GraphicCache
 
         // if scaling is needed, perform it
         if (size > 0 && image.getHeight() != size) {
-            double dsize = (double) size;
+            double dsize = size;
 
             double scaleY = dsize / image.getHeight(); // >1 if you're magnifying
             double scaleX = scaleY; // keep aspect ratio!
@@ -91,11 +91,7 @@ public class ImageGraphicFactory implements ExternalGraphicFactory, GraphicCache
         return new ImageIcon(image);
     }
 
-    /**
-     * Returs the set of mime types supported by this factory
-     *
-     * @return
-     */
+    /** Returs the set of mime types supported by this factory */
     public Set<String> getSupportedMimeTypes() {
         return Collections.unmodifiableSet(supportedGraphicFormats);
     }

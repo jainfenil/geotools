@@ -18,7 +18,8 @@ package org.geotools.xml.styling;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -39,13 +40,12 @@ import org.w3c.dom.NodeList;
 public class SLDInlineFeatureParser {
 
     /** hash table that takes a epsg# to its definition* */
-    private static Hashtable<Integer, CoordinateReferenceSystem> SRSLookup =
-            new Hashtable<Integer, CoordinateReferenceSystem>();
+    private static Map<Integer, CoordinateReferenceSystem> SRSLookup = new HashMap<>();
 
     public SimpleFeatureType featureType = null;
     public DataStore dataStore = null;
     Node rootNode = null;
-    ArrayList<Feature> features = new ArrayList<Feature>();
+    ArrayList<Feature> features = new ArrayList<>();
     CoordinateReferenceSystem SRS = null; // default EPSG#.
 
     private static int uniqueNumber = 0;
@@ -71,7 +71,7 @@ public class SLDInlineFeatureParser {
                     "SLD InlineFeature Parser - couldnt determine a FeatureType.  See help for whats supported."); // shouldnt get here
 
         makeFeatures(root, isFeatureCollection);
-        if (features.size() == 0)
+        if (features.isEmpty())
             throw new Exception("SLD InlineFeature Parser - didnt find any features!");
 
         buildStore();
@@ -126,8 +126,6 @@ public class SLDInlineFeatureParser {
      * simple - child points to a <featureMember>, we want it to point to the element inside!
      *
      * <p>in general, this will find the 1st element node inside the node.
-     *
-     * @param child
      */
     private Node descend(Node root) {
         NodeList children = root.getChildNodes();
@@ -150,7 +148,6 @@ public class SLDInlineFeatureParser {
      * parsing.
      *
      * @param feature - points to the actual feature ie. "<Person>"
-     * @param featureType
      */
     private SimpleFeature parseFeature(Node feature, SimpleFeatureType featureType)
             throws Exception {
@@ -182,8 +179,6 @@ public class SLDInlineFeatureParser {
     /**
      * Given a node, determine if its a geometry or a string attribute return the corresponding
      * value.
-     *
-     * @param child
      */
     private Object getValue(Node root) throws Exception {
         NodeList children = root.getChildNodes();
@@ -340,8 +335,6 @@ public class SLDInlineFeatureParser {
      *
      * <p>Would have a Featuretype name of "tiger:wkb_geometry" with 2 attributes: wkb_geometry --
      * geometry laname -- string
-     *
-     * @param root
      */
     private SimpleFeatureType makeFeatureType(Node root, boolean isCollection) throws Exception {
         Node feature = null;
@@ -414,11 +407,7 @@ public class SLDInlineFeatureParser {
         return build.buildFeatureType();
     }
 
-    /**
-     * looks for a nested attribute - assumes that this is a geometry. TODO: be much smarter
-     *
-     * @param child
-     */
+    /** looks for a nested attribute - assumes that this is a geometry. TODO: be much smarter */
     private boolean isGeometry(Node root) {
         NodeList children = root.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -435,9 +424,6 @@ public class SLDInlineFeatureParser {
     /**
      * Give a node and the name of a child of that node, find its (string) value. This doesnt do
      * anything complex.
-     *
-     * @param parentNode
-     * @param wantedChildName
      */
     public Node getNode(Node parentNode, String wantedChildName) {
         NodeList children = parentNode.getChildNodes();
@@ -465,8 +451,6 @@ public class SLDInlineFeatureParser {
 
     /**
      * expected input: "http://www.opengis.net/gml/srs/epsg.xml#4326" NOTE: only supports epsg#s.
-     *
-     * @param srs
      */
     private void parseSRS(String srs) throws Exception {
         if (srs == null) return;
@@ -478,12 +462,9 @@ public class SLDInlineFeatureParser {
     /**
      * simple way of getting epsg #. We cache them so that we dont have to keep reading the DB or
      * the epsg.properties file. I cannot image a system with more than a dozen CRSs in it...
-     *
-     * @param epsg
      */
     private CoordinateReferenceSystem getSRS(int epsg) throws Exception {
-        CoordinateReferenceSystem result =
-                (CoordinateReferenceSystem) SRSLookup.get(Integer.valueOf(epsg));
+        CoordinateReferenceSystem result = SRSLookup.get(Integer.valueOf(epsg));
         if (result == null) {
             // make and add to hash
             result = CRS.decode("EPSG:" + epsg);

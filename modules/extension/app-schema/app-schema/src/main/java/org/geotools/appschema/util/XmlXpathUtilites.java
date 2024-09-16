@@ -87,6 +87,7 @@ public class XmlXpathUtilites {
     }
 
     private static void addNamespaces(NamespaceSupport ns, JXPathContext context) {
+        @SuppressWarnings("unchecked")
         Enumeration<String> prefixes = ns.getPrefixes();
         while (prefixes.hasMoreElements()) {
             String prefix = prefixes.nextElement();
@@ -116,10 +117,11 @@ public class XmlXpathUtilites {
 
             if (start > -1) {
                 int end = step.indexOf(']');
-                Scanner scanner = new Scanner(step.substring(start + 1, end));
-                if (scanner.hasNextInt()) {
-                    // remove index and the brackets
-                    step = step.substring(0, start);
+                try (Scanner scanner = new Scanner(step.substring(start + 1, end))) {
+                    if (scanner.hasNextInt()) {
+                        // remove index and the brackets
+                        step = step.substring(0, start);
+                    }
                 }
             }
             buf.append(step);
@@ -141,11 +143,10 @@ public class XmlXpathUtilites {
 
         List<String> ls = null;
         if (values == null) {
-            ls = new ArrayList<String>();
+            ls = new ArrayList<>();
         } else {
-            ls = new ArrayList<String>(values.size());
-            for (int i = 0; i < values.size(); i++) {
-                Object value = values.get(i);
+            ls = new ArrayList<>(values.size());
+            for (Object value : values) {
                 String unwrappedValue = "";
                 if (value instanceof org.jdom2.Attribute) {
                     unwrappedValue = ((org.jdom2.Attribute) value).getValue();

@@ -17,7 +17,7 @@
 
 package org.geotools.swing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.map.Layer;
@@ -40,7 +40,7 @@ public class SingleLayerMapContentTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void nullArgToCtorThrowsException() {
-        MapContent mc = new SingleLayerMapContent(null);
+        new SingleLayerMapContent(null);
     }
 
     @Test(expected = UnsupportedOperationException.class)

@@ -16,7 +16,7 @@
  */
 package org.geotools.data.shapefile.fid;
 
-import static org.geotools.data.shapefile.files.ShpFileType.*;
+import static org.geotools.data.shapefile.files.ShpFileType.FIX;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -55,7 +55,6 @@ public class IndexedFidWriter implements FileWriter {
      * on close().
      *
      * @param shpFiles The shapefiles to used
-     * @throws IOException
      */
     public IndexedFidWriter(ShpFiles shpFiles) throws IOException {
         storageFile = shpFiles.getStorageFile(FIX);
@@ -69,7 +68,6 @@ public class IndexedFidWriter implements FileWriter {
      *
      * @param shpFiles The shapefiles to used
      * @param storageFile the storage file that will be written to. It will NOT be closed.
-     * @throws IOException
      */
     public IndexedFidWriter(ShpFiles shpFiles, StorageFile storageFile) throws IOException {
         // Note do NOT assign storageFile so that it is closed because this method method requires
@@ -244,7 +242,6 @@ public class IndexedFidWriter implements FileWriter {
      * Writes the current fidIndex. Writes to the same place in the file each time. Only {@link
      * #next()} moves forward in the file.
      *
-     * @throws IOException
      * @see #next()
      * @see #remove()
      */

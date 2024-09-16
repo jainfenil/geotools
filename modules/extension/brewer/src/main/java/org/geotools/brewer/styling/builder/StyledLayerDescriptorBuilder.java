@@ -25,8 +25,7 @@ import org.geotools.styling.UserLayer;
 
 public class StyledLayerDescriptorBuilder extends AbstractSLDBuilder<StyledLayerDescriptor> {
 
-    List<AbstractSLDBuilder<? extends StyledLayer>> layers =
-            new ArrayList<AbstractSLDBuilder<? extends StyledLayer>>();
+    List<AbstractSLDBuilder<? extends StyledLayer>> layers = new ArrayList<>();
 
     String name;
 
@@ -81,11 +80,7 @@ public class StyledLayerDescriptorBuilder extends AbstractSLDBuilder<StyledLayer
         return this;
     }
 
-    /**
-     * Reset builder to provided original stroke.
-     *
-     * @param stroke
-     */
+    /** Reset builder to provided original stroke. */
     public StyledLayerDescriptorBuilder reset(StyledLayerDescriptor other) {
         if (other == null) {
             return unset();

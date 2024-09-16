@@ -16,7 +16,11 @@
  */
 package org.geotools.geometry.jts;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
@@ -68,11 +72,7 @@ public class WKTReader2Test {
         assertEquals(new Coordinate(110, -46.5), mp.getGeometryN(1).getCoordinate());
     }
 
-    /**
-     * Draw a circle between the start and end point; or each group of three their after.
-     *
-     * @throws Exception
-     */
+    /** Draw a circle between the start and end point; or each group of three their after. */
     @Test
     public void circularString() throws Exception {
         String WKT =
@@ -134,16 +134,14 @@ public class WKTReader2Test {
     public void curvePolygon() throws Exception {
         // perfect circle!
         WKTReader reader = new WKTReader2();
-        String WKT;
-        Polygon polygon;
-        Geometry geometry;
 
-        WKT =
-                "CURVEPOLYGON(CIRCULARSTRING(143.62025166838282 -30.037497356076827, 142.92857147299705 -32.75101196874403, 143.62025166838282 -30.037497356076827))";
-        geometry = reader.read(WKT);
+        String WKT =
+                "CURVEPOLYGON(CIRCULARSTRING(143.62025166838282 -30.037497356076827, 142"
+                        + ".92857147299705 -32.75101196874403, 143.62025166838282 -30.037497356076827))";
+        Geometry geometry = reader.read(WKT);
         assertNotNull("read curvepolygon", geometry);
         assertTrue(geometry instanceof Polygon);
-        polygon = (Polygon) geometry;
+        Polygon polygon = (Polygon) geometry;
         assertTrue(polygon.getExteriorRing() instanceof CircularRing);
         assertTrue("ring", polygon.getExteriorRing().isClosed());
         assertEquals("segmented ring", 51, polygon.getExteriorRing().getNumPoints());
@@ -185,14 +183,14 @@ public class WKTReader2Test {
         WKT = "MULTICURVE((0 0, 5 5),CIRCULARSTRING(4 0, 4 4, 8 4))";
         ml = (MultiLineString) reader.read(WKT);
         assertEquals(2, ml.getNumGeometries());
-        assertTrue(ml.getGeometryN(0).getClass() == LineString.class);
+        assertSame(ml.getGeometryN(0).getClass(), LineString.class);
         assertTrue(ml.getGeometryN(1) instanceof CircularString);
 
         WKT =
                 "MULTICURVE((100 100, 120 120), COMPOUNDCURVE(CIRCULARSTRING(0 0, 2 0, 2 1, 2 3, 4 3),(4 3, 4 5, 1 4, 0 0)))";
         ml = (MultiLineString) reader.read(WKT);
         assertEquals(2, ml.getNumGeometries());
-        assertTrue(ml.getGeometryN(0).getClass() == LineString.class);
+        assertSame(ml.getGeometryN(0).getClass(), LineString.class);
         assertTrue(ml.getGeometryN(1) instanceof CompoundRing);
     }
 

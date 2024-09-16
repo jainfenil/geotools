@@ -77,19 +77,19 @@ public class WarpBuilder {
     /**
      * Sets the maximum number of positions in the optimized grid, in case we have more we'll fall
      * back to the warp adapter. By default there is no limit
-     *
-     * @param maxPositions
      */
     public void setMaxPositions(int maxPositions) {
         this.maxPositions = maxPositions;
     }
 
     /**
-     * Returns true if the given domain is valid for the splitting alghoritm. Can be called before
-     * getRowColsSplit to prevent exceptions.
+     * Returns true if the given domain is valid for the splitting algorithm. Can be called before
+     * getRowColsSplit to prevent exceptions. Unlike {@link #buildWarp(MathTransform2D, Rectangle)}
+     * the domain here can be expressed in geographic coordinates, so there is no requirement that
+     * the area is at least 1x1 (in geographic coordiantes, that's a massive area), but only that
+     * it's not empty
      *
      * @param domain domain to check
-     * @return
      */
     public boolean isValidDomain(Rectangle2D.Double domain) {
         return isValidDomain(
@@ -97,18 +97,14 @@ public class WarpBuilder {
     }
 
     private boolean isValidDomain(double minx, double maxx, double miny, double maxy) {
-        final int width = (int) (maxx - minx);
-        final int height = (int) (maxy - miny);
+        final double width = maxx - minx;
+        final double height = maxy - miny;
         return width > 0 && height > 0;
     }
 
     /**
      * Given a math transform and a source domain, return the number of rows and cols by which the
      * domain should be split to avoid transform linearity issues, or null if it could not be found.
-     *
-     * @param mt
-     * @param domain
-     * @return
      */
     public int[] getRowColsSplit(MathTransform2D mt, Rectangle2D.Double domain) {
         // first simple case, the tx is affine
@@ -164,8 +160,6 @@ public class WarpBuilder {
     /**
      * @param mt The math transform to be approximated
      * @param domain The domain in which the transform will be approximated
-     * @param tolerance
-     * @return
      */
     public Warp buildWarp(MathTransform2D mt, Rectangle domain) throws TransformException {
         // first simple case, the tx is affine
@@ -348,12 +342,6 @@ public class WarpBuilder {
     /**
      * Performs recursive slicing of the area to find the optimal number of subdivisions along the x
      * and y axis.
-     *
-     * @param mt
-     * @param minx
-     * @param maxx
-     * @param miny
-     * @param maxy
      */
     int[] computeOptimalDepths(
             MathTransform2D mt,
@@ -426,18 +414,7 @@ public class WarpBuilder {
         return new int[] {rowDepth, colDepth};
     }
 
-    /**
-     * Checks if the point predicted by a WarpGrid between the specified points
-     *
-     * @param mt
-     * @param minx
-     * @param miny
-     * @param minx2
-     * @param midy
-     * @param minx3
-     * @param maxy
-     * @return
-     */
+    /** Checks if the point predicted by a WarpGrid between the specified points */
     boolean isWithinTolerance(
             MathTransform2D mt, double x1, double y1, double x2, double y2, double x3, double y3)
             throws TransformException {
@@ -525,12 +502,7 @@ public class WarpBuilder {
         }
     }
 
-    /**
-     * A debugging aid that dumps the grids to a file
-     *
-     * @param points
-     * @param name
-     */
+    /** A debugging aid that dumps the grids to a file */
     void dumpPropertyFile(float[] points, String name) {
         long start = System.currentTimeMillis();
 

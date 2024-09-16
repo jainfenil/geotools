@@ -91,7 +91,7 @@ public class MemoryDataStore extends ContentDataStore {
         addFeatures(collection);
     }
 
-    public MemoryDataStore(SimpleFeature[] array) {
+    public MemoryDataStore(SimpleFeature... array) {
         addFeatures(array);
     }
 
@@ -198,13 +198,13 @@ public class MemoryDataStore extends ContentDataStore {
      * @param features Array of features to add
      * @throws IllegalArgumentException If provided feature array is empty
      */
-    public void addFeatures(SimpleFeature[] features) {
+    public void addFeatures(SimpleFeature... features) {
         if ((features == null) || (features.length == 0)) {
             throw new IllegalArgumentException("Provided features are empty");
         }
         synchronized (entries) {
-            for (int i = 0; i < features.length; i++) {
-                addFeatureInternal(features[i]);
+            for (SimpleFeature feature : features) {
+                addFeatureInternal(feature);
             }
         }
     }
@@ -244,7 +244,6 @@ public class MemoryDataStore extends ContentDataStore {
      * <p>Technically this is accessing the MemoryState for {@link Transaction#AUTO_COMMIT}, which
      * is the definitive storage for the feature content.
      *
-     * @param typeName
      * @return MemoryState storing feature (by FeatureID)
      * @throws IOException If typeName cannot be found
      */
@@ -264,7 +263,6 @@ public class MemoryDataStore extends ContentDataStore {
      *
      * <p>
      *
-     * @param schema
      * @return MemoryState used for content storage
      * @throws IOException If new entry could not be created due to typeName conflict
      */
@@ -299,7 +297,7 @@ public class MemoryDataStore extends ContentDataStore {
      * @see org.geotools.data.ContentDataStore#getFeatureTypes()
      */
     protected List<Name> createTypeNames() {
-        List<Name> names = new ArrayList<Name>(this.entries.keySet());
+        List<Name> names = new ArrayList<>(this.entries.keySet());
         Collections.sort(
                 names,
                 new Comparator<Name>() {

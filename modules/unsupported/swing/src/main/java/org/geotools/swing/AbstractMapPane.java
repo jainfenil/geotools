@@ -97,7 +97,7 @@ public abstract class AbstractMapPane extends JPanel
     protected final Lock drawingLock;
     protected final ReadWriteLock paramsLock;
 
-    protected final Set<MapPaneListener> listeners = new HashSet<MapPaneListener>();
+    protected final Set<MapPaneListener> listeners = new HashSet<>();
     protected final MouseDragBox dragBox;
 
     /*
@@ -198,11 +198,7 @@ public abstract class AbstractMapPane extends JPanel
         doSetRenderingExecutor(executor);
     }
 
-    /**
-     * Draws layers into one or more images which will then be displayed by the map pane.
-     *
-     * @param recreate
-     */
+    /** Draws layers into one or more images which will then be displayed by the map pane. */
     protected abstract void drawLayers(boolean recreate);
 
     /**

@@ -20,11 +20,13 @@ package org.geotools.data.complex;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,7 +53,7 @@ public class AppSchemaDataAccessFactoryTest extends AppSchemaTestSupport {
 
     AppSchemaDataAccessFactory factory;
 
-    Map params;
+    Map<String, Serializable> params;
 
     private static final String NSURI = "http://online.socialchange.net.au";
 
@@ -60,7 +62,7 @@ public class AppSchemaDataAccessFactoryTest extends AppSchemaTestSupport {
     @Before
     public void setUp() throws Exception {
         factory = new AppSchemaDataAccessFactory();
-        params = new HashMap();
+        params = new HashMap<>();
         params.put("dbtype", "app-schema");
         URL resource = getClass().getResource("/test-data/roadsegments.xml");
         if (resource == null) {
@@ -80,7 +82,7 @@ public class AppSchemaDataAccessFactoryTest extends AppSchemaTestSupport {
      */
     @Test
     public void testCreateDataStorePreconditions() {
-        Map badParams = new HashMap();
+        Map<String, Serializable> badParams = new HashMap<>();
         try {
             factory.createDataStore(badParams);
             fail("allowed bad params");
@@ -134,7 +136,7 @@ public class AppSchemaDataAccessFactoryTest extends AppSchemaTestSupport {
     @Test
     public void testCreateNewDataStore() throws IOException {
         try {
-            factory.createNewDataStore(Collections.EMPTY_MAP);
+            factory.createNewDataStore(Collections.emptyMap());
             fail("unsupported?");
         } catch (UnsupportedOperationException e) {
             // OK
@@ -156,7 +158,7 @@ public class AppSchemaDataAccessFactoryTest extends AppSchemaTestSupport {
     /** Test method for 'org.geotools.data.complex.AppSchemaDataAccessFactory.canProcess(Map)' */
     @Test
     public void testCanProcess() {
-        Map params = new HashMap();
+        Map<String, Serializable> params = new HashMap<>();
         assertFalse(factory.canProcess(params));
         params.put("dbtype", "arcsde");
         params.put("url", "http://somesite.net/config.xml");
@@ -183,5 +185,49 @@ public class AppSchemaDataAccessFactoryTest extends AppSchemaTestSupport {
     public void testGetImplementationHints() {
         assertNotNull(factory.getImplementationHints());
         assertEquals(0, factory.getImplementationHints().size());
+    }
+
+    /** Testing class for check data store creation failure handling and resilience. */
+    public static class AppSchemaDataAccessFactoryFailureTest extends AppSchemaTestSupport {
+
+        private AppSchemaDataAccessFactory factory;
+        private Map<String, Serializable> params;
+
+        /**
+         * Checks that App-schema data store factory unregisters correctly the included mappings
+         * stores on a creation failure.
+         */
+        @Test
+        public void testUnregisterOnFailure() throws Exception {
+            factory = new AppSchemaDataAccessFactory();
+            params = new HashMap<>();
+            params.put("dbtype", "app-schema");
+            URL resource =
+                    getClass().getResource("/test-data/creation_failure/roadsegments_bad.xml");
+            if (resource == null) {
+                fail("Can't find resouce /test-data/creation_failure/roadsegments_bad.xml");
+            }
+            params.put("url", resource);
+
+            DataAccess<FeatureType, Feature> ds;
+            boolean exceptionCatched = false;
+            try {
+                ds = factory.createDataStore(params);
+                assertNotNull(ds);
+                FeatureSource<FeatureType, Feature> mappedSource =
+                        ds.getFeatureSource(mappedTypeName);
+                assertNull(mappedSource);
+            } catch (Exception ex) {
+                exceptionCatched = true;
+            }
+            assertTrue(exceptionCatched);
+            assertFalse(DataAccessRegistry.hasName(mappedTypeName));
+        }
+
+        @After
+        public void tearDown() throws Exception {
+            factory = null;
+            params = null;
+        }
     }
 }

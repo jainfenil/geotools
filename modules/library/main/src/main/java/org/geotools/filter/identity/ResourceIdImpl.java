@@ -54,12 +54,9 @@ public class ResourceIdImpl extends FeatureIdVersionedImpl implements ResourceId
     /**
      * Obtain a ResourceId that represents an explicit request for feature id and feature version
      * (essentially the quivalent of {@link FeatureId})
-     *
-     * @param fid
-     * @param featureVersion
      */
     public ResourceIdImpl(String fid, String featureVersion) {
-        this(fid, featureVersion, (Version) null);
+        this(fid, featureVersion, null);
     }
 
     /**
@@ -73,7 +70,7 @@ public class ResourceIdImpl extends FeatureIdVersionedImpl implements ResourceId
      *     null}
      */
     public ResourceIdImpl(String fid, Date start, Date end) {
-        this(fid, (String) null, (Version) null);
+        this(fid, null, (Version) null);
         if (start == null && end == null) {
             throw new NullPointerException(
                     "At least one of start and end time are required for a lookup based on a date range");

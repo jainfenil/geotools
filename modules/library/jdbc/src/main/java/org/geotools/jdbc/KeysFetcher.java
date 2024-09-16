@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -217,7 +218,7 @@ abstract class KeysFetcher {
         }
     }
 
-    /** Class for a PK that has it's value computed from the database. */
+    /** Class for a PK that has its value computed from the database. */
     private static class FromDB extends KeysFetcher {
         private final List<KeyFetcher> fetchers;
 
@@ -253,6 +254,8 @@ abstract class KeysFetcher {
                     }
                 } else if (CharSequence.class.isAssignableFrom(t)) {
                     return new FromRandom(ds, col);
+                } else if (t == UUID.class) {
+                    return new FromUuid(ds, col);
                 }
             }
             throw new IOException("Cannot generate key value for column of type: " + t.getName());
@@ -281,8 +284,7 @@ abstract class KeysFetcher {
             if (!isPostInsert()) {
                 return;
             }
-            final ResultSet rs = ps.getGeneratedKeys();
-            try {
+            try (ResultSet rs = ps.getGeneratedKeys()) {
                 final Iterator<SimpleFeature> it = features.iterator();
                 final List<Object> keyValues = new ArrayList<>(key.getColumns().size());
                 while (rs.next()) {
@@ -299,8 +301,6 @@ abstract class KeysFetcher {
                     feature.getUserData().put("fid", fid);
                     keyValues.clear();
                 }
-            } finally {
-                rs.close();
             }
         }
 
@@ -355,7 +355,7 @@ abstract class KeysFetcher {
         }
     }
 
-    /** Base class to handle a PK column comming from the DB. */
+    /** Base class to handle a PK column coming from the DB. */
     private abstract static class KeyFetcher {
         private final String colName;
         protected final PrimaryKeyColumn col;
@@ -383,10 +383,6 @@ abstract class KeysFetcher {
         /**
          * Returns the last generated value based on the connection. Deprecated, please
          * use/implement the version taking also the statement as an argument
-         *
-         * @param cx
-         * @return
-         * @throws SQLException
          */
         public Object getLastValue(Connection cx) throws SQLException {
             return getLastValue(cx, null);
@@ -420,6 +416,27 @@ abstract class KeysFetcher {
         }
     }
 
+    private static class FromUuid extends KeyFetcher {
+        FromUuid(JDBCDataStore ds, PrimaryKeyColumn col) {
+            super(ds, col);
+        }
+
+        @Override
+        public Object getLastValue(Connection cx, Statement st) {
+            throw new IllegalArgumentException("Column " + col.getName() + " is not generated.");
+        }
+
+        @Override
+        public boolean isPostInsert() {
+            return false;
+        }
+
+        @Override
+        public Object getNext(Connection cx) {
+            return UUID.randomUUID();
+        }
+    }
+
     /**
      * For PK columns that have no sequence at all. Take the max()+1 from the existing features and
      * use that value.
@@ -437,10 +454,8 @@ abstract class KeysFetcher {
             sql.append(") + 1 FROM ");
             ds.encodeTableName(key.getTableName(), sql, null);
 
-            Statement st = cx.createStatement();
-            try {
-                ResultSet rs = st.executeQuery(sql.toString());
-                try {
+            try (Statement st = cx.createStatement()) {
+                try (ResultSet rs = st.executeQuery(sql.toString())) {
                     if (rs.next()) {
                         next = rs.getObject(1);
                     } else {
@@ -453,11 +468,7 @@ abstract class KeysFetcher {
                         // to insert
                         next = 1;
                     }
-                } finally {
-                    rs.close();
                 }
-            } finally {
-                st.close();
             }
         }
 

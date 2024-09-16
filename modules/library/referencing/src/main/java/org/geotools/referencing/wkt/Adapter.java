@@ -46,12 +46,12 @@ final class Adapter extends Formattable {
         if (object instanceof org.geotools.referencing.util.Formattable) {
             return ((org.geotools.referencing.util.Formattable) object).formatWKT(formatter);
         }
-        final Class classe = object.getClass();
+        final Class<?> classe = object.getClass();
         try {
             classe.getMethod("toWKT", (Class[]) null).invoke(object, (Object[]) null);
         } catch (Exception cause) {
-            final UnsupportedImplementationException exception;
-            exception = new UnsupportedImplementationException(classe);
+            final UnsupportedImplementationException exception =
+                    new UnsupportedImplementationException(classe);
             exception.initCause(cause);
             throw exception;
         }

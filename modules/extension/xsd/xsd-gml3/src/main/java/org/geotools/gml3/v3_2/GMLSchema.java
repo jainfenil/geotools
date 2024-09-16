@@ -74,7 +74,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _DOMAINOFVALIDITY_TYPE,
@@ -138,7 +138,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         COVERAGEFUNCTIONTYPE_TYPE,
@@ -200,7 +200,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _DOMAINOFVALIDITY_TYPE,
@@ -301,7 +301,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         COORDINATESYSTEMAXISPROPERTYTYPE_TYPE,
@@ -365,7 +365,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DOMAINSETTYPE_TYPE,
@@ -422,7 +422,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.INTEGER_TYPE,
@@ -535,7 +535,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _DOMAINOFVALIDITY_TYPE,
@@ -623,7 +623,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         FEATUREPROPERTYTYPE_TYPE,
@@ -685,7 +685,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.BOOLEAN_TYPE,
@@ -744,7 +744,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         BOUNDINGSHAPETYPE_TYPE,
@@ -801,7 +801,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         METADATAPROPERTYTYPE_TYPE,
@@ -910,7 +910,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         METADATAPROPERTYTYPE_TYPE,
@@ -1046,7 +1046,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GENERALCONVERSIONPROPERTYTYPE_TYPE,
@@ -1102,7 +1102,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGENERALOPERATIONPARAMETERTYPE_TYPE,
@@ -1232,7 +1232,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.NONNEGATIVEINTEGER_TYPE,
@@ -1287,7 +1287,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGENERALPARAMETERVALUETYPE_TYPE,
@@ -1396,7 +1396,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         METADATAPROPERTYTYPE_TYPE,
@@ -1556,7 +1556,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         AGGREGATIONTYPE_TYPE,
@@ -1699,7 +1699,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGRIDDEDSURFACETYPE_ROWS_TYPE,
@@ -1766,7 +1766,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         POINTGRID_ROWS_ROWTYPE_TYPE,
@@ -1819,7 +1819,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.BOOLEAN_TYPE,
@@ -1869,7 +1869,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ID_TYPE,
@@ -1925,7 +1925,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.BOOLEAN_TYPE,
@@ -1978,7 +1978,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         AGGREGATIONTYPE_TYPE,
@@ -2030,7 +2030,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTRINGTYPE_TYPE,
@@ -2281,7 +2281,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYURI_TYPE,
@@ -2375,7 +2375,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         RELATEDTIMETYPE_TYPE,
@@ -2429,7 +2429,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEPRIMITIVEPROPERTYTYPE_TYPE,
@@ -2493,7 +2493,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         REFERENCETYPE_TYPE,
@@ -2627,7 +2627,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         AFFINECSTYPE_TYPE,
@@ -2790,7 +2790,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -2909,7 +2909,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ANGLETYPE_TYPE,
@@ -3019,7 +3019,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -3143,7 +3143,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -3360,7 +3360,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -3488,7 +3488,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -3599,7 +3599,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -3732,7 +3732,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYTYPE_TYPE,
@@ -3796,7 +3796,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ARRAYASSOCIATIONTYPE_TYPE,
@@ -3846,7 +3846,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.BOOLEAN_TYPE,
@@ -4058,7 +4058,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -4188,7 +4188,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ASSOCIATIONROLETYPE_TYPE,
@@ -4248,7 +4248,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         REFERENCETYPE_TYPE,
@@ -4314,7 +4314,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -4437,7 +4437,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _BOOLEAN_TYPE,
@@ -4567,7 +4567,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         METADATAPROPERTYTYPE_TYPE,
@@ -4673,7 +4673,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ENVELOPETYPE_TYPE,
@@ -4741,7 +4741,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTCRSTYPE_TYPE,
@@ -4852,8 +4852,7 @@ public class GMLSchema extends SchemaImpl {
     public static final AttributeType CURVEPROPERTYTYPE_TYPE = build_CURVEPROPERTYTYPE_TYPE();
 
     private static AttributeType build_CURVEPROPERTYTYPE_TYPE() {
-        AttributeType builtType;
-        builtType =
+        AttributeType builtType =
                 new AbstractLazyAttributeTypeImpl(
                         new NameImpl("http://www.opengis.net/gml/3.2", "CurvePropertyType"),
                         LineString.class,
@@ -4940,7 +4939,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CARTESIANCSTYPE_TYPE,
@@ -5143,7 +5142,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _CATEGORY_TYPE,
@@ -5278,7 +5277,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -5421,7 +5420,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CLOTHOIDTYPE_REFLOCATION_TYPE,
@@ -5506,7 +5505,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         AFFINEPLACEMENTTYPE_TYPE,
@@ -5561,7 +5560,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYURI_TYPE,
@@ -5615,7 +5614,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYURI_TYPE,
@@ -5669,7 +5668,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYURI_TYPE,
@@ -5722,7 +5721,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYURI_TYPE,
@@ -5829,7 +5828,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CURVEPROPERTYTYPE_TYPE,
@@ -5891,7 +5890,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SOLIDPROPERTYTYPE_TYPE,
@@ -5953,7 +5952,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SURFACEPROPERTYTYPE_TYPE,
@@ -6016,7 +6015,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         VALUEPROPERTYTYPE_TYPE,
@@ -6088,7 +6087,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         COMPOUNDCRSTYPE_TYPE,
@@ -6215,7 +6214,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SINGLECRSPROPERTYTYPE_TYPE,
@@ -6280,7 +6279,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CONCATENATEDOPERATIONTYPE_TYPE,
@@ -6413,7 +6412,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         COORDINATEOPERATIONPROPERTYTYPE_TYPE,
@@ -6474,7 +6473,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CURVEINTERPOLATIONTYPE_TYPE,
@@ -6538,7 +6537,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CONVERSIONTOPREFERREDUNITTYPE_TYPE,
@@ -6613,7 +6612,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CONVERSIONTYPE_TYPE,
@@ -6749,7 +6748,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.DOUBLE_TYPE,
@@ -6810,7 +6809,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         OPERATIONMETHODPROPERTYTYPE_TYPE,
@@ -6874,7 +6873,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTCOORDINATEOPERATIONTYPE_TYPE,
@@ -7004,7 +7003,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         COORDINATESYSTEMAXISTYPE_TYPE,
@@ -7141,7 +7140,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CODETYPE_TYPE,
@@ -7235,7 +7234,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTCOORDINATESYSTEMTYPE_TYPE,
@@ -7371,7 +7370,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.STRING_TYPE,
@@ -7471,7 +7470,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _COUNT_TYPE,
@@ -7594,7 +7593,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         STRINGORREFTYPE_TYPE,
@@ -7678,7 +7677,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -7799,7 +7798,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTCURVETYPE_TYPE,
@@ -7910,7 +7909,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTCURVESEGMENTTYPE_TYPE,
@@ -8003,7 +8002,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CURVEINTERPOLATIONTYPE_TYPE,
@@ -8064,7 +8063,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CYLINDRICALCSTYPE_TYPE,
@@ -8235,7 +8234,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DEGREESTYPE_TYPE,
@@ -8312,7 +8311,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ASSOCIATIONROLETYPE_TYPE,
@@ -8384,7 +8383,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTDATUMTYPE_TYPE,
@@ -8554,7 +8553,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         METADATAPROPERTYTYPE_TYPE,
@@ -8655,7 +8654,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         REFERENCETYPE_TYPE,
@@ -8708,7 +8707,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.STRING_TYPE,
@@ -8852,7 +8851,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.INTEGER_TYPE,
@@ -8905,7 +8904,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DERIVEDCRSTYPE_TYPE,
@@ -9033,7 +9032,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SINGLECRSPROPERTYTYPE_TYPE,
@@ -9104,7 +9103,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DERIVATIONUNITTERMTYPE_TYPE,
@@ -9159,7 +9158,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DEFINITIONTYPE_TYPE,
@@ -9287,7 +9286,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DICTIONARYENTRYTYPE_TYPE,
@@ -9364,7 +9363,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NCNAMELIST_TYPE,
@@ -9450,7 +9449,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NCNAMELIST_TYPE,
@@ -9526,7 +9525,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         EDGETYPE_TYPE,
@@ -9667,7 +9666,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         FACETYPE_TYPE,
@@ -9808,7 +9807,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NODETYPE_TYPE,
@@ -9952,7 +9951,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         MEASURETYPE_TYPE,
@@ -10005,7 +10004,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTIONPROPERTYTYPE_TYPE,
@@ -10058,7 +10057,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOSOLIDTYPE_TYPE,
@@ -10206,7 +10205,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         COMPASSPOINTENUMERATION_TYPE,
@@ -10286,7 +10285,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTIONVECTORTYPE_TYPE,
@@ -10466,7 +10465,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         VECTORTYPE_TYPE,
@@ -10537,7 +10536,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         COVERAGEFUNCTIONTYPE_TYPE,
@@ -10592,7 +10591,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGEOMETRYTYPE_TYPE,
@@ -10739,7 +10738,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DYNAMICFEATUREMEMBERTYPE_TYPE,
@@ -10794,7 +10793,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DYNAMICFEATURETYPE_TYPE,
@@ -10918,7 +10917,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEPRIMITIVEPROPERTYTYPE_TYPE,
@@ -11001,7 +11000,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOSOLIDPROPERTYTYPE_TYPE,
@@ -11088,7 +11087,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ELLIPSOIDTYPE_TYPE,
@@ -11214,7 +11213,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         MEASURETYPE_TYPE,
@@ -11278,7 +11277,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ELLIPSOIDALCSTYPE_TYPE,
@@ -11445,7 +11444,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ENGINEERINGCRSTYPE_TYPE,
@@ -11585,7 +11584,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         AFFINECSPROPERTYTYPE_TYPE,
@@ -11711,7 +11710,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ENGINEERINGDATUMTYPE_TYPE,
@@ -11883,7 +11882,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -11998,7 +11997,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEPOSITIONTYPE_TYPE,
@@ -12069,7 +12068,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         FACETYPE_TYPE,
@@ -12220,7 +12219,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NODEPROPERTYTYPE_TYPE,
@@ -12317,7 +12316,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTFEATURETYPE_TYPE,
@@ -12411,7 +12410,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTFEATURETYPE_TYPE,
@@ -12553,7 +12552,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ASSOCIATIONROLETYPE_TYPE,
@@ -12649,7 +12648,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.DOUBLE_TYPE,
@@ -12727,7 +12726,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGENERALCONVERSIONTYPE_TYPE,
@@ -12857,7 +12856,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGENERALTRANSFORMATIONTYPE_TYPE,
@@ -13031,7 +13030,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GEOCENTRICCRSTYPE_TYPE,
@@ -13164,7 +13163,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CARTESIANCSPROPERTYTYPE_TYPE,
@@ -13240,7 +13239,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONLISTTYPE_TYPE,
@@ -13357,7 +13356,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GEODETICCRSTYPE_TYPE,
@@ -13491,7 +13490,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ELLIPSOIDALCSPROPERTYTYPE_TYPE,
@@ -13572,7 +13571,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GEODETICDATUMTYPE_TYPE,
@@ -13699,7 +13698,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         PRIMEMERIDIANPROPERTYTYPE_TYPE,
@@ -13761,7 +13760,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GEOGRAPHICCRSTYPE_TYPE,
@@ -13891,7 +13890,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ELLIPSOIDALCSPROPERTYTYPE_TYPE,
@@ -13963,7 +13962,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GEOMETRICCOMPLEXTYPE_TYPE,
@@ -14127,7 +14126,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GEOMETRICPRIMITIVEPROPERTYTYPE_TYPE,
@@ -14190,7 +14189,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGEOMETRICPRIMITIVETYPE_TYPE,
@@ -14327,7 +14326,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGEOMETRYTYPE_TYPE,
@@ -14427,7 +14426,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         INTEGERLIST_TYPE,
@@ -14484,7 +14483,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SEQUENCERULETYPE_TYPE,
@@ -14581,7 +14580,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GRIDENVELOPETYPE_TYPE,
@@ -14639,7 +14638,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GRIDLIMITSTYPE_TYPE,
@@ -14713,7 +14712,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTTIMESLICETYPE_TYPE,
@@ -14820,7 +14819,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         IMAGECRSTYPE_TYPE,
@@ -14950,7 +14949,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CARTESIANCSPROPERTYTYPE_TYPE,
@@ -15031,7 +15030,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         IMAGEDATUMTYPE_TYPE,
@@ -15157,7 +15156,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CODEWITHAUTHORITYTYPE_TYPE,
@@ -15250,7 +15249,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DEFINITIONPROXYTYPE_TYPE,
@@ -15301,7 +15300,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.BOOLEAN_TYPE,
@@ -15359,7 +15358,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         KNOTTYPE_TYPE,
@@ -15409,7 +15408,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.DOUBLE_TYPE,
@@ -15562,7 +15561,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         LINESTRINGSEGMENTTYPE_TYPE,
@@ -15625,7 +15624,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONTYPE_TYPE,
@@ -15766,7 +15765,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         LINEARCSTYPE_TYPE,
@@ -16021,7 +16020,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGEOMETRYTYPE_TYPE,
@@ -16172,7 +16171,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.STRING_TYPE,
@@ -16235,7 +16234,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         UOMIDENTIFIER_TYPE, new NameImpl("uom"), 0, 1, true, null));
@@ -16285,7 +16284,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         UOMIDENTIFIER_TYPE, new NameImpl("uom"), 0, 1, true, null));
@@ -16333,7 +16332,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         UOMIDENTIFIER_TYPE, new NameImpl("uom"), 0, 1, true, null));
@@ -16381,7 +16380,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTMETADATATYPE_TYPE,
@@ -16532,7 +16531,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GEOMETRYPROPERTYTYPE_TYPE,
@@ -16658,8 +16657,7 @@ public class GMLSchema extends SchemaImpl {
             build_MULTICURVEPROPERTYTYPE_TYPE();
 
     private static AttributeType build_MULTICURVEPROPERTYTYPE_TYPE() {
-        AttributeType builtType;
-        builtType =
+        AttributeType builtType =
                 new AbstractLazyAttributeTypeImpl(
                         new NameImpl("http://www.opengis.net/gml/3.2", "MultiCurvePropertyType"),
                         org.locationtech.jts.geom.MultiLineString.class,
@@ -16876,7 +16874,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         MULTISOLIDTYPE_TYPE,
@@ -17011,7 +17009,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SOLIDPROPERTYTYPE_TYPE,
@@ -17393,7 +17391,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NODETYPE_TYPE,
@@ -17532,7 +17530,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NODETYPE_TYPE,
@@ -17672,7 +17670,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         FACEORTOPOSOLIDPROPERTYTYPE_TYPE,
@@ -17752,7 +17750,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         OBLIQUECARTESIANCSTYPE_TYPE,
@@ -17925,7 +17923,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEPRIMITIVEPROPERTYTYPE_TYPE,
@@ -18003,7 +18001,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CURVEPROPERTYTYPE_TYPE,
@@ -18075,7 +18073,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         OPERATIONMETHODTYPE_TYPE,
@@ -18208,7 +18206,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _FORMULACITATION_TYPE,
@@ -18301,7 +18299,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         OPERATIONPARAMETERGROUPTYPE_TYPE,
@@ -18431,7 +18429,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.POSITIVEINTEGER_TYPE,
@@ -18494,7 +18492,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         OPERATIONPARAMETERTYPE_TYPE,
@@ -18663,7 +18661,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTCOORDINATEOPERATIONTYPE_TYPE,
@@ -18791,7 +18789,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CURVEPROPERTYTYPE_TYPE,
@@ -18852,7 +18850,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SURFACEPROPERTYTYPE_TYPE,
@@ -18915,7 +18913,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTGENERALPARAMETERVALUEPROPERTYTYPE_TYPE,
@@ -18986,7 +18984,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         MEASURETYPE_TYPE,
@@ -19113,7 +19111,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         PASSTHROUGHOPERATIONTYPE_TYPE,
@@ -19243,7 +19241,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.POSITIVEINTEGER_TYPE,
@@ -19315,7 +19313,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         POINTTYPE_TYPE,
@@ -19370,7 +19368,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONLISTTYPE_TYPE,
@@ -19521,7 +19519,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         POLARCSTYPE_TYPE,
@@ -19687,7 +19685,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTRINGPROPERTYTYPE_TYPE,
@@ -19796,7 +19794,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         PRIMEMERIDIANTYPE_TYPE,
@@ -19922,7 +19920,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ANGLETYPE_TYPE,
@@ -19979,7 +19977,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.STRING_TYPE,
@@ -20029,7 +20027,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTFEATURETYPE_TYPE,
@@ -20165,7 +20163,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         PROJECTEDCRSTYPE_TYPE,
@@ -20295,7 +20293,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GEODETICCRSPROPERTYTYPE_TYPE,
@@ -20442,7 +20440,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _QUANTITY_TYPE,
@@ -20566,7 +20564,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         VALUEARRAYTYPE_TYPE,
@@ -20646,7 +20644,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTRINGPROPERTYTYPE_TYPE,
@@ -20707,7 +20705,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         POINTPROPERTYTYPE_TYPE,
@@ -20767,7 +20765,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.BOOLEAN_TYPE,
@@ -20952,7 +20950,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.BOOLEAN_TYPE,
@@ -21076,7 +21074,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         RINGTYPE_TYPE,
@@ -21129,7 +21127,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CURVEPROPERTYTYPE_TYPE,
@@ -21276,7 +21274,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         INCREMENTORDER_TYPE,
@@ -21335,7 +21333,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SHELLTYPE_TYPE,
@@ -21384,7 +21382,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SURFACEPROPERTYTYPE_TYPE,
@@ -21484,7 +21482,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTCRSTYPE_TYPE,
@@ -21613,7 +21611,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTCOORDINATEOPERATIONTYPE_TYPE,
@@ -21741,7 +21739,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTSOLIDTYPE_TYPE,
@@ -21803,7 +21801,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTSOLIDTYPE_TYPE,
@@ -21939,7 +21937,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SHELLPROPERTYTYPE_TYPE,
@@ -22039,7 +22037,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         CURVEINTERPOLATIONTYPE_TYPE,
@@ -22100,7 +22098,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         SPHERICALCSTYPE_TYPE,
@@ -22266,7 +22264,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XLINKSchema._ACTUATE_TYPE,
@@ -22425,7 +22423,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTSURFACETYPE_TYPE,
@@ -22536,7 +22534,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTSURFACEPATCHTYPE_TYPE,
@@ -22668,7 +22666,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTFEATURETYPE_TYPE,
@@ -22814,7 +22812,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TEMPORALCRSTYPE_TYPE,
@@ -22944,7 +22942,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMECSPROPERTYTYPE_TYPE,
@@ -23015,7 +23013,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TEMPORALCSTYPE_TYPE,
@@ -23194,7 +23192,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         METADATAPROPERTYTYPE_TYPE,
@@ -23319,7 +23317,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TEMPORALDATUMTYPE_TYPE,
@@ -23445,7 +23443,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.DATETIME_TYPE,
@@ -23497,7 +23495,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMECSTYPE_TYPE,
@@ -23664,7 +23662,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMECALENDARERATYPE_TYPE,
@@ -23802,7 +23800,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         STRINGORREFTYPE_TYPE,
@@ -23885,7 +23883,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMECALENDARTYPE_TYPE,
@@ -24019,7 +24017,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMECALENDARERAPROPERTYTYPE_TYPE,
@@ -24073,7 +24071,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMECLOCKTYPE_TYPE,
@@ -24210,7 +24208,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         STRINGORREFTYPE_TYPE,
@@ -24294,7 +24292,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEPOSITIONTYPE_TYPE,
@@ -24364,7 +24362,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEEDGETYPE_TYPE,
@@ -24499,7 +24497,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMENODEPROPERTYTYPE_TYPE,
@@ -24619,7 +24617,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEINSTANTTYPE_TYPE,
@@ -24753,7 +24751,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEPOSITIONTYPE_TYPE,
@@ -24807,7 +24805,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEUNITTYPE_TYPE, new NameImpl("unit"), 0, 1, true, null));
@@ -24871,7 +24869,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMENODETYPE_TYPE,
@@ -25008,7 +25006,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEEDGEPROPERTYTYPE_TYPE,
@@ -25080,7 +25078,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEORDINALERATYPE_TYPE,
@@ -25220,7 +25218,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         RELATEDTIMETYPE_TYPE,
@@ -25292,8 +25290,7 @@ public class GMLSchema extends SchemaImpl {
     public static final AttributeType MULTICURVETYPE_TYPE = build_MULTICURVETYPE_TYPE();
 
     private static AttributeType build_MULTICURVETYPE_TYPE() {
-        AttributeType builtType;
-        builtType =
+        AttributeType builtType =
                 new AbstractLazyAttributeTypeImpl(
                         new NameImpl("http://www.opengis.net/gml/3.2", "MultiCurveType"),
                         org.locationtech.jts.geom.MultiLineString.class,
@@ -25348,7 +25345,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEORDINALERAPROPERTYTYPE_TYPE,
@@ -25402,7 +25399,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEPERIODTYPE_TYPE,
@@ -25544,7 +25541,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMEPOSITIONTYPE_TYPE,
@@ -25648,7 +25645,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYURI_TYPE,
@@ -25756,7 +25753,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTTIMEPRIMITIVETYPE_TYPE,
@@ -25892,7 +25889,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.STRING_TYPE,
@@ -25950,7 +25947,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMETOPOLOGYCOMPLEXTYPE_TYPE,
@@ -26086,7 +26083,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TIMETOPOLOGYPRIMITIVEPROPERTYTYPE_TYPE,
@@ -26142,7 +26139,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTTIMETOPOLOGYPRIMITIVETYPE_TYPE,
@@ -26377,7 +26374,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         LINESTRINGSEGMENTARRAYPROPERTYTYPE_TYPE,
@@ -26452,7 +26449,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTPOSITIONLISTTYPE_TYPE,
@@ -26519,7 +26516,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOCOMPLEXTYPE_TYPE,
@@ -26651,7 +26648,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOCOMPLEXPROPERTYTYPE_TYPE,
@@ -26755,7 +26752,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOCURVETYPE_TYPE,
@@ -26816,7 +26813,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTEDEDGEPROPERTYTYPE_TYPE,
@@ -26874,7 +26871,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOPOINTTYPE_TYPE,
@@ -26934,7 +26931,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTEDNODEPROPERTYTYPE_TYPE,
@@ -26987,7 +26984,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTTOPOPRIMITIVETYPE_TYPE,
@@ -27048,7 +27045,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTTOPOPRIMITIVETYPE_TYPE,
@@ -27181,7 +27178,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOSOLIDTYPE_TYPE,
@@ -27323,7 +27320,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NODEOREDGEPROPERTYTYPE_TYPE,
@@ -27407,7 +27404,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOSURFACETYPE_TYPE,
@@ -27469,7 +27466,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTEDFACEPROPERTYTYPE_TYPE,
@@ -27528,7 +27525,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TOPOVOLUMETYPE_TYPE,
@@ -27590,7 +27587,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         DIRECTEDTOPOSOLIDPROPERTYTYPE_TYPE,
@@ -27654,7 +27651,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         TRANSFORMATIONTYPE_TYPE,
@@ -27781,7 +27778,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         OPERATIONMETHODPROPERTYTYPE_TYPE,
@@ -27843,7 +27840,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         ABSTRACTRINGPROPERTYTYPE_TYPE,
@@ -27905,7 +27902,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         STRINGORREFTYPE_TYPE,
@@ -27972,7 +27969,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         UOMIDENTIFIER_TYPE, new NameImpl("uom"), 0, 1, true, null));
@@ -28137,7 +28134,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         USERDEFINEDCSTYPE_TYPE,
@@ -28300,7 +28297,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYTYPE_TYPE,
@@ -28387,7 +28384,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYURI_TYPE,
@@ -28440,7 +28437,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         XSSchema.ANYTYPE_TYPE,
@@ -28645,7 +28642,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         VERTICALCRSTYPE_TYPE,
@@ -28772,7 +28769,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         VERTICALCSPROPERTYTYPE_TYPE,
@@ -28835,7 +28832,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         VERTICALCSTYPE_TYPE,
@@ -29001,7 +28998,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         VERTICALDATUMTYPE_TYPE,
@@ -29203,7 +29200,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NILREASONTYPE_TYPE,
@@ -29253,7 +29250,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NILREASONTYPE_TYPE,
@@ -29303,7 +29300,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NILREASONTYPE_TYPE,
@@ -29353,7 +29350,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         NILREASONTYPE_TYPE,
@@ -29404,7 +29401,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         MEASURETYPE_TYPE,
@@ -29474,7 +29471,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GMDSchema.ABSTRACTDQ_POSITIONALACCURACY_TYPE_TYPE,
@@ -29598,7 +29595,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GMDSchema.EX_EXTENT_TYPE_TYPE,
@@ -29721,7 +29718,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         GMDSchema.CI_CITATION_TYPE_TYPE,
@@ -29844,7 +29841,7 @@ public class GMLSchema extends SchemaImpl {
 
                     @Override
                     public Collection<PropertyDescriptor> buildDescriptors() {
-                        List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+                        List<PropertyDescriptor> descriptors = new ArrayList<>();
                         descriptors.add(
                                 new AttributeDescriptorImpl(
                                         _SECONDDEFININGPARAMETER_TYPE,

@@ -128,9 +128,32 @@ class WFSFeatureSource extends ContentFeatureSource {
         return client.canLimit();
     }
 
+    /** {@inheritDoc} */
     @Override
     public WFSDataStore getDataStore() {
         return (WFSDataStore) super.getDataStore();
+    }
+
+    /**
+     * This method changes the query object so that all propertyName references are resolved to
+     * simple attribute names against the schema of the feature source.
+     *
+     * <p>For example, this method ensures that propertyName's such as "gml:name" are rewritten as
+     * simply "name".
+     */
+    @Override
+    protected Query resolvePropertyNames(Query query) {
+        // Resolving is not conform with the specification of a wfs propertyname which is a QName
+        // from w3.org, see qualified names.
+        return query;
+    }
+
+    /** Transform provided filter; resolving property names */
+    @Override
+    protected Filter resolvePropertyNames(Filter filter) {
+        // Resolving is not conform with the specification of a wfs propertyname which is a QName
+        // from w3.org, see qualified names.
+        return filter;
     }
 
     /**
@@ -181,11 +204,7 @@ class WFSFeatureSource extends ContentFeatureSource {
         return resultCount;
     }
 
-    /**
-     * Invert axis order in the given query filter, if needed.
-     *
-     * @param query
-     */
+    /** Invert axis order in the given query filter, if needed. */
     private void invertAxisInFilterIfNeeded(Query query, SimpleFeatureType featureType) {
         CoordinateReferenceSystem crs = query.getCoordinateSystem();
         if (crs == null) {
@@ -214,8 +233,8 @@ class WFSFeatureSource extends ContentFeatureSource {
         final WFSDataStore dataStore = getDataStore();
 
         final QName remoteTypeName = dataStore.getRemoteTypeName(getEntry().getName());
-        final SimpleFeatureType remoteSimpleFeatureType;
-        remoteSimpleFeatureType = dataStore.getRemoteSimpleFeatureType(remoteTypeName);
+        final SimpleFeatureType remoteSimpleFeatureType =
+                dataStore.getRemoteSimpleFeatureType(remoteTypeName);
 
         request.setTypeName(remoteTypeName);
         request.setFullType(remoteSimpleFeatureType);
@@ -243,11 +262,12 @@ class WFSFeatureSource extends ContentFeatureSource {
      * @see org.geotools.data.store.ContentFeatureSource#getReaderInternal(org.geotools.data.Query)
      */
     @Override
+    @SuppressWarnings("PMD.CloseResource") // the reader is returned and managed outside
     protected FeatureReader<SimpleFeatureType, SimpleFeature> getReaderInternal(Query localQuery)
             throws IOException {
 
         if (Filter.EXCLUDE.equals(localQuery.getFilter())) {
-            return new EmptyFeatureReader<SimpleFeatureType, SimpleFeature>(getSchema());
+            return new EmptyFeatureReader<>(getSchema());
         }
 
         GetFeatureRequest request = createGetFeature(localQuery, ResultType.RESULTS);
@@ -262,19 +282,16 @@ class WFSFeatureSource extends ContentFeatureSource {
         GeometryFactory geometryFactory = findGeometryFactory(localQuery.getHints());
         GetParser<SimpleFeature> features = response.getSimpleFeatures(geometryFactory);
 
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader;
-        reader = new WFSFeatureReader(features);
+        FeatureReader<SimpleFeatureType, SimpleFeature> reader = new WFSFeatureReader(features);
 
         if (request.getUnsupportedFilter() != null
                 && request.getUnsupportedFilter() != Filter.INCLUDE) {
-            reader =
-                    new FilteringFeatureReader<SimpleFeatureType, SimpleFeature>(
-                            reader, request.getUnsupportedFilter());
+            reader = new FilteringFeatureReader<>(reader, request.getUnsupportedFilter());
         }
 
         if (!reader.hasNext()) {
             reader.close();
-            return new EmptyFeatureReader<SimpleFeatureType, SimpleFeature>(contentType);
+            return new EmptyFeatureReader<>(contentType);
         }
 
         final SimpleFeatureType readerType = reader.getFeatureType();
@@ -285,6 +302,7 @@ class WFSFeatureSource extends ContentFeatureSource {
 
         reader = applyReprojectionDecorator(reader, localQuery, request);
 
+        @SuppressWarnings("PMD.CloseResource") // not managed here
         Transaction transaction = getTransaction();
         if (!Transaction.AUTO_COMMIT.equals(transaction)) {
             ContentEntry entry = getEntry();
@@ -292,9 +310,7 @@ class WFSFeatureSource extends ContentFeatureSource {
             WFSLocalTransactionState wfsState = (WFSLocalTransactionState) state;
             if (wfsState != null) {
                 WFSDiff diff = wfsState.getDiff();
-                reader =
-                        new DiffFeatureReader<SimpleFeatureType, SimpleFeature>(
-                                reader, diff, localQuery.getFilter());
+                reader = new DiffFeatureReader<>(reader, diff, localQuery.getFilter());
             }
         }
         return reader;
@@ -344,8 +360,8 @@ class WFSFeatureSource extends ContentFeatureSource {
     private GeometryFactory findGeometryFactory(Hints hints) {
         GeometryFactory geomFactory = (GeometryFactory) hints.get(Hints.JTS_GEOMETRY_FACTORY);
         if (geomFactory == null) {
-            CoordinateSequenceFactory seqFac;
-            seqFac = (CoordinateSequenceFactory) hints.get(Hints.JTS_COORDINATE_SEQUENCE_FACTORY);
+            CoordinateSequenceFactory seqFac =
+                    (CoordinateSequenceFactory) hints.get(Hints.JTS_COORDINATE_SEQUENCE_FACTORY);
             if (seqFac == null) {
                 seqFac = PackedCoordinateSequenceFactory.DOUBLE_FACTORY;
             }
@@ -361,8 +377,8 @@ class WFSFeatureSource extends ContentFeatureSource {
         final Name localTypeName = getEntry().getName();
         final QName remoteTypeName = dataStore.getRemoteTypeName(localTypeName);
 
-        final SimpleFeatureType remoteSimpleFeatureType;
-        remoteSimpleFeatureType = dataStore.getRemoteSimpleFeatureType(remoteTypeName);
+        final SimpleFeatureType remoteSimpleFeatureType =
+                dataStore.getRemoteSimpleFeatureType(remoteTypeName);
 
         // adapt the feature type name
         SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
@@ -393,10 +409,6 @@ class WFSFeatureSource extends ContentFeatureSource {
      * Returns the feature type that shall result of issueing the given request, adapting the
      * original feature type for the request's type name in terms of the query CRS and requested
      * attributes.
-     *
-     * @param query
-     * @return
-     * @throws IOException
      */
     SimpleFeatureType getQueryType(final Query query, SimpleFeatureType featureType)
             throws IOException {

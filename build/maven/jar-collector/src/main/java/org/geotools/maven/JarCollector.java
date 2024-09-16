@@ -48,7 +48,7 @@ public class JarCollector extends AbstractMojo {
     /**
      * Directory containing the generated JAR.
      *
-     * @parameter expression="${project.build.directory}"
+     * @parameter property="project.build.directory"
      * @required
      */
     private String outputDirectory;
@@ -56,7 +56,7 @@ public class JarCollector extends AbstractMojo {
     /**
      * Name of the generated JAR.
      *
-     * @parameter expression="${project.build.finalName}"
+     * @parameter property="project.build.finalName"
      * @required
      */
     private String jarName;
@@ -64,7 +64,7 @@ public class JarCollector extends AbstractMojo {
     /**
      * The Maven project running this plugin.
      *
-     * @parameter expression="${project}"
+     * @parameter property="project"
      * @required
      */
     private MavenProject project;
@@ -133,6 +133,7 @@ public class JarCollector extends AbstractMojo {
             }
         }
         FileUtils.copyFileToDirectory(jarFile, collect);
+        @SuppressWarnings("unchecked")
         Set<Artifact> dependencies = project.getDependencyArtifacts();
         if (dependencies != null) {
             for (final Artifact artifact : dependencies) {

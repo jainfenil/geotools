@@ -29,7 +29,8 @@ import org.opengis.referencing.cs.AxisDirection;
  * @author Martin Desruisseaux
  * @since 2.7.2
  */
-public final class DirectionAlongMeridian implements Comparable, Serializable {
+public final class DirectionAlongMeridian
+        implements Comparable<DirectionAlongMeridian>, Serializable {
     /** For cross-version compatibility. */
     private static final long serialVersionUID = 1602711631943838328L;
 
@@ -135,8 +136,7 @@ public final class DirectionAlongMeridian implements Comparable, Serializable {
     /** Searchs for the specified name in the specified set of directions. */
     private static AxisDirection findDirection(
             final AxisDirection[] values, final String direction) {
-        for (int i = 0; i < values.length; i++) {
-            final AxisDirection candidate = values[i];
+        for (final AxisDirection candidate : values) {
             final String name = candidate.name();
             if (direction.equalsIgnoreCase(name)) {
                 return candidate;
@@ -250,8 +250,7 @@ public final class DirectionAlongMeridian implements Comparable, Serializable {
      *   <tr><td>North along 130 deg West</td>  <td>North along 140 deg East</td></tr>
      * </table>
      */
-    public int compareTo(final Object object) {
-        final DirectionAlongMeridian that = (DirectionAlongMeridian) object;
+    public int compareTo(final DirectionAlongMeridian that) {
         final int c = baseDirection.compareTo(that.baseDirection);
         if (c != 0) {
             return c;

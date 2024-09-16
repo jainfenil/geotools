@@ -45,7 +45,7 @@ public class DCConfiguration extends Configuration {
     }
 
     /** Registers the bindings for the configuration. */
-    protected void registerBindings(Map bindings) {
+    protected void registerBindings(Map<QName, Object> bindings) {
         bindings.put(
                 DC.elementContainer,
                 new SimpleContentComplexEMFBinding(Csw20Factory.eINSTANCE, DC.elementContainer));
@@ -76,11 +76,7 @@ public class DCConfiguration extends Configuration {
         container.registerComponentInstance(Csw20Factory.eINSTANCE);
     }
 
-    /**
-     * Generates the bindings registrations for this class
-     *
-     * @param args
-     */
+    /** Generates the bindings registrations for this class */
     @SuppressWarnings("PMD.SystemPrintln")
     public static void main(String[] args) {
         for (Field f : DC.class.getFields()) {

@@ -37,7 +37,6 @@ import org.geotools.styling.Style;
 import org.geotools.styling.StyleBuilder;
 import org.geotools.styling.StyleFactory;
 import org.geotools.styling.StyledLayerDescriptor;
-import org.geotools.styling.Symbolizer;
 import org.geotools.styling.TextSymbolizer;
 import org.geotools.styling.UserLayer;
 import org.geotools.xsd.Configuration;
@@ -354,8 +353,7 @@ public class StyleExamples {
         // creation of the style
         Style style = sb.createStyle();
         FeatureTypeStyle featureTypeStyle =
-                sb.createFeatureTypeStyle(
-                        "labelPoint", new Symbolizer[] {textSymbolizer, pointSymbolizer});
+                sb.createFeatureTypeStyle("labelPoint", textSymbolizer, pointSymbolizer);
         style.featureTypeStyles().add(featureTypeStyle);
 
         // creation of the style
@@ -429,9 +427,27 @@ public class StyleExamples {
         Graphic graph2 = sb.createGraphic(null, circle, null, 1, 4, 0);
         PointSymbolizer pointSymbolizer = sb.createPointSymbolizer(graph2);
         style.featureTypeStyles()
-                .add(
-                        sb.createFeatureTypeStyle(
-                                "labelPoint", new Symbolizer[] {textSymbolizer, pointSymbolizer}));
+                .add(sb.createFeatureTypeStyle("labelPoint", textSymbolizer, pointSymbolizer));
         // markTestSLD end
+    }
+
+    private void backgroundExample() {
+        // styleBackground start
+
+        // create a "user defined" style
+        StyleFactory sf = CommonFactoryFinder.getStyleFactory();
+        Style style = sf.createStyle();
+        style.setName("style");
+        // ...
+
+        //
+        // set a background
+        FilterFactory ff = CommonFactoryFinder.getFilterFactory();
+        Fill background = sf.fill(null, ff.literal(Color.RED), ff.literal(1.0));
+        style.setBackground(background);
+
+        // ... set the feature type styles and symbolizers
+
+        // styleBackground end
     }
 }

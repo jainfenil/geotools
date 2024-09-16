@@ -16,7 +16,8 @@
  */
 package org.geotools.filter.function;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,24 +50,22 @@ public class FunctionFactoryTest {
     static FactoryIteratorProvider ffIteratorProvider;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUpClass() {
         ffIteratorProvider =
                 new FactoryIteratorProvider() {
 
                     public <T> Iterator<T> iterator(Class<T> category) {
 
                         if (FunctionFactory.class == category) {
-                            List<FunctionFactory> l = new ArrayList<FunctionFactory>();
+                            List<FunctionFactory> l = new ArrayList<>();
                             l.add(
                                     new FunctionFactory() {
 
                                         @SuppressWarnings("unchecked")
                                         public List<FunctionName> getFunctionNames() {
-                                            return (List)
-                                                    Arrays.asList(
-                                                            new FunctionNameImpl(
-                                                                    "foo",
-                                                                    new String[] {"bar", "baz"}));
+                                            return Arrays.asList(
+                                                    new FunctionNameImpl(
+                                                            "foo", new String[] {"bar", "baz"}));
                                         }
 
                                         public Function function(
@@ -83,16 +82,18 @@ public class FunctionFactoryTest {
                                             if ("foo".equals(name.getLocalPart())) {
                                                 return new FunctionImpl() {
                                                     @Override
-                                                    public Object evaluate(
-                                                            Object object, Class context) {
-                                                        return "theResult";
+                                                    public <T> T evaluate(
+                                                            Object object, Class<T> context) {
+                                                        return context.cast("theResult");
                                                     }
                                                 };
                                             }
                                             return null;
                                         }
                                     });
-                            return (Iterator<T>) l.iterator();
+                            @SuppressWarnings("unchecked")
+                            Iterator<T> cast = (Iterator<T>) (l.iterator());
+                            return cast;
                         }
                         return null;
                     }
@@ -102,7 +103,7 @@ public class FunctionFactoryTest {
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void tearDownClass() {
         GeoTools.removeFactoryIteratorProvider(ffIteratorProvider);
     }
 
@@ -125,16 +126,12 @@ public class FunctionFactoryTest {
         assertNotNull(f);
     }
 
-    /**
-     * GEOT-3841
-     *
-     * @throws Exception
-     */
+    /** GEOT-3841 */
     @Test
     public void testThreadedFunctionLookup() throws Exception {
         final FilterFactory ff = CommonFactoryFinder.getFilterFactory(null);
         ExecutorService es = Executors.newCachedThreadPool();
-        List<Future<Exception>> tests = new ArrayList<Future<Exception>>();
+        List<Future<Exception>> tests = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             Future<Exception> f =
                     es.submit(

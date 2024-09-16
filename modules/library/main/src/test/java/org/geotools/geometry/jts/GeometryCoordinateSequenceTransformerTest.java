@@ -18,7 +18,10 @@ package org.geotools.geometry.jts;
 
 // J2SE dependencies
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -120,11 +123,7 @@ public class GeometryCoordinateSequenceTransformerTest {
         assertTrue(ls.getCoordinateSequence().size() > 3);
     }
 
-    /**
-     * Confirm that testing method is accurate!
-     *
-     * @throws Exception
-     */
+    /** Confirm that testing method is accurate! */
     @Test
     public void testDifferentDimensionsFailure() throws Exception {
         Geometry g1 = gb.box(10, 10, 20, 20);
@@ -137,9 +136,6 @@ public class GeometryCoordinateSequenceTransformerTest {
     /**
      * Check transformation correctness by transforming forwards and backwards using inverse
      * MathTransforms.
-     *
-     * @param g
-     * @throws TransformException
      */
     private void checkTransform(Geometry g) throws TransformException {
         GeometryCoordinateSequenceTransformer gcsTrans =
@@ -158,7 +154,7 @@ public class GeometryCoordinateSequenceTransformerTest {
         Geometry g2 = gcsTransInv.transform(gTrans);
 
         // result better be a different geometry
-        assertTrue(g != g2);
+        assertNotSame(g, g2);
         assertTrue(hasSameValuesAndStructure(g, g2));
     }
 

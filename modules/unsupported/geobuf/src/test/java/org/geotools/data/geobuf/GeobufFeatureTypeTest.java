@@ -18,7 +18,11 @@ package org.geotools.data.geobuf;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import org.geotools.data.DataUtilities;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,15 +39,16 @@ public class GeobufFeatureTypeTest {
         SimpleFeatureType featureType =
                 DataUtilities.createType("test2", "geom:Point,name:String,id:int");
         GeobufFeatureType geobufFeatureType = new GeobufFeatureType();
-        OutputStream out = new FileOutputStream(file);
-        geobufFeatureType.encode(featureType, out);
-        out.close();
-        InputStream inputStream = new FileInputStream(file);
-        SimpleFeatureType decodedFeatureType = geobufFeatureType.decode("test2", inputStream);
-        inputStream.close();
-        // Without a feature, there is no way to know the type
-        assertEquals(
-                "geom:Geometry,name:String,id:String",
-                DataUtilities.encodeType(decodedFeatureType));
+        try (OutputStream out = new FileOutputStream(file)) {
+            geobufFeatureType.encode(featureType, out);
+        }
+        try (InputStream inputStream = new FileInputStream(file)) {
+            SimpleFeatureType decodedFeatureType = geobufFeatureType.decode("test2", inputStream);
+
+            // Without a feature, there is no way to know the type
+            assertEquals(
+                    "geom:Geometry,name:String,id:String",
+                    DataUtilities.encodeType(decodedFeatureType));
+        }
     }
 }

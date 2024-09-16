@@ -30,9 +30,7 @@ import java.util.logging.Logger;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.util.logging.Logging;
-import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.TransformException;
 
 /**
  * Stores the contents of a map for display, including a list of layers, a {@linkplain MapViewport}
@@ -159,7 +157,7 @@ public class MapContent {
         monitor.writeLock().lock();
         try {
             if (mapListeners == null) {
-                mapListeners = new CopyOnWriteArrayList<MapLayerListListener>();
+                mapListeners = new CopyOnWriteArrayList<>();
             }
             boolean added = mapListeners.addIfAbsent(listener);
             if (added && mapListeners.size() == 1) {
@@ -265,7 +263,6 @@ public class MapContent {
      *
      * <p>In an interactive setting this will trigger a {@link LayerListEvent}
      *
-     * @param layer
      * @return true if the layer was added
      */
     public boolean addLayer(Layer layer) {
@@ -669,13 +666,7 @@ public class MapContent {
         }
     }
 
-    /**
-     * Set the <code>CoordinateReferenceSystem</code> for this map's internal viewport.
-     *
-     * @param crs
-     * @throws FactoryException
-     * @throws TransformException
-     */
+    /** Set the <code>CoordinateReferenceSystem</code> for this map's internal viewport. */
     void setCoordinateReferenceSystem(CoordinateReferenceSystem crs) {
         monitor.writeLock().lock();
         try {
@@ -697,7 +688,7 @@ public class MapContent {
         monitor.writeLock().lock();
         try {
             if (propertyListeners == null) {
-                propertyListeners = new CopyOnWriteArrayList<java.beans.PropertyChangeListener>();
+                propertyListeners = new CopyOnWriteArrayList<>();
             }
             if (!propertyListeners.contains(listener)) {
                 propertyListeners.add(listener);
@@ -730,8 +721,6 @@ public class MapContent {
      * for an OGC "Open Web Service Context" document.
      *
      * <p>Modifications to the userData will result in a propertyChange event.
-     *
-     * @return
      */
     public java.util.Map<String, Object> getUserData() {
         monitor.writeLock().lock();

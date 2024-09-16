@@ -17,7 +17,6 @@
 package org.geotools.gml3.bindings;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
 import org.geotools.geometry.jts.CompoundCurvedGeometry;
@@ -36,6 +35,7 @@ import org.locationtech.jts.geom.LineString;
  * @author Erik van de Pol. B3Partners BV.
  * @author Andrea Aime
  */
+@SuppressWarnings("ComparableType")
 public class RingTypeBinding extends AbstractComplexBinding implements Comparable {
     protected GeometryFactory gf;
 
@@ -89,8 +89,8 @@ public class RingTypeBinding extends AbstractComplexBinding implements Comparabl
         } else {
             LineString curved = null;
             List<LineString> components = new ArrayList<>();
-            for (Iterator it = members.iterator(); it.hasNext(); ) {
-                LineString ls = (LineString) it.next();
+            for (Object member : members) {
+                LineString ls = (LineString) member;
                 if (ls instanceof CurvedGeometry<?>) {
                     curved = ls;
                 }

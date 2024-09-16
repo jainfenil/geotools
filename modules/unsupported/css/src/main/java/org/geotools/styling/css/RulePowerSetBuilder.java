@@ -83,6 +83,7 @@ class RulePowerSetBuilder extends FilteredPowerSetBuilder<CssRule, CssRule> {
         this(classifyRules(domain), simplifier, maxCombinations);
     }
 
+    @SuppressWarnings("unchecked")
     protected RulePowerSetBuilder(
             List[] domainMixins, UnboundSimplifyingFilterVisitor simplifier, int maxCombinations) {
         super(domainMixins[0]);
@@ -116,15 +117,15 @@ class RulePowerSetBuilder extends FilteredPowerSetBuilder<CssRule, CssRule> {
 
         // do we have mixins to consider now?
         List<CssRule> results = new ArrayList<>();
-        if (mixins == null || mixins.size() == 0) {
+        if (mixins == null || mixins.isEmpty()) {
             results.add(combined);
         } else {
             List<CssRule> applicableMixins = getApplicableMixins(combined);
 
-            if (applicableMixins.size() > 0) {
+            if (!applicableMixins.isEmpty()) {
                 int idx = 0;
 
-                // let's see if all mixins are applying without conditinos
+                // let's see if all mixins are applying without conditions
                 for (; idx < applicableMixins.size(); idx++) {
                     CssRule mixin = applicableMixins.get(idx);
                     Selector mixedSelector =
@@ -181,9 +182,6 @@ class RulePowerSetBuilder extends FilteredPowerSetBuilder<CssRule, CssRule> {
      * their pseudo-classes matched by the main rule symbolizers. Two lists will be returned, an
      * in-conditional one, where the mixins just blend into the main rule, and a conditional one,
      * where the mixin adds its own conditions, and thus require its own power set expansion
-     *
-     * @param rule
-     * @return
      */
     private List<CssRule> getApplicableMixins(CssRule rule) {
         Set<PseudoClass> mixablePseudoClasses = rule.getMixablePseudoClasses();
@@ -208,13 +206,7 @@ class RulePowerSetBuilder extends FilteredPowerSetBuilder<CssRule, CssRule> {
         return result;
     }
 
-    /**
-     * Filter applicable mixin rules. Defaults to accepting all rules.
-     *
-     * @param rule
-     * @param mixinRule
-     * @return
-     */
+    /** Filter applicable mixin rules. Defaults to accepting all rules. */
     protected boolean acceptMixinCssRule(CssRule rule, CssRule mixinRule) {
         return true;
     }

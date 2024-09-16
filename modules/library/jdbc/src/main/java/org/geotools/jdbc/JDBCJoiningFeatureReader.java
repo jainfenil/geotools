@@ -78,13 +78,14 @@ public class JDBCJoiningFeatureReader extends JDBCFeatureReader {
             JoinInfo join,
             Query query)
             throws SQLException, IOException {
-        joinReaders = new ArrayList<JDBCFeatureReader>();
+        joinReaders = new ArrayList<>();
         int offset =
                 featureType.getAttributeCount()
                         + getPrimaryKeyOffset(featureSource, getPrimaryKey(), featureType);
 
         for (JoinPart part : join.getParts()) {
             SimpleFeatureType ft = part.getQueryFeatureType();
+            @SuppressWarnings("PMD.CloseResource") // closing done elsewhere
             JDBCFeatureReader joinReader =
                     new JDBCFeatureReader(
                             rs,
@@ -135,6 +136,7 @@ public class JDBCJoiningFeatureReader extends JDBCFeatureReader {
     }
 
     @Override
+    @SuppressWarnings("PMD.CloseResource") // reader closed elsewhere
     public boolean hasNext() throws IOException {
         boolean next = super.hasNext();
         for (JDBCFeatureReader r : joinReaders) {
@@ -144,6 +146,7 @@ public class JDBCJoiningFeatureReader extends JDBCFeatureReader {
     }
 
     @Override
+    @SuppressWarnings("PMD.CloseResource") // reader closed elsewhere
     public SimpleFeature next()
             throws IOException, IllegalArgumentException, NoSuchElementException {
         // read the regular feature

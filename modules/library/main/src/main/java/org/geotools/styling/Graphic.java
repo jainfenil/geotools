@@ -167,11 +167,7 @@ public interface Graphic
      */
     public AnchorPoint getAnchorPoint();
 
-    /**
-     * Anchor point (expressed as an x/y percentage of the graphic size).
-     *
-     * @param anchorPoint
-     */
+    /** Anchor point (expressed as an x/y percentage of the graphic size). */
     public void setAnchorPoint(org.opengis.style.AnchorPoint anchorPoint);
 
     /**
@@ -255,7 +251,7 @@ abstract class ConstantGraphic implements Graphic {
         cannotModifyConstant();
     }
 
-    public void setExternalGraphics(ExternalGraphic[] externalGraphics) {
+    public void setExternalGraphics(ExternalGraphic... externalGraphics) {
         cannotModifyConstant();
     }
 
@@ -263,7 +259,7 @@ abstract class ConstantGraphic implements Graphic {
         cannotModifyConstant();
     }
 
-    public void setMarks(Mark[] marks) {
+    public void setMarks(Mark... marks) {
         cannotModifyConstant();
     }
 
@@ -279,7 +275,7 @@ abstract class ConstantGraphic implements Graphic {
         cannotModifyConstant();
     }
 
-    public void setSymbols(Symbol[] symbols) {
+    public void setSymbols(Symbol... symbols) {
         cannotModifyConstant();
     }
 

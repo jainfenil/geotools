@@ -85,7 +85,8 @@ public class Arguments {
      * @param args Command line arguments. Arguments {@code "-encoding"} and {@code "-locale"} will
      *     be automatically parsed.
      */
-    public Arguments(final String[] args) {
+    @SuppressWarnings("PMD.CloseResource") // we don't close System.out
+    public Arguments(final String... args) {
         this.arguments = args.clone();
         this.locale = getLocale(getOptionalString("-locale"));
         this.encoding = getOptionalString("-encoding");
@@ -400,16 +401,13 @@ public class Arguments {
     public String[] getRemainingArguments(final int max) {
         int count = 0;
         final String[] left = new String[Math.min(max, arguments.length)];
-        for (int i = 0; i < arguments.length; i++) {
-            final String arg = arguments[i];
+        for (final String arg : arguments) {
             if (arg != null) {
                 if (count >= max) {
                     illegalArgument(
                             new IllegalArgumentException(
                                     Errors.getResources(locale)
-                                            .getString(
-                                                    ErrorKeys.UNEXPECTED_PARAMETER_$1,
-                                                    arguments[i])));
+                                            .getString(ErrorKeys.UNEXPECTED_PARAMETER_$1, arg)));
                 }
                 left[count++] = arg;
             }
@@ -431,8 +429,8 @@ public class Arguments {
      */
     public String[] getRemainingArguments(final int max, final char forbiddenPrefix) {
         final String[] arguments = getRemainingArguments(max);
-        for (int i = 0; i < arguments.length; i++) {
-            String argument = arguments[i];
+        for (String s : arguments) {
+            String argument = s;
             if (argument != null) {
                 argument = argument.trim();
                 if (argument.length() != 0) {

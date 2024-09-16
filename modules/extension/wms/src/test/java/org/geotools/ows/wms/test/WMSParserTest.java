@@ -16,15 +16,17 @@
  */
 package org.geotools.ows.wms.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import org.geotools.data.ows.HTTPResponse;
-import org.geotools.ows.MockHttpClient;
-import org.geotools.ows.MockHttpResponse;
+import org.geotools.http.HTTPResponse;
+import org.geotools.http.MockHttpClient;
+import org.geotools.http.MockHttpResponse;
 import org.geotools.ows.ServiceException;
 import org.geotools.ows.wms.WebMapServer;
 import org.geotools.test.TestData;

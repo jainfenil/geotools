@@ -29,6 +29,7 @@ import org.geotools.metadata.i18n.ErrorKeys;
 import org.geotools.metadata.i18n.Errors;
 import org.geotools.metadata.iso.citation.Citations;
 import org.geotools.referencing.NamedIdentifier;
+import org.geotools.referencing.wkt.Parser;
 import org.geotools.referencing.wkt.Symbols;
 import org.geotools.util.DerivedSet;
 import org.geotools.util.NameFactory;
@@ -156,9 +157,9 @@ public class PropertyAuthorityFactory extends DirectAuthorityFactory
         this.authorities = authorities.clone();
         authority = authorities[0];
         ensureNonNull("authority", authority);
-        final InputStream in = definitions.openStream();
-        this.definitions.load(in);
-        in.close();
+        try (InputStream in = definitions.openStream()) {
+            this.definitions.load(in);
+        }
         /*
          * If the WKT do not contains any AXIS[...] element, then every CRS will be created with
          * the default (longitude,latitude) axis order. In such case this factory is insensitive
@@ -385,8 +386,8 @@ public class PropertyAuthorityFactory extends DirectAuthorityFactory
             return code;
         }
         final String candidate = scope.toString();
-        for (int i = 0; i < authorities.length; i++) {
-            if (Citations.identifierMatches(authorities[i], candidate)) {
+        for (Citation citation : authorities) {
+            if (Citations.identifierMatches(citation, candidate)) {
                 return name.tip().toString().trim();
             }
         }
@@ -414,7 +415,7 @@ public class PropertyAuthorityFactory extends DirectAuthorityFactory
         protected Map<String, Object> alterProperties(Map<String, Object> properties) {
             Object candidate = properties.get(IdentifiedObject.IDENTIFIERS_KEY);
             if (candidate == null && code != null) {
-                properties = new HashMap<String, Object>(properties);
+                properties = new HashMap<>(properties);
                 code = trimAuthority(code);
                 final Object identifiers;
                 if (authorities.length <= 1) {

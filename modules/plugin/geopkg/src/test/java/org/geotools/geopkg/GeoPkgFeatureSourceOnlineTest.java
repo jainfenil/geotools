@@ -20,6 +20,7 @@ import org.geotools.data.Query;
 import org.geotools.jdbc.JDBCFeatureSourceOnlineTest;
 import org.geotools.jdbc.JDBCTestSetup;
 import org.geotools.referencing.CRS;
+import org.junit.Test;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.PropertyIsLike;
 import org.opengis.referencing.FactoryException;
@@ -27,12 +28,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 public class GeoPkgFeatureSourceOnlineTest extends JDBCFeatureSourceOnlineTest {
 
-    /**
-     * Allows subclasses to use a axis order specific version of it
-     *
-     * @return
-     * @throws FactoryException
-     */
+    /** Allows subclasses to use a axis order specific version of it */
     protected CoordinateReferenceSystem getWGS84() throws FactoryException {
         return CRS.decode("EPSG:4326", true);
     }
@@ -42,10 +38,12 @@ public class GeoPkgFeatureSourceOnlineTest extends JDBCFeatureSourceOnlineTest {
         return new GeoPkgTestSetup();
     }
 
+    @Test
     public void testGetFeaturesWithArithmeticOpFilter() throws Exception {
         // seems there are rounding issues here - consider new test
     }
 
+    @Test
     public void testConversionFilter() throws Exception {
         // seems there are rounding issues here - consider new test
     }
@@ -55,8 +53,8 @@ public class GeoPkgFeatureSourceOnlineTest extends JDBCFeatureSourceOnlineTest {
      */
     public void testLikeFilter() throws Exception {
         FilterFactory2 ff = (FilterFactory2) dataStore.getFilterFactory();
-        PropertyIsLike caseSensitiveLike =
-                ff.like(ff.property(aname("stringProperty")), "Z*", "*", "?", "\\", true);
+        //        PropertyIsLike caseSensitiveLike =
+        //                ff.like(ff.property(aname("stringProperty")), "Z*", "*", "?", "\\", true);
         PropertyIsLike caseInsensitiveLike =
                 ff.like(ff.property(aname("stringProperty")), "Z*", "*", "?", "\\", false);
         PropertyIsLike caseInsensitiveLike2 =

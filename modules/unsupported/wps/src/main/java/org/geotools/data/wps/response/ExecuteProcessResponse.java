@@ -22,8 +22,8 @@ import java.io.InputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import net.opengis.ows11.ExceptionReportType;
 import net.opengis.wps10.ExecuteResponseType;
-import org.geotools.data.ows.HTTPResponse;
 import org.geotools.data.ows.Response;
+import org.geotools.http.HTTPResponse;
 import org.geotools.ows.ServiceException;
 import org.geotools.wps.WPSConfiguration;
 import org.geotools.xsd.Configuration;
@@ -45,12 +45,7 @@ public class ExecuteProcessResponse extends Response {
     private InputStream rawResponseStream;
     private String rawContentType;
 
-    /**
-     * @param contentType
-     * @param inputStream
-     * @throws ServiceException
-     * @throws SAXException
-     */
+    /** */
     public ExecuteProcessResponse(HTTPResponse httpResponse, boolean raw)
             throws IOException, ServiceException {
         super(httpResponse);
@@ -117,9 +112,7 @@ public class ExecuteProcessResponse extends Response {
         try {
             // object = DocumentFactory.getInstance(inputStream, hints, Level.WARNING);
             object = parser.parse(inputStream);
-        } catch (SAXException e) {
-            throw (IOException) new IOException().initCause(e);
-        } catch (ParserConfigurationException e) {
+        } catch (SAXException | ParserConfigurationException e) {
             throw (IOException) new IOException().initCause(e);
         }
 
@@ -154,11 +147,7 @@ public class ExecuteProcessResponse extends Response {
         return rawResponseStream;
     }
 
-    /**
-     * The raw response stream content type
-     *
-     * @return
-     */
+    /** The raw response stream content type */
     public String getRawContentType() {
         return rawContentType;
     }

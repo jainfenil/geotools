@@ -116,8 +116,7 @@ public class DefaultMathTransformFactory extends ReferencingFactory
     private transient MathTransformProvider lastProvider;
 
     /** The operation method for the last transform created. */
-    private static final ThreadLocal<OperationMethod> lastMethod =
-            new ThreadLocal<OperationMethod>();
+    private static final ThreadLocal<OperationMethod> lastMethod = new ThreadLocal<>();
 
     /**
      * A pool of math transform. This pool is used in order to returns instance of existing math
@@ -130,7 +129,7 @@ public class DefaultMathTransformFactory extends ReferencingFactory
 
     /** Constructs a default {@link MathTransform math transform} factory. */
     public DefaultMathTransformFactory() {
-        this(new Class<?>[] {MathTransformProvider.class});
+        this(MathTransformProvider.class);
     }
 
     /**
@@ -140,7 +139,7 @@ public class DefaultMathTransformFactory extends ReferencingFactory
      * @param categories The providers categories, as implementations of {@link
      *     MathTransformProvider}.
      */
-    private DefaultMathTransformFactory(final Class<?>[] categories) {
+    private DefaultMathTransformFactory(final Class<?>... categories) {
         registry = new FactoryRegistry(Arrays.asList(categories));
         pool = CanonicalSet.newInstance(MathTransform.class);
     }
@@ -170,7 +169,7 @@ public class DefaultMathTransformFactory extends ReferencingFactory
      * @see #createParameterizedTransform
      */
     public Set<OperationMethod> getAvailableMethods(final Class<? extends Operation> type) {
-        return new LazySet<OperationMethod>(
+        return new LazySet<>(
                 registry.getFactories(
                         MathTransformProvider.class,
                         (type != null) ? new MethodFilter(type) : null,
@@ -194,8 +193,7 @@ public class DefaultMathTransformFactory extends ReferencingFactory
         @Override
         public boolean test(MathTransformProvider element) {
             if (element instanceof MathTransformProvider) {
-                final Class<? extends Operation> t =
-                        ((MathTransformProvider) element).getOperationType();
+                final Class<? extends Operation> t = element.getOperationType();
                 if (t != null && !type.isAssignableFrom(t)) {
                     return false;
                 }
@@ -643,7 +641,7 @@ public class DefaultMathTransformFactory extends ReferencingFactory
      *
      * @param args Command line arguments.
      */
-    public static void main(String[] args) {
+    public static void main(String... args) {
         /*
          * Parse the command-line arguments and print the summary.
          */
@@ -653,18 +651,18 @@ public class DefaultMathTransformFactory extends ReferencingFactory
         if (arguments.getFlag("-projections")) type = Projection.class;
         if (arguments.getFlag("-conversions")) type = Conversion.class;
         args = arguments.getRemainingArguments(1);
-        try {
+        try (ParameterWriter writer = new ParameterWriter(arguments.out)) {
             final DefaultMathTransformFactory factory = new DefaultMathTransformFactory();
-            final ParameterWriter writer = new ParameterWriter(arguments.out);
+
             writer.setLocale(arguments.locale);
             Set<OperationMethod> methods = Collections.emptySet();
             if (printAll || args.length == 0) {
-                final Set<String> scopes = new HashSet<String>();
+                final Set<String> scopes = new HashSet<>();
                 //              scopes.add("OGC");  // Omitted because usually the same than
                 // 'identifier'.
                 scopes.add("EPSG");
                 scopes.add("Geotools"); // Limit the number of columns to output.
-                methods = new TreeSet<OperationMethod>(AbstractIdentifiedObject.NAME_COMPARATOR);
+                methods = new TreeSet<>(AbstractIdentifiedObject.NAME_COMPARATOR);
                 methods.addAll(factory.getAvailableMethods(type));
                 writer.summary(methods, scopes);
             }
@@ -672,7 +670,7 @@ public class DefaultMathTransformFactory extends ReferencingFactory
                 if (args.length == 0) {
                     methods = Collections.emptySet();
                 } else {
-                    methods = Collections.singleton((OperationMethod) factory.getProvider(args[0]));
+                    methods = Collections.singleton(factory.getProvider(args[0]));
                 }
             }
             /*
@@ -684,6 +682,7 @@ public class DefaultMathTransformFactory extends ReferencingFactory
                 arguments.out.write(lineSeparator);
                 writer.format(method);
             }
+            arguments.out.flush();
         } catch (NoSuchIdentifierException exception) {
             arguments.err.println(exception.getLocalizedMessage());
             return;
@@ -691,7 +690,6 @@ public class DefaultMathTransformFactory extends ReferencingFactory
             java.util.logging.Logger.getGlobal().log(java.util.logging.Level.INFO, "", exception);
             return;
         }
-        arguments.out.flush();
     }
 
     /**

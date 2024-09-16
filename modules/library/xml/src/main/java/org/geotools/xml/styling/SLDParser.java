@@ -16,7 +16,8 @@
  */
 package org.geotools.xml.styling;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -31,9 +32,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.xml.parsers.ParserConfigurationException;
-import org.geotools.data.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.NameImpl;
 import org.geotools.filter.ExpressionDOMParser;
@@ -92,6 +94,7 @@ import org.geotools.styling.TextSymbolizer2;
 import org.geotools.styling.UomOgcMapping;
 import org.geotools.styling.UserLayer;
 import org.geotools.styling.UserLayerImpl;
+import org.geotools.util.Base64;
 import org.geotools.util.GrowableInternationalString;
 import org.geotools.util.SimpleInternationalString;
 import org.geotools.util.factory.GeoTools;
@@ -112,6 +115,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * TODO: This really needs to be container ready
@@ -345,8 +349,6 @@ public class SLDParser {
     /**
      * Sets the EntityResolver implementation that will be used by DocumentBuilder to resolve XML
      * external entities.
-     *
-     * @param entityResolver
      */
     public void setEntityResolver(EntityResolver entityResolver) {
         this.entityResolver = entityResolver;
@@ -382,12 +384,8 @@ public class SLDParser {
     public Style[] readXML() {
         try {
             dom = newDocumentBuilder(true).parse(source);
-        } catch (javax.xml.parsers.ParserConfigurationException pce) {
+        } catch (ParserConfigurationException | IOException | SAXException pce) {
             throw new RuntimeException(pce);
-        } catch (org.xml.sax.SAXException se) {
-            throw new RuntimeException(se);
-        } catch (java.io.IOException ie) {
-            throw new RuntimeException(ie);
         } finally {
             disposeInputSource();
         }
@@ -395,11 +393,7 @@ public class SLDParser {
         return readDOM(dom);
     }
 
-    /**
-     * Close the input source stream/reader if they had been created in this class
-     *
-     * @param source
-     */
+    /** Close the input source stream/reader if they had been created in this class */
     private void disposeInputSource() {
         if (!disposeInputSource) {
             return;
@@ -450,10 +444,7 @@ public class SLDParser {
         return styles;
     }
 
-    /**
-     * @param document
-     * @param name
-     */
+    /** */
     private NodeList findElements(final org.w3c.dom.Document document, final String name) {
         NodeList nodes = document.getElementsByTagNameNS("*", name);
 
@@ -485,12 +476,8 @@ public class SLDParser {
             // one per file
             return sld;
 
-        } catch (javax.xml.parsers.ParserConfigurationException pce) {
+        } catch (ParserConfigurationException | IOException | SAXException pce) {
             throw new RuntimeException(pce);
-        } catch (org.xml.sax.SAXException se) {
-            throw new RuntimeException(se);
-        } catch (java.io.IOException ie) {
-            throw new RuntimeException(ie);
         } finally {
             disposeInputSource();
         }
@@ -532,12 +519,7 @@ public class SLDParser {
         return sld;
     }
 
-    /**
-     * Returns the first child node value, or null if there is no child
-     *
-     * @param child
-     * @return
-     */
+    /** Returns the first child node value, or null if there is no child */
     String getFirstChildValue(Node child) {
         if (child.getFirstChild() != null) return child.getFirstChild().getNodeValue();
         else return null;
@@ -586,7 +568,7 @@ public class SLDParser {
     }
 
     private FeatureTypeConstraint[] parseLayerFeatureConstraints(Node root) {
-        List<FeatureTypeConstraint> featureTypeConstraints = new ArrayList<FeatureTypeConstraint>();
+        List<FeatureTypeConstraint> featureTypeConstraints = new ArrayList<>();
 
         NodeList children = root.getChildNodes();
         final int length = children.getLength();
@@ -657,10 +639,7 @@ public class SLDParser {
         return ows;
     }
 
-    /**
-     * @param child
-     * @param layer
-     */
+    /** */
     private void parseInlineFeature(Node root, UserLayer layer) {
         try {
             SLDInlineFeatureParser inparser = new SLDInlineFeatureParser(root);
@@ -695,8 +674,6 @@ public class SLDParser {
      * &lt;/xsd:element&gt;
      * &lt;/code&gt;
      * </pre>
-     *
-     * @param root
      */
     private NamedLayer parseNamedLayer(Node root) {
         NamedLayer layer = new NamedLayerImpl();
@@ -748,8 +725,6 @@ public class SLDParser {
      * &lt;/xsd:element&gt;
      * &lt;/code&gt;
      * </pre>
-     *
-     * @param n
      */
     public NamedStyle parseNamedStyle(Node n) {
         if (dom == null) {
@@ -847,6 +822,8 @@ public class SLDParser {
                 }
             } else if (childName.equalsIgnoreCase("FeatureTypeStyle")) {
                 style.featureTypeStyles().add(parseFeatureTypeStyle(child));
+            } else if (childName.equalsIgnoreCase("Background")) {
+                style.setBackground(parseFill(child));
             }
         }
 
@@ -860,8 +837,8 @@ public class SLDParser {
         }
 
         FeatureTypeStyle ft = factory.createFeatureTypeStyle();
-        ArrayList<Rule> rules = new ArrayList<Rule>();
-        ArrayList<String> sti = new ArrayList<String>();
+        ArrayList<Rule> rules = new ArrayList<>();
+        ArrayList<String> sti = new ArrayList<>();
         NodeList children = style.getChildNodes();
         final int length = children.getLength();
         for (int i = 0; i < length; i++) {
@@ -904,7 +881,7 @@ public class SLDParser {
             }
         }
 
-        if (sti.size() > 0) {
+        if (!sti.isEmpty()) {
             ft.semanticTypeIdentifiers().clear();
             sti.forEach(s -> ft.semanticTypeIdentifiers().add(SemanticType.valueOf(s)));
         }
@@ -937,7 +914,7 @@ public class SLDParser {
         }
 
         Rule rule = factory.createRule();
-        List<Symbolizer> symbolizers = new ArrayList<Symbolizer>();
+        List<Symbolizer> symbolizers = new ArrayList<>();
         NodeList children = ruleNode.getChildNodes();
         final int length = children.getLength();
         for (int i = 0; i < length; i++) {
@@ -1008,9 +985,6 @@ public class SLDParser {
     /**
      * Parse a node with mixed content containing internationalized elements in the form: <Localized
      * lang="locale">text</Localized>
-     *
-     * @param root
-     * @return
      */
     private InternationalString parseInternationalString(Node root) {
         if (LOGGER.isLoggable(Level.FINEST)) {
@@ -1021,7 +995,7 @@ public class SLDParser {
         final int length = children.getLength();
         StringBuilder text = new StringBuilder();
 
-        Map<String, String> translations = new HashMap<String, String>();
+        Map<String, String> translations = new HashMap<>();
 
         for (int i = 0; i < length; i++) {
             Node child = children.item(i);
@@ -1049,7 +1023,10 @@ public class SLDParser {
             } else continue;
         }
 
-        if (translations.size() > 0) {
+        if (translations.isEmpty()) {
+            String simpleText = getFirstChildValue(root);
+            return new SimpleInternationalString(simpleText == null ? "" : simpleText);
+        } else {
             GrowableInternationalString intString =
                     new GrowableInternationalString(text.toString()) {
 
@@ -1062,9 +1039,6 @@ public class SLDParser {
                 intString.add("", "_" + lang, translations.get(lang));
             }
             return intString;
-        } else {
-            String simpleText = getFirstChildValue(root);
-            return new SimpleInternationalString(simpleText == null ? "" : simpleText);
         }
     }
 
@@ -1135,8 +1109,8 @@ public class SLDParser {
      */
     protected PolygonSymbolizer parsePolygonSymbolizer(Node root) {
         PolygonSymbolizer symbol = factory.createPolygonSymbolizer();
-        symbol.setFill((Fill) null);
-        symbol.setStroke((org.geotools.styling.Stroke) null);
+        symbol.setFill(null);
+        symbol.setStroke(null);
 
         NamedNodeMap namedNodeMap = root.getAttributes();
         Node uomNode = namedNodeMap.getNamedItem(uomString);
@@ -1188,7 +1162,7 @@ public class SLDParser {
             symbol.setUnitOfMeasure(uomMapping.getUnit());
         }
 
-        List<org.geotools.styling.Font> fonts = new ArrayList<org.geotools.styling.Font>();
+        List<org.geotools.styling.Font> fonts = new ArrayList<>();
         NodeList children = root.getChildNodes();
         final int length = children.getLength();
         for (int i = 0; i < length; i++) {
@@ -1271,17 +1245,14 @@ public class SLDParser {
         return ot;
     }
 
-    /**
-     * adds the key/value pair from the node ("<VendorOption name="...">...</VendorOption>")
-     *
-     * @param symbol
-     * @param child
-     */
+    /** adds the key/value pair from the node ("<VendorOption name="...">...</VendorOption>") */
     private void parseVendorOption(Map<String, String> options, Node child) {
         String key = child.getAttributes().getNamedItem("name").getNodeValue();
         String value = getFirstChildValue(child);
 
-        options.put(key, value);
+        if (StringUtils.isNotBlank(value)) {
+            options.put(key, value);
+        }
     }
 
     /**
@@ -1375,7 +1346,7 @@ public class SLDParser {
             String text = textNode.getNodeValue();
             return ff.literal(text.trim());
         }
-        List<Expression> expressionList = new ArrayList<Expression>();
+        List<Expression> expressionList = new ArrayList<>();
         for (int index = 0; index < children.getLength(); index++) {
             Node child = children.item(index);
             if (child instanceof CharacterData) {
@@ -1859,7 +1830,7 @@ public class SLDParser {
         String format = "";
         String uri = "";
         String content = null;
-        Map<String, Object> paramList = new HashMap<String, Object>();
+        Map<String, Object> paramList = new HashMap<>();
 
         NodeList children = root.getChildNodes();
         final int length = children.getLength();
@@ -2215,13 +2186,7 @@ public class SLDParser {
         return fill;
     }
 
-    /**
-     * Concatenates the given expressions (through the strConcat FunctionFilter expression)
-     *
-     * @param left
-     * @param right
-     * @return
-     */
+    /** Concatenates the given expressions (through the strConcat FunctionFilter expression) */
     private Expression manageMixed(Expression left, Expression right) {
         if (left == null) return right;
         if (right == null) return left;
@@ -2233,7 +2198,6 @@ public class SLDParser {
      * Parses a css parameter. Default implementation trims whitespaces from text nodes.
      *
      * @param root node to parse
-     * @return
      */
     private Expression parseCssParameter(Node root) {
         return parseCssParameter(root, true);
@@ -2246,7 +2210,6 @@ public class SLDParser {
      * @param root node to parse
      * @param trimWhiteSpace true to trim whitespace from text nodes. If false, whitespaces will be
      *     collapsed into one
-     * @return
      */
     private Expression parseCssParameter(Node root, boolean trimWhiteSpace) {
         if (LOGGER.isLoggable(Level.FINEST)) {
@@ -2255,8 +2218,8 @@ public class SLDParser {
 
         NodeList children = root.getChildNodes();
         final int length = children.getLength();
-        List<Expression> expressions = new ArrayList<Expression>();
-        List<Boolean> cdatas = new ArrayList<Boolean>();
+        List<Expression> expressions = new ArrayList<>();
+        List<Boolean> cdatas = new ArrayList<>();
         for (int i = 0; i < length; i++) {
             Node child = children.item(i);
 
@@ -2318,7 +2281,7 @@ public class SLDParser {
             } else continue;
         }
 
-        if (expressions.size() == 0 && LOGGER.isLoggable(Level.FINEST)) {
+        if (expressions.isEmpty() && LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("no children in CssParam");
         }
 
@@ -2326,7 +2289,7 @@ public class SLDParser {
             // remove all leading white spaces, which means, find all
             // string literals, remove the white space ones, eventually
             // remove the leading white space form the first non white space one
-            while (expressions.size() > 0) {
+            while (!expressions.isEmpty()) {
                 Expression ex = expressions.get(0);
 
                 // if it's not a string literal we're done
@@ -2356,7 +2319,7 @@ public class SLDParser {
             }
 
             // remove also all trailing white spaces the same way
-            while (expressions.size() > 0) {
+            while (!expressions.isEmpty()) {
                 final int idx = expressions.size() - 1;
                 Expression ex = expressions.get(idx);
 
@@ -2543,12 +2506,7 @@ public class SLDParser {
         return dlp;
     }
 
-    /**
-     * Internal method to parse an AnchorPoint node; protected visibility for testing.
-     *
-     * @param root
-     * @return
-     */
+    /** Internal method to parse an AnchorPoint node; protected visibility for testing. */
     protected AnchorPoint parseAnchorPoint(Node root) {
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("parsing anchorPoint");

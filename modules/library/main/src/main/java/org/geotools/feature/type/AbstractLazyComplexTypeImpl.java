@@ -48,15 +48,7 @@ public abstract class AbstractLazyComplexTypeImpl extends AbstractLazyAttributeT
 
     private Map<Name, PropertyDescriptor> descriptorMap;
 
-    /**
-     * Constructor arguments have the same meaning as in {@link ComplexTypeImpl}.
-     *
-     * @param name
-     * @param identified
-     * @param isAbstract
-     * @param restrictions
-     * @param description
-     */
+    /** Constructor arguments have the same meaning as in {@link ComplexTypeImpl}. */
     public AbstractLazyComplexTypeImpl(
             Name name,
             boolean identified,
@@ -84,10 +76,8 @@ public abstract class AbstractLazyComplexTypeImpl extends AbstractLazyAttributeT
                 descriptors = Collections.emptyList();
                 descriptorMap = Collections.emptyMap();
             } else {
-                Collection<PropertyDescriptor> localDescriptors =
-                        new ArrayList<PropertyDescriptor>(builtDescriptors);
-                Map<Name, PropertyDescriptor> localDescriptorMap =
-                        new HashMap<Name, PropertyDescriptor>();
+                Collection<PropertyDescriptor> localDescriptors = new ArrayList<>(builtDescriptors);
+                Map<Name, PropertyDescriptor> localDescriptorMap = new HashMap<>();
                 for (PropertyDescriptor descriptor : localDescriptors) {
                     localDescriptorMap.put(descriptor.getName(), descriptor);
                 }

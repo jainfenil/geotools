@@ -79,11 +79,7 @@ public class CQLAttributeNameTest {
                 "gmd:MD_Metadata.gmd:identificationInfo.gmd:MD_DataIdentification.gmd:abstract");
     }
 
-    /**
-     * Invalid attribute names
-     *
-     * @throws CQLException
-     */
+    /** Invalid attribute names */
     @Test(expected = CQLException.class)
     public void invalidAttribute() throws CQLException {
 
@@ -94,11 +90,7 @@ public class CQLAttributeNameTest {
         testAttribute("startpart part1");
     }
 
-    /**
-     * Using a CQL Keyword as property name
-     *
-     * @throws Exception
-     */
+    /** Using a CQL Keyword as property name */
     @Test
     public void keywordAsAttribute() throws CQLException {
 
@@ -109,11 +101,7 @@ public class CQLAttributeNameTest {
         testAttributeBetweenDoubleQuotes("\"OR\"");
     }
 
-    /**
-     * Using different local characters as property name.
-     *
-     * @throws Exception
-     */
+    /** Using different local characters as property name. */
     @Test
     public void localCharactersetInAttributeName() throws CQLException {
 
@@ -136,14 +124,12 @@ public class CQLAttributeNameTest {
     }
 
     private void testAttributeBetweenDoubleQuotes(final String attSample) throws CQLException {
-        PropertyIsLike result;
-        PropertyName attResult = null;
 
-        result =
+        PropertyIsLike result =
                 (PropertyIsLike)
                         CompilerUtil.parseFilter(this.language, attSample + " LIKE 'abc%'");
 
-        attResult = (PropertyName) result.getExpression();
+        PropertyName attResult = (PropertyName) result.getExpression();
 
         String expected = attSample.replace('.', '/');
         expected = expected.substring(1, expected.length() - 1);
@@ -153,14 +139,12 @@ public class CQLAttributeNameTest {
     }
 
     private void testAttribute(final String attSample) throws CQLException {
-        PropertyIsLike result;
-        PropertyName attResult = null;
 
-        result =
+        PropertyIsLike result =
                 (PropertyIsLike)
                         CompilerUtil.parseFilter(this.language, attSample + " LIKE 'abc%'");
 
-        attResult = (PropertyName) result.getExpression();
+        PropertyName attResult = (PropertyName) result.getExpression();
 
         final String expected = attSample.replace('.', '/');
 

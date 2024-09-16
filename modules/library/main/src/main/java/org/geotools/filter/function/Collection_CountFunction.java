@@ -18,7 +18,7 @@
  */
 package org.geotools.filter.function;
 
-import static org.geotools.filter.capability.FunctionNameImpl.*;
+import static org.geotools.filter.capability.FunctionNameImpl.parameter;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -62,8 +62,6 @@ public class Collection_CountFunction extends FunctionExpressionImpl {
      *
      * @param collection collection to calculate the count
      * @return An object containing the count value of the attributes
-     * @throws IllegalFilterException
-     * @throws IOException
      */
     static CalcResult calculateCount(SimpleFeatureCollection collection)
             throws IllegalFilterException, IOException {
@@ -86,9 +84,7 @@ public class Collection_CountFunction extends FunctionExpressionImpl {
                     if (result != null) {
                         count = result.getValue();
                     }
-                } catch (IllegalFilterException e) {
-                    LOGGER.log(Level.FINER, e.getLocalizedMessage(), e);
-                } catch (IOException e) {
+                } catch (IllegalFilterException | IOException e) {
                     LOGGER.log(Level.FINER, e.getLocalizedMessage(), e);
                 }
             }

@@ -30,6 +30,7 @@ import org.geotools.data.DataStoreFactorySpi;
 import org.geotools.gce.imagemosaic.Utils;
 import org.geotools.gce.imagemosaic.catalog.oracle.OracleDatastoreWrapper;
 import org.geotools.gce.imagemosaic.catalog.postgis.PostgisDatastoreWrapper;
+import org.geotools.gce.imagemosaic.catalog.sqlserver.SQLServerDatastoreWrapper;
 import org.geotools.util.Utilities;
 import org.geotools.util.factory.Hints;
 
@@ -83,10 +84,15 @@ public class GTDataStoreGranuleCatalog extends AbstractGTDataStoreGranuleCatalog
             this.tileIndexStore =
                     new OracleDatastoreWrapper(
                             getTileIndexStore(), FilenameUtils.getFullPath(parentLocation));
+        } else if (Utils.isSQLServerStore(spi)) {
+            // always wrap to ensure the geometry metadata table is there
+            this.tileIndexStore =
+                    new SQLServerDatastoreWrapper(
+                            getTileIndexStore(), FilenameUtils.getFullPath(parentLocation));
         }
 
         // this init must be here as it's getting called by the parent class constructor
-        this.validTypeNames = new HashSet<String>();
+        this.validTypeNames = new HashSet<>();
 
         // is this a new store? If so we do not set any properties
         if (create) {

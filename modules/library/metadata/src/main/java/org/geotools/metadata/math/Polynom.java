@@ -245,14 +245,14 @@ public class Polynom implements Serializable {
      * @param c The coefficients for the polynomial equation.
      */
     @SuppressWarnings("PMD.SystemPrintln")
-    public static void main(final String[] c) {
+    public static void main(final String... c) {
         final double[] r = new double[c.length];
         for (int i = 0; i < c.length; i++) {
             r[i] = Double.parseDouble(c[i]);
         }
         final double[] roots = roots(r);
-        for (int i = 0; i < roots.length; i++) {
-            System.out.println(roots[i]);
+        for (double root : roots) {
+            System.out.println(root);
         }
     }
 

@@ -28,6 +28,7 @@ import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 
+@SuppressWarnings("PMD.JUnit4TestShouldUseBeforeAnnotation")
 public abstract class JDBCGeometryTestSetup extends JDBCDelegatingTestSetup {
 
     protected JDBCGeometryTestSetup(JDBCTestSetup delegate) {
@@ -73,9 +74,6 @@ public abstract class JDBCGeometryTestSetup extends JDBCDelegatingTestSetup {
     /**
      * Must remove the spatial table and all metadata associated to it, leaving the DBMS in a state
      * where the same table can be re-created without issues
-     *
-     * @param tableName
-     * @throws Exception
      */
     protected abstract void dropSpatialTable(String tableName) throws Exception;
 }

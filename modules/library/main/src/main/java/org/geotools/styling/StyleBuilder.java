@@ -16,7 +16,7 @@
  */
 package org.geotools.styling;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.Arrays;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -98,11 +98,7 @@ public class StyleBuilder {
         this.ff = (FilterFactory2) filterFactory;
     }
 
-    /**
-     * Documented setter injection, StyleBuilder uses a StyleFactory for creation.
-     *
-     * @param factory
-     */
+    /** Documented setter injection, StyleBuilder uses a StyleFactory for creation. */
     public void setStyleFactory(StyleFactory factory) {
         sf = factory;
     }
@@ -115,11 +111,7 @@ public class StyleBuilder {
         return sf;
     }
 
-    /**
-     * Documented setter injection, StyleBuilder uses a StyleFactory for creation.
-     *
-     * @param factory
-     */
+    /** Documented setter injection, StyleBuilder uses a StyleFactory for creation. */
     public void setFilterFactory(FilterFactory factory) {
         ff = (FilterFactory2) factory;
     }
@@ -1208,7 +1200,7 @@ public class StyleBuilder {
      * @param symbolizers - an array of symbolizers to use
      * @return the new rule
      */
-    public Rule createRule(Symbolizer[] symbolizers) {
+    public Rule createRule(Symbolizer... symbolizers) {
         return createRule(symbolizers, Double.NaN, Double.NaN);
     }
 
@@ -1298,7 +1290,7 @@ public class StyleBuilder {
      * @return the new feature type styler
      */
     public FeatureTypeStyle createFeatureTypeStyle(
-            String featureTypeName, Symbolizer[] symbolizers) {
+            String featureTypeName, Symbolizer... symbolizers) {
         return createFeatureTypeStyle(featureTypeName, symbolizers, Double.NaN, Double.NaN);
     }
 
@@ -1377,7 +1369,7 @@ public class StyleBuilder {
      * @param rules - the rules that make up the FeatureTypeStyle
      * @return the new feature type styler
      */
-    public FeatureTypeStyle createFeatureTypeStyle(String typeName, Rule[] rules) {
+    public FeatureTypeStyle createFeatureTypeStyle(String typeName, Rule... rules) {
         FeatureTypeStyle fts = sf.createFeatureTypeStyle();
         fts.rules().addAll(Arrays.asList(rules));
 
@@ -1569,14 +1561,11 @@ public class StyleBuilder {
         double[] values = new double[fc.size()];
         int count = 0;
 
-        SimpleFeatureIterator it = fc.features();
-        try {
+        try (SimpleFeatureIterator it = fc.features()) {
             while (it.hasNext()) {
-                SimpleFeature f = (SimpleFeature) it.next();
+                SimpleFeature f = it.next();
                 values[count++] = ((Number) f.getAttribute(name)).doubleValue();
             }
-        } finally {
-            it.close();
         }
 
         // pass to classification algorithm
@@ -1734,12 +1723,7 @@ public class StyleBuilder {
         double[] breaks;
         double[] collection;
 
-        /**
-         * Creates a new instance of EqualClasses
-         *
-         * @param numberClasses
-         * @param fc
-         */
+        /** Creates a new instance of EqualClasses */
         public EqualClasses(int numberClasses, double[] fc) {
 
             breaks = new double[numberClasses - 1];

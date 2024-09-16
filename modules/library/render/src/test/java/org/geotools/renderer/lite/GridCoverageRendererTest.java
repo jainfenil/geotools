@@ -17,20 +17,29 @@
 package org.geotools.renderer.lite;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import it.geosolutions.jaiext.range.NoDataContainer;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.IndexColorModel;
+import java.awt.image.Raster;
+import java.awt.image.RenderedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -59,6 +68,7 @@ import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
 import org.geotools.coverage.processing.CoverageProcessor;
 import org.geotools.coverage.processing.operation.Crop;
+import org.geotools.coverage.util.CoverageUtilities;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.function.EnvFunction;
 import org.geotools.gce.arcgrid.ArcGridReader;
@@ -225,20 +235,16 @@ public class GridCoverageRendererTest {
      *     exclusive.
      * @return The "real world" grid coverage.
      * @throws IOException if an I/O operation was needed and failed.
-     * @throws ParseException
-     * @throws IllegalArgumentException
      */
     private final GridCoverage2D getGC()
             throws IOException, IllegalArgumentException, ParseException {
-        final String path;
-        final Rectangle2D bounds;
 
         // unit = "°C";
-        path = "TestGridCoverage.tif";
+        final String path = "TestGridCoverage.tif";
         final CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
 
         // 41°S - 5°N ; 35°E - 80°E (450 x 460 pixels)
-        bounds = new Rectangle2D.Double(35, -41, 45, 46);
+        final Rectangle2D bounds = new Rectangle2D.Double(35, -41, 45, 46);
         final GeneralEnvelope envelope = new GeneralEnvelope(bounds);
         final RenderedImage image = ImageIO.read(TestData.getResource(this, path));
         final int numBands = image.getSampleModel().getNumBands();
@@ -325,8 +331,6 @@ public class GridCoverageRendererTest {
     /**
      * Tests what happens when the grid coverage is associated with a broken style with no
      * symbolizers inside. It should just render nothing, a NPE was reported instead in GEOT-2543.
-     *
-     * @throws Exception
      */
     @Test
     public void paintWrongStyle() throws Exception {
@@ -465,7 +469,7 @@ public class GridCoverageRendererTest {
 
         final StreamingRenderer renderer = new StreamingRenderer();
         renderer.setMapContent(content);
-        Map<Object, Object> rendererParams = new HashMap<Object, Object>();
+        Map<Object, Object> rendererParams = new HashMap<>();
         rendererParams.put(StreamingRenderer.ADVANCED_PROJECTION_HANDLING_KEY, true);
         rendererParams.put(StreamingRenderer.CONTINUOUS_MAP_WRAPPING, true);
         renderer.setRendererHints(rendererParams);
@@ -826,7 +830,7 @@ public class GridCoverageRendererTest {
         assertTrue(property instanceof GridCoverage2D);
         GridCoverage2D propertyCoverage = (GridCoverage2D) property;
         CoordinateReferenceSystem targetCrs = propertyCoverage.getCoordinateReferenceSystem();
-        assertTrue(targetCrs.getName().equals(crs.getName()));
+        assertEquals(targetCrs.getName(), crs.getName());
     }
 
     @Test
@@ -1371,11 +1375,7 @@ public class GridCoverageRendererTest {
         ImageUtilities.disposeImage(image);
     }
 
-    /**
-     * Tests band selection with Env Function Expression
-     *
-     * @throws Exception
-     */
+    /** Tests band selection with Env Function Expression */
     @Test
     public void testBandSelectionExpression() throws Exception {
         // Create a solid color coverage
@@ -1633,7 +1633,7 @@ public class GridCoverageRendererTest {
         symbolizer.setChannelSelection(chSel);
         symbolizer.setOpacity(sldBuilder.literalExpression(1.0));
 
-        Graphics2D graphics = ((BufferedImage) TestMultiBandReader.image).createGraphics();
+        Graphics2D graphics = TestMultiBandReader.image.createGraphics();
         renderer.paint(
                 graphics,
                 reader,
@@ -1806,6 +1806,13 @@ public class GridCoverageRendererTest {
                 renderer.renderImage(
                         offDatelineReader, null, symbolizer, interpolation, null, 256, 256);
         assertNotNull(image);
+        // goes out as indexed, switch to RGB as the image comparison needs it
+        // (nodata = 0 in the source, the black in the original image becomes transparent)
+        image =
+                new ImageWorker(image)
+                        .forceComponentColorModel()
+                        .forceColorSpaceRGB()
+                        .getRenderedImage();
         File reference =
                 new File(
                         "src/test/resources/org/geotools/renderer/lite/gridcoverage2d/offDateline.png");
@@ -1825,7 +1832,7 @@ public class GridCoverageRendererTest {
 
         final StreamingRenderer renderer = new StreamingRenderer();
         renderer.setMapContent(content);
-        Map<Object, Object> rendererParams = new HashMap<Object, Object>();
+        Map<Object, Object> rendererParams = new HashMap<>();
         rendererParams.put(StreamingRenderer.ADVANCED_PROJECTION_HANDLING_KEY, true);
         rendererParams.put(StreamingRenderer.CONTINUOUS_MAP_WRAPPING, true);
         renderer.setRendererHints(rendererParams);
@@ -1859,7 +1866,6 @@ public class GridCoverageRendererTest {
         }
 
         // crate the first reader
-        URL harvestSingleURL = URLs.fileToUrl(directory1);
         ImageMosaicReader reader = new ImageMosaicReader(directory1, null);
 
         // now create a second reader that won't be informed of the harvesting changes
@@ -1924,16 +1930,10 @@ public class GridCoverageRendererTest {
         }
     }
 
-    /**
-     * Checks the pixel i/j is fully transparent
-     *
-     * @param image
-     * @param i
-     * @param j
-     */
+    /** Checks the pixel i/j is fully transparent */
     protected void assertPixelIsTransparent(BufferedImage image, int i, int j) {
         int pixel = image.getRGB(i, j);
-        assertEquals(true, (pixel >> 24) == 0x00);
+        assertEquals((pixel >> 24), 0x00);
     }
 
     private RasterSymbolizer buildChannelSelectingSymbolizer(int band) {
@@ -1942,20 +1942,11 @@ public class GridCoverageRendererTest {
         StyleFactory sf = sb.getStyleFactory();
         symbolizer.setChannelSelection(
                 sf.createChannelSelection(
-                        new SelectedChannelType[] {
-                            sf.createSelectedChannelType(
-                                    String.valueOf(band), (ContrastEnhancement) null)
-                        }));
+                        sf.createSelectedChannelType(String.valueOf(band), null)));
         return symbolizer;
     }
 
-    /**
-     * Build a Symbolizer with ENV function ChannelName
-     *
-     * @param envVar
-     * @param band
-     * @return
-     */
+    /** Build a Symbolizer with ENV function ChannelName */
     private RasterSymbolizer buildEnvChannelSelectingSymbolizer(String envVar, int band) {
         StyleBuilder sb = new StyleBuilder();
         RasterSymbolizer symbolizer = sb.createRasterSymbolizer();
@@ -1963,11 +1954,9 @@ public class GridCoverageRendererTest {
         final FilterFactory ff = CommonFactoryFinder.getFilterFactory(null);
         symbolizer.setChannelSelection(
                 sf.createChannelSelection(
-                        new SelectedChannelType[] {
-                            sf.createSelectedChannelType(
-                                    ff.function("env", ff.literal(envVar), ff.literal(band)),
-                                    (ContrastEnhancement) null)
-                        }));
+                        sf.createSelectedChannelType(
+                                ff.function("env", ff.literal(envVar), ff.literal(band)),
+                                (ContrastEnhancement) null)));
         return symbolizer;
     }
 
@@ -2021,7 +2010,7 @@ public class GridCoverageRendererTest {
 
                 @Override
                 public ParameterValueGroup getReadParameters() {
-                    HashMap<String, String> info = new HashMap<String, String>();
+                    HashMap<String, String> info = new HashMap<>();
 
                     info.put("name", "bandTester");
                     info.put("description", "desc");
@@ -2029,8 +2018,7 @@ public class GridCoverageRendererTest {
                     info.put("docURL", "http://www.geotools.org");
                     info.put("version", "1.0");
 
-                    List<GeneralParameterDescriptor> params =
-                            new ArrayList<GeneralParameterDescriptor>();
+                    List<GeneralParameterDescriptor> params = new ArrayList<>();
                     params.add(AbstractGridFormat.BANDS);
 
                     return new ParameterGroup(
@@ -2137,7 +2125,7 @@ public class GridCoverageRendererTest {
 
                 @Override
                 public ParameterValueGroup getReadParameters() {
-                    HashMap<String, String> info = new HashMap<String, String>();
+                    HashMap<String, String> info = new HashMap<>();
 
                     info.put("name", "bandTester");
                     info.put("description", "desc");
@@ -2145,8 +2133,7 @@ public class GridCoverageRendererTest {
                     info.put("docURL", "http://www.geotools.org");
                     info.put("version", "1.0");
 
-                    List<GeneralParameterDescriptor> params =
-                            new ArrayList<GeneralParameterDescriptor>();
+                    List<GeneralParameterDescriptor> params = new ArrayList<>();
                     params.add(AbstractGridFormat.BANDS);
 
                     return new ParameterGroup(
@@ -2162,10 +2149,8 @@ public class GridCoverageRendererTest {
                 throws IllegalArgumentException, IOException {
             for (GeneralParameterValue parameter : parameters) {
                 if ("Bands".equals(parameter.getDescriptor().getName().toString())) {
-                    assertTrue(
-                            Arrays.equals(
-                                    expectedBands,
-                                    (int[]) ((ParameterValue) parameter).getValue()));
+                    assertArrayEquals(
+                            expectedBands, (int[]) ((ParameterValue) parameter).getValue());
                 }
             }
 
@@ -2178,11 +2163,7 @@ public class GridCoverageRendererTest {
         }
     }
 
-    /**
-     * Test painting a request outside the valid area
-     *
-     * @throws Exception
-     */
+    /** Test painting a request outside the valid area */
     @Test
     public void testPaintOutsideValidArea() throws Exception {
 
@@ -2195,7 +2176,7 @@ public class GridCoverageRendererTest {
         CountingRenderListener counter = new CountingRenderListener();
         renderer.addRenderListener(counter);
         renderer.setMapContent(content);
-        Map<Object, Object> rendererParams = new HashMap<Object, Object>();
+        Map<Object, Object> rendererParams = new HashMap<>();
         rendererParams.put(StreamingRenderer.ADVANCED_PROJECTION_HANDLING_KEY, true);
         renderer.setRendererHints(rendererParams);
         BufferedImage image = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
@@ -2239,11 +2220,7 @@ public class GridCoverageRendererTest {
         ImageAssert.assertEquals(reference, image, 0);
     }
 
-    /**
-     * Test custom PADDING is being used when provided as Hint
-     *
-     * @throws Exception
-     */
+    /** Test custom PADDING is being used when provided as Hint */
     @Test
     public void testPadding() throws Exception {
         CoordinateReferenceSystem wgs84 = CRS.decode("EPSG:4326", true);
@@ -2306,5 +2283,194 @@ public class GridCoverageRendererTest {
         ImageAssert.assertEquals(reference, rendered, 0);
 
         coverage.dispose(true);
+    }
+
+    @Test
+    public void testChannelSelectOnRescaledDataset() throws Exception {
+        URL coverageFile =
+                org.geotools.test.TestData.url(GridCoverageRendererTest.class, "scale_offset");
+        ImageMosaicReader reader = new ImageMosaicReader(coverageFile);
+
+        ParameterValue<Boolean> rescalePixels = AbstractGridFormat.RESCALE_PIXELS.createValue();
+        rescalePixels.setValue(true);
+
+        ParameterValue<int[]> bands = AbstractGridFormat.BANDS.createValue();
+        bands.setValue(new int[] {0});
+        GridCoverage2D coverage = reader.read(new GeneralParameterValue[] {rescalePixels, bands});
+        NoDataContainer noDataProperty = CoverageUtilities.getNoDataProperty(coverage);
+        assertNotNull(noDataProperty);
+        double noData = noDataProperty.getAsSingleValue();
+
+        // At that specific location (x=7,y=2) sample should be nodata
+        final int noDataPixelCoordinateX = 7;
+        final int noDataPixelCoordinateY = 2;
+        RenderedImage image = coverage.getRenderedImage();
+        Raster raster = image.getData();
+        double sample = raster.getSampleDouble(noDataPixelCoordinateX, noDataPixelCoordinateY, 0);
+        assertEquals(noData, sample, 1E-6);
+
+        ReferencedEnvelope mapExtent = ReferencedEnvelope.reference(coverage.getEnvelope2D());
+        Rectangle screenSize =
+                new Rectangle(
+                        image.getMinX(), image.getMinY(), image.getWidth(), image.getHeight());
+        AffineTransform w2s = RendererUtilities.worldToScreenTransform(mapExtent, screenSize);
+        GridCoverageRenderer renderer =
+                new GridCoverageRenderer(
+                        coverage.getCoordinateReferenceSystem(), mapExtent, screenSize, w2s);
+
+        Style style = RendererBaseTest.loadStyle(this, "sld1.sld");
+        RasterSymbolizer rasterSymbolizer =
+                (RasterSymbolizer)
+                        style.featureTypeStyles().get(0).rules().get(0).symbolizers().get(0);
+        image =
+                renderer.renderImage(
+                        coverage,
+                        rasterSymbolizer,
+                        Interpolation.getInstance(Interpolation.INTERP_NEAREST),
+                        Color.RED,
+                        256,
+                        256);
+
+        ColorModel cm = image.getColorModel();
+        assertTrue(cm instanceof IndexColorModel);
+        IndexColorModel icm = (IndexColorModel) cm;
+        int transparentPixel = icm.getTransparentPixel();
+
+        raster = image.getData();
+        int sampleB = raster.getSample(noDataPixelCoordinateX, noDataPixelCoordinateY, 0);
+        assertEquals(transparentPixel, sampleB);
+        coverage.dispose(true);
+    }
+
+    @Test
+    public void testContrastEnhancementWithNodataDataset() throws Exception {
+        URL coverageFile =
+                org.geotools.test.TestData.url(GridCoverageRendererTest.class, "nodataNbands.tiff");
+        GeoTiffReader reader = new GeoTiffReader(coverageFile);
+        GridCoverage2D coverage = reader.read(null);
+        NoDataContainer noDataProperty = CoverageUtilities.getNoDataProperty(coverage);
+        assertNotNull(noDataProperty);
+        double noData = noDataProperty.getAsSingleValue();
+
+        // At that specific location (x=7,y=2) sample should be nodata
+        final int noDataPixelCoordinateX = 7;
+        final int noDataPixelCoordinateY = 2;
+        RenderedImage image = coverage.getRenderedImage();
+        Raster raster = image.getData();
+        double sample = raster.getSampleDouble(noDataPixelCoordinateX, noDataPixelCoordinateY, 0);
+        assertEquals(noData, sample, 1E-6);
+
+        ReferencedEnvelope mapExtent = ReferencedEnvelope.reference(coverage.getEnvelope2D());
+        Rectangle screenSize =
+                new Rectangle(
+                        image.getMinX(), image.getMinY(), image.getWidth(), image.getHeight());
+        AffineTransform w2s = RendererUtilities.worldToScreenTransform(mapExtent, screenSize);
+        GridCoverageRenderer renderer =
+                new GridCoverageRenderer(
+                        coverage.getCoordinateReferenceSystem(), mapExtent, screenSize, w2s);
+
+        Style style = RendererBaseTest.loadStyle(this, "n_bands.sld");
+        RasterSymbolizer rasterSymbolizer =
+                (RasterSymbolizer)
+                        style.featureTypeStyles().get(0).rules().get(0).symbolizers().get(0);
+        image =
+                renderer.renderImage(
+                        coverage,
+                        rasterSymbolizer,
+                        Interpolation.getInstance(Interpolation.INTERP_NEAREST),
+                        Color.RED,
+                        256,
+                        256);
+
+        raster = image.getData();
+        int sampleB = raster.getSample(noDataPixelCoordinateX, noDataPixelCoordinateY, 0);
+        assertEquals(0, sampleB);
+        coverage.dispose(true);
+    }
+
+    @Test
+    public void testRenderRadarOnAzeq() throws Exception {
+        File file =
+                URLs.urlToFile(
+                        GridCoverageRendererTest.class.getResource(
+                                "gridcoverage2d/test-data/pacific_radar.tif"));
+        GeoTiffReader reader = new GeoTiffReader(file);
+        ReferencedEnvelope readerEnvelope =
+                ReferencedEnvelope.reference(reader.getOriginalEnvelope());
+        CoordinateReferenceSystem crs = CRS.decode("AUTO:97003,9001,170,-16", true);
+        ReferencedEnvelope azeqEnvelope = readerEnvelope.transform(crs, true);
+
+        testImage(reader, azeqEnvelope, "pacificRadar.png");
+    }
+
+    @Test
+    public void testRenderRadarOnAzeqZoomedIn() throws Exception {
+        File file =
+                URLs.urlToFile(
+                        GridCoverageRendererTest.class.getResource(
+                                "gridcoverage2d/test-data/pacific_radar.tif"));
+        GeoTiffReader reader = new GeoTiffReader(file);
+        CoordinateReferenceSystem crs = CRS.decode("AUTO:97003,9001,170,-16", true);
+        ReferencedEnvelope azeqEnvelope =
+                new ReferencedEnvelope(
+                        898340.67097417, 1127313.3142259, -8529.3690118708, 220443.2742399, crs);
+
+        testImage(reader, azeqEnvelope, "pacificRadarZoomedIn.png");
+    }
+
+    @Test
+    public void testRenderRadarOnCentralAzeq() throws Exception {
+        File file =
+                URLs.urlToFile(
+                        GridCoverageRendererTest.class.getResource(
+                                "gridcoverage2d/test-data/pacific_radar.tif"));
+        GeoTiffReader reader = new GeoTiffReader(file);
+        CoordinateReferenceSystem crs = CRS.decode("AUTO:97003,9001,0,0", true);
+        ReferencedEnvelope azeqEnvelope =
+                new ReferencedEnvelope(-10698974, 10065735, -18709397, -1.4979931, crs);
+
+        testImage(reader, azeqEnvelope, "pacificRadarCentralAzeq.png");
+    }
+
+    private void testImage(GeoTiffReader reader, ReferencedEnvelope vaiEnvelope, String fileName)
+            throws TransformException, NoninvertibleTransformException, FactoryException,
+                    IOException {
+        ReferencedEnvelope mapExtent = vaiEnvelope;
+        Rectangle screenSize =
+                new Rectangle(400, (int) (mapExtent.getHeight() / mapExtent.getWidth() * 400));
+        AffineTransform w2s = RendererUtilities.worldToScreenTransform(mapExtent, screenSize);
+        GridCoverageRenderer renderer =
+                new GridCoverageRenderer(
+                        mapExtent.getCoordinateReferenceSystem(), mapExtent, screenSize, w2s);
+
+        RasterSymbolizer rasterSymbolizer = buildRadardStyle();
+
+        RenderedImage image =
+                renderer.renderImage(
+                        reader,
+                        null,
+                        rasterSymbolizer,
+                        Interpolation.getInstance(Interpolation.INTERP_NEAREST),
+                        Color.BLACK,
+                        256,
+                        256);
+        assertNotNull(image);
+        // RenderedImageBrowser.showChain(image, true, true, "foo", true);
+        File reference =
+                new File(
+                        "src/test/resources/org/geotools/renderer/lite/gridcoverage2d/" + fileName);
+        ImageAssert.assertEquals(reference, image, 20);
+    }
+
+    private RasterSymbolizer buildRadardStyle() {
+        StyleBuilder sb = new StyleBuilder();
+        ColorMap cm =
+                sb.createColorMap(
+                        new String[] {"a", "b"},
+                        new double[] {-20, 50},
+                        new Color[] {Color.RED, Color.GREEN},
+                        ColorMap.TYPE_RAMP);
+        RasterSymbolizer rasterSymbolizer = sb.createRasterSymbolizer(cm, 1d);
+        return rasterSymbolizer;
     }
 }

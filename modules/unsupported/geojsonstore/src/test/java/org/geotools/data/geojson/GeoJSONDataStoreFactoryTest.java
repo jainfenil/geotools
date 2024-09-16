@@ -19,13 +19,16 @@ package org.geotools.data.geojson;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import org.geotools.data.DataStore;
+import org.geotools.data.DataStoreFactorySpi;
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.Query;
@@ -40,40 +43,39 @@ public class GeoJSONDataStoreFactoryTest {
 
     private URL url;
     private DataStore store;
+    GeoJSONDataStoreFactory fac = new GeoJSONDataStoreFactory();
 
     @Before
     public void setUp() throws Exception {
         url = TestData.url(GeoJSONDataStore.class, "ne_110m_admin_1_states_provinces.geojson");
-        Map<String, Serializable> params = new HashMap<String, Serializable>();
-        params.put("url", url);
-
-        store = DataStoreFinder.getDataStore(params);
+        Map<String, Serializable> params = new HashMap<>();
+        params.put(GeoJSONDataStoreFactory.URL_PARAM.key, url);
+        store = fac.createDataStore(params);
         assertNotNull("didn't create store", store);
     }
 
     @Test
     public void testExtensions() throws IOException {
         URL t1 = new URL("http://example.com/ian.json");
-        Map<String, Serializable> params = new HashMap<String, Serializable>();
-        params.put("url", t1);
+        Map<String, Serializable> params = new HashMap<>();
+        params.put(GeoJSONDataStoreFactory.URL_PARAM.key, t1);
 
-        DataStore store1 = DataStoreFinder.getDataStore(params);
+        DataStore store1 = fac.createDataStore(params);
         assertNotNull("didn't create store", store1);
         URL t2 = new URL("http://example.com/ian.geojson");
 
-        params.put("url", t2);
-        store1 = DataStoreFinder.getDataStore(params);
-        assertNotNull("didn't create store", store1);
+        params.put(GeoJSONDataStoreFactory.URL_PARAM.key, t2);
+        if (!fac.canProcess(params)) fail("Didn't handle URL;");
 
         URL t3 = new URL("http://example.com/ian.randomjson");
         store1 = null;
-        params.put("url", t3);
-        store = DataStoreFinder.getDataStore(params);
+        params.put(GeoJSONDataStoreFactory.URL_PARAM.key, t3);
+        store = fac.createDataStore(params);
         assertNull("created bad store", store1);
         URL t4 = new URL("http://example.com/ian.random");
         store1 = null;
-        params.put("url", t4);
-        store = DataStoreFinder.getDataStore(params);
+        params.put(GeoJSONDataStoreFactory.URL_PARAM.key, t4);
+        store = fac.createDataStore(params);
         assertNull("created bad store", store1);
     }
 
@@ -97,8 +99,25 @@ public class GeoJSONDataStoreFactoryTest {
     @Test
     public void testGetFeatureReader() throws IOException {
         String names[] = store.getTypeNames();
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader =
-                store.getFeatureReader(new Query(names[0], Filter.INCLUDE), null);
-        assertNotNull("failed to get FeatureReader", reader);
+        try (FeatureReader<SimpleFeatureType, SimpleFeature> reader =
+                store.getFeatureReader(new Query(names[0], Filter.INCLUDE), null)) {
+            assertNotNull("failed to get FeatureReader", reader);
+        }
+    }
+
+    @Test
+    public void testAvailability() {
+
+        Iterator<DataStoreFactorySpi> stores = DataStoreFinder.getAllDataStores();
+        boolean found = false;
+        GeoJSONDataStoreFactory expected = new GeoJSONDataStoreFactory();
+        while (stores.hasNext()) {
+            if (stores.next().getDisplayName().equalsIgnoreCase(expected.getDisplayName())) {
+                found = true;
+            }
+        }
+        if (!found) {
+            fail("GeoJSONDataStoreFactory not available");
+        }
     }
 }

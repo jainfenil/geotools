@@ -56,16 +56,7 @@ public abstract class AbstractLazyAttributeTypeImpl implements AttributeType {
 
     private AttributeType superType;
 
-    /**
-     * Constructor arguments have the same meaning as in {@link AttributeTypeImpl}.
-     *
-     * @param name
-     * @param binding
-     * @param identified
-     * @param isAbstract
-     * @param restrictions
-     * @param description
-     */
+    /** Constructor arguments have the same meaning as in {@link AttributeTypeImpl}. */
     public AbstractLazyAttributeTypeImpl(
             Name name,
             Class<?> binding,
@@ -86,10 +77,10 @@ public abstract class AbstractLazyAttributeTypeImpl implements AttributeType {
         if (restrictions == null) {
             this.restrictions = Collections.emptyList();
         } else {
-            this.restrictions = Collections.unmodifiableList(new ArrayList<Filter>(restrictions));
+            this.restrictions = Collections.unmodifiableList(new ArrayList<>(restrictions));
         }
         this.description = description;
-        this.userData = new HashMap<Object, Object>();
+        this.userData = new HashMap<>();
     }
 
     /**

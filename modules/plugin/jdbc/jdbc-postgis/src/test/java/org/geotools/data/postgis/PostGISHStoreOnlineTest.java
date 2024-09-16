@@ -21,12 +21,14 @@ import java.util.logging.Logger;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.Query;
 import org.geotools.data.store.ContentFeatureSource;
+import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.jdbc.JDBCTestSetup;
 import org.geotools.jdbc.JDBCTestSupport;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.FilterFactory;
 import org.opengis.filter.PropertyIsEqualTo;
+import org.opengis.filter.expression.Function;
 
 public class PostGISHStoreOnlineTest extends JDBCTestSupport {
 
@@ -61,9 +63,9 @@ public class PostGISHStoreOnlineTest extends JDBCTestSupport {
         assertNotNull(object);
         assertTrue(object instanceof HStore);
         HStore hstore = (HStore) object;
-        assertTrue(hstore.size() == 1);
+        assertEquals(1, hstore.size());
         assertTrue(hstore.containsKey("key1"));
-        assertTrue(hstore.get("key1").equals("value1"));
+        assertEquals("value1", hstore.get("key1"));
         LOGGER.info(name + " hstore content: " + hstore.toString());
     }
 
@@ -77,11 +79,11 @@ public class PostGISHStoreOnlineTest extends JDBCTestSupport {
         assertNotNull(object);
         assertTrue(object instanceof HStore);
         HStore hstore = (HStore) object;
-        assertTrue(hstore.size() == 2);
+        assertEquals(2, hstore.size());
         assertTrue(hstore.containsKey("key2"));
-        assertTrue(hstore.get("key2").equals("value2"));
+        assertEquals("value2", hstore.get("key2"));
         assertTrue(hstore.containsKey("key3"));
-        assertTrue(hstore.get("key3").equals("value3"));
+        assertEquals("value3", hstore.get("key3"));
         LOGGER.info(name + " hstore content: " + hstore.toString());
     }
 
@@ -95,7 +97,7 @@ public class PostGISHStoreOnlineTest extends JDBCTestSupport {
         assertNotNull(object);
         assertTrue(object instanceof HStore);
         HStore hstore = (HStore) object;
-        assertTrue(hstore.size() == 1);
+        assertEquals(1, hstore.size());
         assertTrue(hstore.containsKey("key4"));
         assertNull(hstore.get("key4"));
         LOGGER.info(name + " hstore content: " + hstore.toString());
@@ -122,6 +124,24 @@ public class PostGISHStoreOnlineTest extends JDBCTestSupport {
         }
         Object object = getHstoreColumnForFeatureWithName("nullcontent");
         assertNull(object);
+    }
+
+    @Test
+    public void testMapGetFunctionOnHstore() throws IOException {
+        if (skipTests()) {
+            return;
+        }
+        // Simply test that the MapGet Filter Function will also work against returned
+        // HSTORE objects which, at the end, are basically maps.
+        ContentFeatureSource fs = dataStore.getFeatureSource(tname("hstoretest"));
+        FilterFactory ff = CommonFactoryFinder.getFilterFactory2();
+
+        Function f = ff.function("mapGet", ff.property("mapping"), ff.literal("key2"));
+        PropertyIsEqualTo filter = ff.equals(f, ff.literal("value2"));
+        Query q = new Query(tname("hstoretest"), filter);
+        SimpleFeature result = DataUtilities.first(fs.getFeatures(q));
+        assertNotNull(result);
+        assertEquals("doublepair", result.getAttribute("name").toString());
     }
 
     private Object getHstoreColumnForFeatureWithName(String name) throws IOException {

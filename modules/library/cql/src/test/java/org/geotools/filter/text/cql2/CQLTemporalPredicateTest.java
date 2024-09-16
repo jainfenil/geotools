@@ -61,11 +61,7 @@ public class CQLTemporalPredicateTest {
         this(Language.CQL);
     }
 
-    /**
-     * New instance of CQLTemporalPredicateTest
-     *
-     * @param language
-     */
+    /** New instance of CQLTemporalPredicateTest */
     protected CQLTemporalPredicateTest(final Language language) {
 
         assert language != null : "language cannot be null value";
@@ -76,18 +72,17 @@ public class CQLTemporalPredicateTest {
     /** This test for BEFORE rule */
     @Test
     public void before() throws Exception {
-        Filter resultFilter;
-        Filter expected;
 
         // -------------------------------------------------------------
         // <attribute_name> BEFORE <date-time expression>
         // -------------------------------------------------------------
         // ATTR1 BEFORE 2006-12-31T01:30:00Z
-        resultFilter = CompilerUtil.parseFilter(this.language, FilterCQLSample.FILTER_BEFORE_DATE);
+        Filter resultFilter =
+                CompilerUtil.parseFilter(this.language, FilterCQLSample.FILTER_BEFORE_DATE);
 
         Assert.assertNotNull("not null expected", resultFilter);
 
-        expected = FilterCQLSample.getSample(FilterCQLSample.FILTER_BEFORE_DATE);
+        Filter expected = FilterCQLSample.getSample(FilterCQLSample.FILTER_BEFORE_DATE);
         Assert.assertEquals(expected, resultFilter);
 
         // ATTR1 BEFORE 2006-12-31T01:30:00.123Z
@@ -168,11 +163,7 @@ public class CQLTemporalPredicateTest {
         Assert.assertEquals("greater filter", expected, resultFilter);
     }
 
-    /**
-     * It must produce a filter with an instance of Date object
-     *
-     * @throws Exception
-     */
+    /** It must produce a filter with an instance of Date object */
     @Test(expected = CQLException.class)
     public void lostTime() throws CQLException {
 
@@ -190,11 +181,7 @@ public class CQLTemporalPredicateTest {
                 "CQLException is expected. The \"date-time\" rule require a time preceded by \"T\"");
     }
 
-    /**
-     * It must produce a filter with an instance of Date object
-     *
-     * @throws Exception
-     */
+    /** It must produce a filter with an instance of Date object */
     @Test
     public void dateTime() throws Exception {
 
@@ -219,11 +206,7 @@ public class CQLTemporalPredicateTest {
         Assert.assertEquals(expectedDate, actualDate);
     }
 
-    /**
-     * Test local time
-     *
-     * @throws Exception
-     */
+    /** Test local time */
     @Test
     public void dateTimeWithLocalTime() throws Exception {
 
@@ -249,11 +232,7 @@ public class CQLTemporalPredicateTest {
         Assert.assertEquals(expectedDate, actualDate);
     }
 
-    /**
-     * Test time zone offset
-     *
-     * @throws Exception
-     */
+    /** Test time zone offset */
     @Test
     public void dateTimeWithOffset() throws Exception {
 
@@ -312,8 +291,6 @@ public class CQLTemporalPredicateTest {
      * before with compound attribute
      *
      * <p>sample: gmd:aa:bb.gmd:cc.gmd:dd BEFORE P10Y10M10DT5H5M5S/2006-11-30T01:30:00Z
-     *
-     * @throws CQLException
      */
     @Test
     public void beforeCompundProperty() throws CQLException {
@@ -353,20 +330,18 @@ public class CQLTemporalPredicateTest {
      */
     @Test
     public void beforeOrDuring() throws Exception {
-        Filter resultFilter;
-        Filter expected;
         // -------------------------------------------------------------
         // <attribute_name> BEFORE OR DURING <period>
         // -------------------------------------------------------------
         // ATTR1 BEFORE OR DURING 2006-11-31T01:30:00Z/2006-12-31T01:30:00Z
-        resultFilter =
+        Filter resultFilter =
                 CompilerUtil.parseFilter(
                         this.language,
                         FilterCQLSample.FILTER_BEFORE_OR_DURING_PERIOD_BETWEEN_DATES);
 
         Assert.assertNotNull("Filter expected", resultFilter);
 
-        expected =
+        Filter expected =
                 FilterCQLSample.getSample(
                         FilterCQLSample.FILTER_BEFORE_OR_DURING_PERIOD_BETWEEN_DATES);
 
@@ -420,19 +395,17 @@ public class CQLTemporalPredicateTest {
      */
     @Test
     public void duringOrAfter() throws Exception {
-        Filter resultFilter;
-        Filter expected;
         // -------------------------------------------------------------
         // <attribute_name> BEFORE OR DURING <period>
         // -------------------------------------------------------------
         // ATTR1 DURING OF AFTER 2006-11-31T01:30:00Z/2006-12-31T01:30:00Z
-        resultFilter =
+        Filter resultFilter =
                 CompilerUtil.parseFilter(
                         this.language, FilterCQLSample.FILTER_DURING_OR_AFTER_PERIOD_BETWEEN_DATES);
 
         Assert.assertNotNull("Filter expected", resultFilter);
 
-        expected =
+        Filter expected =
                 FilterCQLSample.getSample(
                         FilterCQLSample.FILTER_DURING_OR_AFTER_PERIOD_BETWEEN_DATES);
 
@@ -490,17 +463,16 @@ public class CQLTemporalPredicateTest {
      */
     @Test
     public void during() throws Exception {
-        Filter resultFilter;
-        Filter expected;
 
         // ATTR1 DURING 2006-11-30T01:30:00Z/2006-12-31T01:30:00Z
-        resultFilter =
+        Filter resultFilter =
                 CompilerUtil.parseFilter(
                         this.language, FilterCQLSample.FILTER_DURING_PERIOD_BETWEEN_DATES);
 
         Assert.assertNotNull("Filter expected", resultFilter);
 
-        expected = FilterCQLSample.getSample(FilterCQLSample.FILTER_DURING_PERIOD_BETWEEN_DATES);
+        Filter expected =
+                FilterCQLSample.getSample(FilterCQLSample.FILTER_DURING_PERIOD_BETWEEN_DATES);
 
         Assert.assertEquals("greater filter ", expected, resultFilter);
 
@@ -548,18 +520,17 @@ public class CQLTemporalPredicateTest {
      */
     @Test
     public void after() throws Exception {
-        Filter resultFilter;
-        Filter expected;
 
         // -------------------------------------------------------------
         // <attribute_name> AFTER <date-time expression>
         // -------------------------------------------------------------
         //
-        resultFilter = CompilerUtil.parseFilter(this.language, FilterCQLSample.FILTER_AFTER_DATE);
+        Filter resultFilter =
+                CompilerUtil.parseFilter(this.language, FilterCQLSample.FILTER_AFTER_DATE);
 
         Assert.assertNotNull("Filter expected", resultFilter);
 
-        expected = FilterCQLSample.getSample(FilterCQLSample.FILTER_AFTER_DATE);
+        Filter expected = FilterCQLSample.getSample(FilterCQLSample.FILTER_AFTER_DATE);
 
         Assert.assertEquals("greater filter ", expected, resultFilter);
 
@@ -672,8 +643,6 @@ public class CQLTemporalPredicateTest {
      * <p>http://jira.codehaus.org/browse/GEOT-2157?page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel&focusedCommentId=154661#action_154661
      *
      * <p>Note: this test is ignored to avoid to add cycles in the geotools general build.
-     *
-     * @throws Exception
      */
     @Ignore
     public void issueCOT2157() throws Exception {
@@ -698,8 +667,8 @@ public class CQLTemporalPredicateTest {
             threadList[i] = new Thread(cqlRunner);
         }
 
-        for (int i = 0; i < threadList.length; i++) {
-            threadList[i].start();
+        for (Thread thread : threadList) {
+            thread.start();
         }
     }
 

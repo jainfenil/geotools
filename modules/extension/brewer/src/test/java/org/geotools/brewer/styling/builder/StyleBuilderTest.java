@@ -1,10 +1,10 @@
 package org.geotools.brewer.styling.builder;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 import java.awt.Color;
 import java.util.Arrays;
@@ -176,7 +176,7 @@ public class StyleBuilderTest {
         assertNull(b.unset().build());
         assertNotNull(b.reset().build());
 
-        b = new ExtentBuilder(this);
+        b = new ExtentBuilder<>(this);
     }
 
     @Test
@@ -248,7 +248,7 @@ public class StyleBuilderTest {
         assertNull(b.unset().build());
         assertNotNull(b.reset().build());
 
-        b = new LayerFeatureConstraintsBuilder(this);
+        b = new LayerFeatureConstraintsBuilder<>(this);
     }
 
     @Test
@@ -422,7 +422,7 @@ public class StyleBuilderTest {
         symb.stroke().color(Color.BLUE).width(1).opacity(0.5);
         symb.fill().color(Color.CYAN).opacity(0.5);
 
-        Style style = sb.build();
+        sb.build();
 
         // now what do we test :-)
     }
@@ -441,6 +441,17 @@ public class StyleBuilderTest {
         assertEquals(literal, stroke.dashArray().get(1));
     }
 
+    @Test
+    public void testBackgroundFill() {
+        StyleBuilder sb = new StyleBuilder();
+        sb.background().color(Color.RED);
+        Style style = sb.build();
+
+        Fill background = style.getBackground();
+        assertNotNull(background);
+        assertEquals(Color.RED, background.getColor().evaluate(null, Color.class));
+    }
+
     /*
      * public void test(){ FeatureTypeFactory factory =
      * CommonFactoryFinder.getFeatureTypeFactory(null);
@@ -456,7 +467,7 @@ public class StyleBuilderTest {
      * ); properties.add( uom );
      *
      * ComplexType MEASURE_TYPE = factory.createComplexType( new NameImpl("MeasureType"),
-     * properties, true, false, Collections.EMPTY_LIST, null, null );
+     * properties, true, false, Collections.emptyList(), null, null );
      *
      *
      * }

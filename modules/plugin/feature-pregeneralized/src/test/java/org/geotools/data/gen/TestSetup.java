@@ -23,9 +23,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import org.geotools.TestData;
 import org.geotools.data.DefaultRepository;
 import org.geotools.data.DefaultTransaction;
@@ -67,12 +69,12 @@ public class TestSetup {
             createShapeFilePyramd();
 
             REPOSITORY = new DefaultRepository();
-            POINTMAP = new HashMap<Double, Map<String, Integer>>();
-            POINTMAP.put(0.0, new HashMap<String, Integer>());
-            POINTMAP.put(5.0, new HashMap<String, Integer>());
-            POINTMAP.put(10.0, new HashMap<String, Integer>());
-            POINTMAP.put(20.0, new HashMap<String, Integer>());
-            POINTMAP.put(50.0, new HashMap<String, Integer>());
+            POINTMAP = new HashMap<>();
+            POINTMAP.put(0.0, new HashMap<>());
+            POINTMAP.put(5.0, new HashMap<>());
+            POINTMAP.put(10.0, new HashMap<>());
+            POINTMAP.put(20.0, new HashMap<>());
+            POINTMAP.put(50.0, new HashMap<>());
 
             URL url = TestData.url("shapes/streams.shp");
 
@@ -101,30 +103,29 @@ public class TestSetup {
                             ds.getSchema(), "dsStreams_5_10_20_50", "streams_5_10_20_50");
 
             // StreamsFeatureSource = ds.getFeatureSource(typeName);
-            Transaction t = new DefaultTransaction();
             Query query = new Query(typeName, Filter.INCLUDE);
-            FeatureReader<SimpleFeatureType, SimpleFeature> reader = ds.getFeatureReader(query, t);
-            while (reader.hasNext()) {
+            try (Transaction t = new DefaultTransaction();
+                    FeatureReader<SimpleFeatureType, SimpleFeature> reader =
+                            ds.getFeatureReader(query, t)) {
+                while (reader.hasNext()) {
 
-                SimpleFeature stream = reader.next();
+                    SimpleFeature stream = reader.next();
 
-                POINTMAP.get(0.0)
-                        .put(
-                                stream.getID(),
-                                ((Geometry) stream.getDefaultGeometry()).getNumPoints());
+                    POINTMAP.get(0.0)
+                            .put(
+                                    stream.getID(),
+                                    ((Geometry) stream.getDefaultGeometry()).getNumPoints());
 
-                addGeneralizedFeatureVertical(stream, dsStreams_5, 5.0);
-                addGeneralizedFeatureVertical(stream, dsStreams_10, 10.0);
-                addGeneralizedFeatureVertical(stream, dsStreams_20, 20.0);
-                addGeneralizedFeatureVertical(stream, dsStreams_50, 50.0);
+                    addGeneralizedFeatureVertical(stream, dsStreams_5, 5.0);
+                    addGeneralizedFeatureVertical(stream, dsStreams_10, 10.0);
+                    addGeneralizedFeatureVertical(stream, dsStreams_20, 20.0);
+                    addGeneralizedFeatureVertical(stream, dsStreams_50, 50.0);
 
-                addGeneralizedFeatureMixed(stream, dsStreams_5_10, 5.0, 10.0);
-                addGeneralizedFeatureMixed(stream, dsStreams_20_50, 20.0, 50.0);
-                addGeneralizedFeatureHorizontal(stream, dsStreams_5_10_20_50);
+                    addGeneralizedFeatureMixed(stream, dsStreams_5_10, 5.0, 10.0);
+                    addGeneralizedFeatureMixed(stream, dsStreams_20_50, 20.0, 50.0);
+                    addGeneralizedFeatureHorizontal(stream, dsStreams_5_10_20_50);
+                }
             }
-
-            reader.close();
-            t.close();
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -136,8 +137,10 @@ public class TestSetup {
             SimpleFeatureType typ, String name, String fname) throws IOException {
         MemoryDataStore memDS = new MemoryDataStore();
 
-        List<AttributeDescriptor> attrs = new ArrayList<AttributeDescriptor>();
+        List<AttributeDescriptor> attrs = new ArrayList<>();
         attrs.addAll(typ.getAttributeDescriptors());
+        // have a non linear mapping between source attributes and target attributes
+        Collections.shuffle(attrs, new Random(1));
 
         SimpleFeatureTypeImpl sft =
                 new SimpleFeatureTypeImpl(
@@ -157,8 +160,11 @@ public class TestSetup {
     private static MemoryDataStore createMemStoreMixed(
             SimpleFeatureType typ, String name, String fname) throws IOException {
         MemoryDataStore memDS = new MemoryDataStore();
-        List<AttributeDescriptor> attrs = new ArrayList<AttributeDescriptor>();
+        List<AttributeDescriptor> attrs = new ArrayList<>();
         attrs.addAll(typ.getAttributeDescriptors());
+        // have a non linear mapping between source attributes and target attributes
+        Collections.shuffle(attrs, new Random(1));
+
         GeometryDescriptorImpl geom2Descr =
                 new GeometryDescriptorImpl(
                         typ.getGeometryDescriptor().getType(),
@@ -187,8 +193,10 @@ public class TestSetup {
             SimpleFeatureType typ, String name, String fname) throws IOException {
         MemoryDataStore memDS = new MemoryDataStore();
 
-        List<AttributeDescriptor> attrs = new ArrayList<AttributeDescriptor>();
+        List<AttributeDescriptor> attrs = new ArrayList<>();
         attrs.addAll(typ.getAttributeDescriptors());
+        // have a non linear mapping between source attributes and target attributes
+        Collections.shuffle(attrs, new Random(1));
 
         GeometryDescriptorImpl geom2Descr =
                 new GeometryDescriptorImpl(
@@ -298,7 +306,6 @@ public class TestSetup {
     }
 
     private static void createShapeFilePyramd() throws IOException {
-        URL url = null;
 
         File baseDir = new File("target" + File.separator + "0");
         if (baseDir.exists() == false) baseDir.mkdir();
@@ -308,18 +315,18 @@ public class TestSetup {
         String propFileName =
                 "target" + File.separator + "0" + File.separator + "streams.properties";
         File propFile = new File(propFileName);
-        FileOutputStream out = new FileOutputStream(propFile);
-        String line = ShapefileDataStoreFactory.URLP.key + "=" + "file:target/0/streams.shp\n";
-        out.write(line.getBytes());
-        out.close();
+        try (FileOutputStream out = new FileOutputStream(propFile)) {
+            String line = ShapefileDataStoreFactory.URLP.key + "=" + "file:target/0/streams.shp\n";
+            out.write(line.getBytes());
+        }
         // ////////
 
-        url = TestData.url("shapes/streams.shp");
+        URL url = TestData.url("shapes/streams.shp");
 
         ShapefileDataStore shapeDS =
                 (ShapefileDataStore) new ShapefileDataStoreFactory().createDataStore(url);
 
-        Map<String, Serializable> params = new HashMap<String, Serializable>();
+        Map<String, Serializable> params = new HashMap<>();
         FileDataStoreFactorySpi factory = new ShapefileDataStoreFactory();
         params.put(
                 ShapefileDataStoreFactory.URLP.key,
@@ -330,21 +337,16 @@ public class TestSetup {
 
         ds.createSchema(fs.getSchema());
         ds.forceSchemaCRS(fs.getSchema().getCoordinateReferenceSystem());
-        FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
-                ds.getFeatureWriter(ds.getTypeNames()[0], Transaction.AUTO_COMMIT);
-
-        SimpleFeatureIterator it = fs.getFeatures().features();
-        try {
+        try (FeatureWriter<SimpleFeatureType, SimpleFeature> writer =
+                        ds.getFeatureWriter(ds.getTypeNames()[0], Transaction.AUTO_COMMIT);
+                SimpleFeatureIterator it = fs.getFeatures().features()) {
             while (it.hasNext()) {
                 SimpleFeature f = it.next();
                 SimpleFeature fNew = writer.next();
                 fNew.setAttributes(f.getAttributes());
                 writer.write();
             }
-        } finally {
-            it.close();
         }
-        writer.close();
         ds.dispose();
         shapeDS.dispose();
 

@@ -54,7 +54,7 @@ public class FeatureListenerManager {
         WeakReference<FeatureListener> reference;
 
         public WeakFeatureListener(FeatureListener listener) {
-            reference = new WeakReference<FeatureListener>(listener);
+            reference = new WeakReference<>(listener);
         }
 
         public void changed(FeatureEvent featureEvent) {
@@ -72,38 +72,23 @@ public class FeatureListenerManager {
      * up after their FeatureSource is no longer referenced.
      */
     Map<FeatureSource<? extends FeatureType, ? extends Feature>, EventListenerList> listenerMap =
-            new WeakHashMap<
-                    FeatureSource<? extends FeatureType, ? extends Feature>, EventListenerList>();
+            new WeakHashMap<>();
 
-    /**
-     * Used by FeaureSource implementations to provide listener support.
-     *
-     * @param featureSource
-     * @param featureListener
-     */
+    /** Used by FeaureSource implementations to provide listener support. */
     public void addFeatureListener(
             FeatureSource<? extends FeatureType, ? extends Feature> featureSource,
             FeatureListener featureListener) {
         eventListenerList(featureSource).add(FeatureListener.class, featureListener);
     }
 
-    /**
-     * Used to clean up a weak reference to a feature listener after it is no longer in use.
-     *
-     * @param listener
-     */
+    /** Used to clean up a weak reference to a feature listener after it is no longer in use. */
     void removeFeatureListener(WeakFeatureListener listener) {
         for (EventListenerList list : listenerMap.values()) {
             list.remove(FeatureListener.class, listener);
         }
     }
 
-    /**
-     * Used by SimpleFeatureSource implementations to provide listener support.
-     *
-     * @param featureSource
-     * @param featureListener
-     */
+    /** Used by SimpleFeatureSource implementations to provide listener support. */
     public void removeFeatureListener(
             FeatureSource<? extends FeatureType, ? extends Feature> featureSource,
             FeatureListener featureListener) {
@@ -117,12 +102,7 @@ public class FeatureListenerManager {
         }
     }
 
-    /**
-     * Retrieve the EvenListenerList for the provided FeatureSource.
-     *
-     * @param featureSource
-     * @return
-     */
+    /** Retrieve the EvenListenerList for the provided FeatureSource. */
     private EventListenerList eventListenerList(
             FeatureSource<? extends FeatureType, ? extends Feature> featureSource) {
         synchronized (listenerMap) {
@@ -156,8 +136,7 @@ public class FeatureListenerManager {
      */
     Map<SimpleFeatureSource, FeatureListener[]> getListeners(
             String typeName, Transaction transaction) {
-        Map<SimpleFeatureSource, FeatureListener[]> map =
-                new HashMap<SimpleFeatureSource, FeatureListener[]>();
+        Map<SimpleFeatureSource, FeatureListener[]> map = new HashMap<>();
         // Map.Entry<SimpleFeatureSource,FeatureListener[]> entry;
         SimpleFeatureSource featureSource;
         EventListenerList listenerList;
@@ -179,7 +158,7 @@ public class FeatureListenerManager {
                 }
 
                 listenerList = (EventListenerList) entry.getValue();
-                listeners = (FeatureListener[]) listenerList.getListeners(FeatureListener.class);
+                listeners = listenerList.getListeners(FeatureListener.class);
 
                 if (listeners.length != 0) {
                     map.put(featureSource, listeners);
@@ -244,10 +223,6 @@ public class FeatureListenerManager {
     /**
      * Provided event will be used as a template for notifying all FeatureSources for the provided
      * typeName.
-     *
-     * @param typeName
-     * @param transaction
-     * @param event
      */
     public void fireEvent(String typeName, Transaction transaction, FeatureEvent event) {
         if (event.getType() == FeatureEvent.Type.COMMIT
@@ -364,12 +339,7 @@ public class FeatureListenerManager {
         }
     }
 
-    /**
-     * Fire notifications out to everyone.
-     *
-     * @param typeName
-     * @param transaction
-     */
+    /** Fire notifications out to everyone. */
     private void fireCommit(
             String typeName,
             Transaction transaction,
@@ -392,37 +362,30 @@ public class FeatureListenerManager {
 
             event = new FeatureEvent(featureSource, type, bounds);
 
-            for (int l = 0; l < listeners.length; l++) {
-                listeners[l].changed(event);
+            for (FeatureListener listener : listeners) {
+                listener.changed(event);
             }
         }
     }
-    /**
-     * Fire notifications out to those listing on this transaction.
-     *
-     * @param typeName
-     * @param transaction
-     * @param type
-     * @param bounds
-     */
+    /** Fire notifications out to those listing on this transaction. */
     private void fireEvent(
             String typeName,
             Transaction transaction,
             FeatureEvent.Type type,
             ReferencedEnvelope bounds) {
-        FeatureSource<? extends FeatureType, ? extends Feature> featureSource;
+        SimpleFeatureSource featureSource;
         FeatureListener[] listeners;
         FeatureEvent event;
         Map<SimpleFeatureSource, FeatureListener[]> map = getListeners(typeName, transaction);
 
-        for (Map.Entry entry : map.entrySet()) {
-            featureSource = (FeatureSource) entry.getKey();
-            listeners = (FeatureListener[]) entry.getValue();
+        for (Map.Entry<SimpleFeatureSource, FeatureListener[]> entry : map.entrySet()) {
+            featureSource = entry.getKey();
+            listeners = entry.getValue();
 
             event = new FeatureEvent(featureSource, type, bounds);
 
-            for (int l = 0; l < listeners.length; l++) {
-                listeners[l].changed(event);
+            for (FeatureListener listener : listeners) {
+                listener.changed(event);
             }
         }
     }

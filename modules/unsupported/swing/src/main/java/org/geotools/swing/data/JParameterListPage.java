@@ -45,7 +45,7 @@ public class JParameterListPage extends JPage {
     List<Parameter<?>> contents;
 
     /** Map of user interface ParamFields displayed to the user */
-    private Map<Parameter<?>, ParamField> fields = new HashMap<Parameter<?>, ParamField>();
+    private Map<Parameter<?>, ParamField> fields = new HashMap<>();
 
     /** Connection params for datastore */
     protected Map<String, Object> connectionParameters;
@@ -101,9 +101,8 @@ public class JParameterListPage extends JPage {
         for (Entry<Parameter<?>, ParamField> entry : fields.entrySet()) {
             Parameter<?> param = entry.getKey();
             ParamField field = entry.getValue();
-            Object value = null;
             Object object = connectionParameters.get(param.key);
-            value = Converters.convert(object, param.type);
+            Object value = Converters.convert(object, param.type);
             if (value == null) {
                 value = object;
             }

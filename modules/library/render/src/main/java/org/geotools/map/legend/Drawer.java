@@ -16,7 +16,13 @@
  */
 package org.geotools.map.legend;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -60,7 +66,6 @@ import org.locationtech.jts.geom.Polygon;
 import org.opengis.feature.IllegalAttributeException;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.filter.expression.Expression;
 import org.opengis.referencing.operation.MathTransform;
 
 /**
@@ -154,7 +159,7 @@ public class Drawer {
     }
 
     Symbolizer[] getSymbolizers(Rule rule) {
-        List<Symbolizer> symbs = new ArrayList<Symbolizer>();
+        List<Symbolizer> symbs = new ArrayList<>();
         symbs.addAll(rule.symbolizers());
         return symbs.toArray(new Symbolizer[symbs.size()]);
     }
@@ -179,9 +184,8 @@ public class Drawer {
             // set graphic size to 10 by default
             point.getGraphic()
                     .setSize(
-                            (Expression)
-                                    CommonFactoryFinder.getFilterFactory(GeoTools.getDefaultHints())
-                                            .literal(10));
+                            CommonFactoryFinder.getFilterFactory(GeoTools.getDefaultHints())
+                                    .literal(10));
 
             // danger assumes a Mark!
             Mark mark = (Mark) point.getGraphic().graphicalSymbols().get(0);
@@ -207,8 +211,8 @@ public class Drawer {
 
         LiteShape shape = new LiteShape(null, worldToScreenTransform, false);
         if (symbs == null) return;
-        for (int m = 0; m < symbs.length; m++) {
-            drawFeature(bi, feature, worldToScreenTransform, drawVertices, symbs[m], mt, shape);
+        for (Symbolizer symb : symbs) {
+            drawFeature(bi, feature, worldToScreenTransform, drawVertices, symb, mt, shape);
         }
     }
 
@@ -251,8 +255,7 @@ public class Drawer {
                 if (averageDistance > 60) pixels = 5;
                 if (pixels > 1) {
                     graphics.setColor(Color.RED);
-                    for (int i = 0; i < coords.length; i++) {
-                        Coordinate coord = coords[i];
+                    for (Coordinate coord : coords) {
                         java.awt.Point p = worldToPixel(coord, worldToScreenTransform);
                         graphics.fillRect(
                                 p.x - (pixels - 1) / 2, p.y - (pixels - 1) / 2, pixels, pixels);
@@ -362,7 +365,7 @@ public class Drawer {
 
                 g.setTransform(AffineTransform.getRotateInstance(rotation));
 
-                BufferedImage image = (BufferedImage) style.getImage();
+                BufferedImage image = style.getImage();
 
                 g.drawImage(
                         image,
@@ -417,13 +420,13 @@ public class Drawer {
         // TODO: fix the styles, the getGeometryPropertyName should probably be
         // moved into an interface...
         if (s instanceof PolygonSymbolizer) {
-            geomName = ((PolygonSymbolizer) s).getGeometryPropertyName();
+            geomName = s.getGeometryPropertyName();
         } else if (s instanceof PointSymbolizer) {
-            geomName = ((PointSymbolizer) s).getGeometryPropertyName();
+            geomName = s.getGeometryPropertyName();
         } else if (s instanceof LineSymbolizer) {
-            geomName = ((LineSymbolizer) s).getGeometryPropertyName();
+            geomName = s.getGeometryPropertyName();
         } else if (s instanceof TextSymbolizer) {
-            geomName = ((TextSymbolizer) s).getGeometryPropertyName();
+            geomName = s.getGeometryPropertyName();
         }
         return geomName;
     }
@@ -435,13 +438,7 @@ public class Drawer {
         return new java.awt.Point((int) p.getX(), (int) p.getY());
     }
 
-    /**
-     * TODO summary sentence for worldToScreenTransform ...
-     *
-     * @param bounds
-     * @param rectangle
-     * @return
-     */
+    /** TODO summary sentence for worldToScreenTransform ... */
     public static AffineTransform worldToScreenTransform(Envelope mapExtent, Rectangle screenSize) {
         double scaleX = screenSize.getWidth() / mapExtent.getWidth();
         double scaleY = screenSize.getHeight() / mapExtent.getHeight();
@@ -469,7 +466,6 @@ public class Drawer {
      * </ul>
      *
      * @param name namespace.name
-     * @param spec
      * @return Generated SimpleFeatureType
      */
     public SimpleFeatureType schema(String name, String spec) {
@@ -544,7 +540,6 @@ public class Drawer {
     /**
      * Simple feature with one attribute called "point".
      *
-     * @param point
      * @return SimpleFeature with a default geometry and no attribtues
      */
     public SimpleFeature feature(Point point) {
@@ -560,7 +555,6 @@ public class Drawer {
     /**
      * Simple Feature with a default geometry and no attribtues.
      *
-     * @param line
      * @return Feature with a default geometry and no attribtues
      */
     public SimpleFeature feature(LineString line) {
@@ -577,7 +571,6 @@ public class Drawer {
     /**
      * Simple Feature with a default geometry and no attribtues.
      *
-     * @param polygon
      * @return Feature with a default geometry and no attribtues
      */
     public SimpleFeature feature(Polygon polygon) {
@@ -594,7 +587,6 @@ public class Drawer {
     /**
      * Simple Feature with a default geometry and no attribtues.
      *
-     * @param multipoint
      * @return Feature with a default geometry and no attribtues
      */
     public SimpleFeature feature(MultiPoint multipoint) {
@@ -611,7 +603,6 @@ public class Drawer {
     /**
      * Simple Feature with a default geometry and no attribtues.
      *
-     * @param multilinestring
      * @return Feature with a default geometry and no attribtues
      */
     public SimpleFeature feature(MultiLineString multilinestring) {
@@ -629,7 +620,6 @@ public class Drawer {
     /**
      * Simple Feature with a default geometry and no attribtues.
      *
-     * @param multipolygon
      * @return Feature with a default geometry and no attribtues
      */
     public SimpleFeature feature(MultiPolygon multipolygon) {
@@ -648,8 +638,6 @@ public class Drawer {
     /**
      * Generate Point from two dimensional ordinates
      *
-     * @param x
-     * @param y
      * @return Point
      */
     public Point point(int x, int y) {
@@ -658,7 +646,6 @@ public class Drawer {
     /**
      * Generate LineStrings from two dimensional ordinates
      *
-     * @param xy
      * @return LineStirng
      */
     public LineString line(int[] xy) {
@@ -674,7 +661,6 @@ public class Drawer {
     /**
      * Generate a MultiLineString from two dimensional ordinates
      *
-     * @param xy
      * @return MultiLineStirng
      */
     public MultiLineString lines(int[][] xy) {

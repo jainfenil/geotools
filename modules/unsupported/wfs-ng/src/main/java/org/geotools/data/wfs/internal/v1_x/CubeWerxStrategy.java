@@ -104,9 +104,7 @@ public class CubeWerxStrategy extends StrictWFS_1_x_Strategy {
         Document dom;
         try {
             dom = encoder.encodeAsDOM(requestObject, opName);
-        } catch (SAXException e) {
-            throw new IOException(e);
-        } catch (TransformerException e) {
+        } catch (SAXException | TransformerException e) {
             throw new IOException(e);
         }
 
@@ -136,13 +134,12 @@ public class CubeWerxStrategy extends StrictWFS_1_x_Strategy {
         Filter[] splitFilters = super.splitFilters(typeName, queryFilter);
 
         Filter serverFilter = splitFilters[0];
-        Filter postFilter = splitFilters[1];
 
         if (!(serverFilter instanceof BinaryLogicOperator)) {
             return splitFilters;
         }
 
-        postFilter = queryFilter;
+        Filter postFilter = queryFilter;
 
         if (serverFilter instanceof Or) {
             // can't know...
@@ -151,7 +148,7 @@ public class CubeWerxStrategy extends StrictWFS_1_x_Strategy {
             boolean spatialAdded = false;
             // if a logical operator, check no more than one geometry filter is enclosed on it
             List<Filter> children =
-                    new ArrayList<Filter>(((BinaryLogicOperator) serverFilter).getChildren());
+                    new ArrayList<>(((BinaryLogicOperator) serverFilter).getChildren());
             for (Iterator<Filter> it = children.iterator(); it.hasNext(); ) {
                 Filter f = it.next();
                 if (f instanceof BinarySpatialOperator) {

@@ -17,7 +17,8 @@
 
 package org.geotools.map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,8 +83,6 @@ public class MapContentConcurrencyTest {
      * In this test we create multiple tasks: half of which add a layer to the layer list and the
      * rest which remove the layer. Then the tasks are shuffled, submitted to the executor, and all
      * started at the same time (or at least given permission to run at the same time).
-     *
-     * @throws Exception
      */
     @Test
     public void addAndRemoveOnSeparateThreads() throws Exception {
@@ -92,14 +91,14 @@ public class MapContentConcurrencyTest {
 
         Layer layer1 = new MockLayer(WORLD);
 
-        List<Runnable> tasks = new ArrayList<Runnable>(numThreads);
+        List<Runnable> tasks = new ArrayList<>(numThreads);
         int k = 0;
         while (k < numThreads / 2) {
             tasks.add(
                     new AddLayerTask(layer1, startLatch) {
                         @Override
                         public void postRun() {
-                            assertTrue(mapContent.layers().size() == 1);
+                            assertEquals(1, mapContent.layers().size());
                         }
                     });
             k++;

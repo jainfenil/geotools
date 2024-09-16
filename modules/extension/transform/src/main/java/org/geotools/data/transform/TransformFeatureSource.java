@@ -73,11 +73,6 @@ public class TransformFeatureSource implements SimpleFeatureSource {
     /**
      * Creates a transformed feature source from the original source, giving it a certain name and a
      * set of computed properties
-     *
-     * @param source
-     * @param name
-     * @param definitions
-     * @throws IOException
      */
     public TransformFeatureSource(
             SimpleFeatureSource source, Name name, List<Definition> definitions)
@@ -228,19 +223,13 @@ public class TransformFeatureSource implements SimpleFeatureSource {
         return source.getBounds(txQuery);
     }
 
-    /**
-     * Returns the set of names actually selected by the query
-     *
-     * @param attributeNames
-     * @param query
-     * @return
-     */
+    /** Returns the set of names actually selected by the query */
     private List<String> getSelectedAttributes(List<String> attributeNames, Query query) {
         if (query.getPropertyNames() == null) {
             return attributeNames;
         }
         List<String> pnames = Arrays.asList(query.getPropertyNames());
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (String an : attributeNames) {
             if (pnames.contains(an)) {
                 result.add(an);
@@ -270,7 +259,7 @@ public class TransformFeatureSource implements SimpleFeatureSource {
     @Override
     public Set<Key> getSupportedHints() {
         // set up hints
-        Set<Key> hints = new HashSet<Key>();
+        Set<Key> hints = new HashSet<>();
         hints.addAll(source.getSupportedHints());
         hints.add(Hints.FEATURE_DETACHED);
 

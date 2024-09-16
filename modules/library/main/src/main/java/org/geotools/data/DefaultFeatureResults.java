@@ -71,9 +71,6 @@ public class DefaultFeatureResults extends DataFeatureCollection {
      *
      * <p>Really? I think it would be, it would just reflect the same query against the
      * SimpleFeatureSource using AUTO_COMMIT.
-     *
-     * @param source
-     * @param query
      */
     public DefaultFeatureResults(SimpleFeatureSource source, Query query) throws IOException {
         super(null, getSchemaInternal(source, query));
@@ -177,8 +174,7 @@ public class DefaultFeatureResults extends DataFeatureCollection {
      */
     protected Transaction getTransaction() {
         if (featureSource instanceof FeatureStore) {
-            SimpleFeatureStore featureStore;
-            featureStore = (SimpleFeatureStore) featureSource;
+            SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
 
             return featureStore.getTransaction();
         } else {
@@ -192,15 +188,15 @@ public class DefaultFeatureResults extends DataFeatureCollection {
      * @return FeatureReader<SimpleFeatureType, SimpleFeature> for this Query
      * @throws IOException If results could not be obtained
      */
+    @SuppressWarnings("PMD.CloseResource") // returned, the caller will close
     public FeatureReader<SimpleFeatureType, SimpleFeature> reader() throws IOException {
-        FeatureReader<SimpleFeatureType, SimpleFeature> reader;
-        reader =
+        FeatureReader<SimpleFeatureType, SimpleFeature> reader =
                 ((DataStore) featureSource.getDataStore())
                         .getFeatureReader(query, getTransaction());
 
         int maxFeatures = query.getMaxFeatures();
         if (maxFeatures != Integer.MAX_VALUE) {
-            reader = new MaxFeatureReader<SimpleFeatureType, SimpleFeature>(reader, maxFeatures);
+            reader = new MaxFeatureReader<>(reader, maxFeatures);
         }
         if (transform != null) {
             reader = new ReprojectFeatureReader(reader, getSchema(), transform);
@@ -213,7 +209,7 @@ public class DefaultFeatureResults extends DataFeatureCollection {
      * designed for bounds computation
      */
     protected FeatureReader<SimpleFeatureType, SimpleFeature> boundsReader() throws IOException {
-        List attributes = new ArrayList();
+        List<String> attributes = new ArrayList<>();
         SimpleFeatureType schema = featureSource.getSchema();
         for (int i = 0; i < schema.getAttributeCount(); i++) {
             AttributeDescriptor at = schema.getDescriptor(i);
@@ -229,7 +225,7 @@ public class DefaultFeatureResults extends DataFeatureCollection {
         if (maxFeatures == Integer.MAX_VALUE) {
             return reader;
         } else {
-            return new MaxFeatureReader<SimpleFeatureType, SimpleFeature>(reader, maxFeatures);
+            return new MaxFeatureReader<>(reader, maxFeatures);
         }
     }
 
@@ -257,19 +253,14 @@ public class DefaultFeatureResults extends DataFeatureCollection {
                 SimpleFeature feature;
                 bounds = new ReferencedEnvelope();
 
-                FeatureReader<SimpleFeatureType, SimpleFeature> reader = boundsReader();
-                try {
+                try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = boundsReader()) {
                     while (reader.hasNext()) {
                         feature = reader.next();
                         bounds.include(feature.getBounds());
                     }
-                } finally {
-                    reader.close();
                 }
-            } catch (IllegalAttributeException e) {
+            } catch (IllegalAttributeException | IOException e) {
                 // throw new DataSourceException("Could not read feature ", e);
-                bounds = new ReferencedEnvelope();
-            } catch (IOException e) {
                 bounds = new ReferencedEnvelope();
             }
         }
@@ -288,8 +279,7 @@ public class DefaultFeatureResults extends DataFeatureCollection {
      * @see org.geotools.data.FeatureResults#getCount()
      */
     public int getCount() throws IOException {
-        int count;
-        count = featureSource.getCount(query);
+        int count = featureSource.getCount(query);
 
         if (count != -1) {
             // optimization worked, return maxFeatures if count is
@@ -302,13 +292,10 @@ public class DefaultFeatureResults extends DataFeatureCollection {
         try {
             count = 0;
 
-            FeatureReader<SimpleFeatureType, SimpleFeature> reader = reader();
-            try {
+            try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = reader()) {
                 for (; reader.hasNext(); count++) {
                     reader.next();
                 }
-            } finally {
-                reader.close();
             }
 
             return count;
@@ -321,13 +308,10 @@ public class DefaultFeatureResults extends DataFeatureCollection {
         try {
             DefaultFeatureCollection collection = new DefaultFeatureCollection(null, null);
 
-            FeatureReader<SimpleFeatureType, SimpleFeature> reader = reader();
-            try {
+            try (FeatureReader<SimpleFeatureType, SimpleFeature> reader = reader()) {
                 while (reader.hasNext()) {
                     collection.add(reader.next());
                 }
-            } finally {
-                reader.close();
             }
 
             return collection;

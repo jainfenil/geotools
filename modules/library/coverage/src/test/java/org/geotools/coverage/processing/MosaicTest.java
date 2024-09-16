@@ -16,8 +16,11 @@
  */
 package org.geotools.coverage.processing;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.sun.media.jai.util.CacheDiagnostics;
 import it.geosolutions.imageioimpl.plugins.tiff.TIFFImageReader;
@@ -26,6 +29,7 @@ import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -59,10 +63,12 @@ import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.image.util.ImageUtilities;
 import org.geotools.referencing.CRS;
+import org.geotools.referencing.crs.DefaultEngineeringCRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.operation.builder.GridToEnvelopeMapper;
 import org.geotools.util.factory.GeoTools;
 import org.geotools.util.factory.Hints;
+import org.hamcrest.CoreMatchers;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -153,14 +159,7 @@ public class MosaicTest extends GridProcessingTestBase {
         coverage4 = readInputFile("sampleData4");
     }
 
-    /**
-     * Private method for reading the input file.
-     *
-     * @param filename
-     * @return
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
+    /** Private method for reading the input file. */
     private static GridCoverage2D readInputFile(String filename)
             throws FileNotFoundException, IOException {
         final File tiff = TestData.file(MosaicTest.class, filename + ".tif");
@@ -216,7 +215,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage1);
         sources.add(coverage2);
         // Setting of the sources
@@ -224,7 +223,7 @@ public class MosaicTest extends GridProcessingTestBase {
         // RenderingHints
         Hints hints = new Hints();
         // Ensure No Layout is set
-        Assert.assertTrue(!hints.containsKey(JAI.KEY_IMAGE_LAYOUT));
+        assertFalse(hints.containsKey(JAI.KEY_IMAGE_LAYOUT));
         // Add a fake Layout for the operation
         ImageLayout il = new ImageLayout();
         hints.put(JAI.KEY_IMAGE_LAYOUT, il);
@@ -277,10 +276,10 @@ public class MosaicTest extends GridProcessingTestBase {
         Assert.assertTrue(hints.containsKey(JAI.KEY_IMAGE_LAYOUT));
         // Ensure no additional bound parameter is set
         ImageLayout layout = (ImageLayout) hints.get(JAI.KEY_IMAGE_LAYOUT);
-        Assert.assertTrue(!layout.isValid(ImageLayout.MIN_X_MASK));
-        Assert.assertTrue(!layout.isValid(ImageLayout.MIN_Y_MASK));
-        Assert.assertTrue(!layout.isValid(ImageLayout.WIDTH_MASK));
-        Assert.assertTrue(!layout.isValid(ImageLayout.HEIGHT_MASK));
+        assertFalse(layout.isValid(ImageLayout.MIN_X_MASK));
+        assertFalse(layout.isValid(ImageLayout.MIN_Y_MASK));
+        assertFalse(layout.isValid(ImageLayout.WIDTH_MASK));
+        assertFalse(layout.isValid(ImageLayout.HEIGHT_MASK));
         Assert.assertTrue(layout.isValid(ImageLayout.TILE_HEIGHT_MASK));
         Assert.assertTrue(layout.isValid(ImageLayout.TILE_WIDTH_MASK));
         return mosaic;
@@ -305,18 +304,23 @@ public class MosaicTest extends GridProcessingTestBase {
     }
 
     private GridCoverage2D getCoverageWithFullROI(GridCoverage2D coverage) {
-        Map<String, Object> properties =
-                new HashMap<>(
-                        (coverage.getProperties() != null)
-                                ? coverage.getProperties()
-                                : Collections.emptyMap());
         RenderedImage ri = coverage.getRenderedImage();
         ROIShape roi = new ROIShape(getImageBounds(ri));
+        return getCoverageWithROI(coverage, roi);
+    }
+
+    private GridCoverage2D getCoverageWithROI(GridCoverage2D coverage, ROI roi) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> map =
+                (coverage.getProperties() != null)
+                        ? coverage.getProperties()
+                        : Collections.emptyMap();
+        Map<String, Object> properties = new HashMap<>(map);
         CoverageUtilities.setROIProperty(properties, roi);
         GridCoverage2D coverageWithRoi =
                 GRID_COVERAGE_FACTORY.create(
                         coverage.getName(),
-                        ri,
+                        coverage.getRenderedImage(),
                         coverage.getEnvelope(),
                         coverage.getSampleDimensions(),
                         null,
@@ -348,7 +352,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage1);
         sources.add(coverage2);
         // Setting of the sources
@@ -406,7 +410,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage3);
         sources.add(coverage4);
         // Setting of the sources
@@ -466,7 +470,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage1);
         sources.add(coverage2);
         // Setting of the sources
@@ -537,7 +541,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage1);
         sources.add(coverage2);
         // Setting of the sources
@@ -557,7 +561,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage1);
 
         // Resampling of the second Coverage to an higher resolution
@@ -626,7 +630,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage1);
 
         // Resampling of the second Coverage to an higher resolution
@@ -695,7 +699,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage1);
 
         // Reprojection of the second Coverage
@@ -856,7 +860,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         GridCoverage2D world = readWorldPaletted();
         sources.add(world);
         ReferencedEnvelope reShifted =
@@ -908,11 +912,7 @@ public class MosaicTest extends GridProcessingTestBase {
         disposeCoveragePlanarImage(coverage2);
     }
 
-    /**
-     * Method for disposing the {@link RenderedImage} chain of the {@link GridCoverage2D}
-     *
-     * @param coverage
-     */
+    /** Method for disposing the {@link RenderedImage} chain of the {@link GridCoverage2D} */
     private static void disposeCoveragePlanarImage(GridCoverage2D coverage) {
         // Dispose the single planar image since some images are input of other tests and
         // disposing the whole chain may therefore throw exceptions
@@ -920,12 +920,7 @@ public class MosaicTest extends GridProcessingTestBase {
                 PlanarImage.wrapRenderedImage(coverage.getRenderedImage()));
     }
 
-    /**
-     * Method for calculating the resolution of the input {@link GridCoverage2D}
-     *
-     * @param coverage
-     * @return
-     */
+    /** Method for calculating the resolution of the input {@link GridCoverage2D} */
     private static double calculateResolution(GridCoverage2D coverage) {
         GridGeometry2D gg2D = coverage.getGridGeometry();
         double envW = gg2D.getEnvelope2D().width;
@@ -934,12 +929,7 @@ public class MosaicTest extends GridProcessingTestBase {
         return res;
     }
 
-    /**
-     * Method which ensures that the two {@link Envelope2D} objects are equals.
-     *
-     * @param expected
-     * @param actual
-     */
+    /** Method which ensures that the two {@link Envelope2D} objects are equals. */
     private void assertEqualBBOX(Envelope2D expected, Envelope2D actual) {
         Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
         Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);
@@ -947,20 +937,14 @@ public class MosaicTest extends GridProcessingTestBase {
         Assert.assertEquals(expected.getWidth(), actual.getWidth(), TOLERANCE);
     }
 
-    /**
-     * Method for cropping the input coverage with the defined envelope.
-     *
-     * @param gc
-     * @param envelope
-     * @return
-     */
+    /** Method for cropping the input coverage with the defined envelope. */
     private GridCoverage2D crop(GridCoverage2D gc, GeneralEnvelope envelope) {
         final GeneralEnvelope oldEnvelope = (GeneralEnvelope) gc.getEnvelope();
         // intersect the envelopes in order to prepare for cropping the coverage
         // down to the neded resolution
         final GeneralEnvelope intersectionEnvelope = new GeneralEnvelope(envelope);
         intersectionEnvelope.setCoordinateReferenceSystem(envelope.getCoordinateReferenceSystem());
-        intersectionEnvelope.intersect((GeneralEnvelope) oldEnvelope);
+        intersectionEnvelope.intersect(oldEnvelope);
 
         // Do we have something to show? After the crop I could get a null
         // coverage which would mean nothing to show.
@@ -970,21 +954,13 @@ public class MosaicTest extends GridProcessingTestBase {
 
         // crop
         final ParameterValueGroup param =
-                (ParameterValueGroup)
-                        processor.getOperation("CoverageCrop").getParameters().clone();
+                processor.getOperation("CoverageCrop").getParameters().clone();
         param.parameter("source").setValue(gc);
         param.parameter("Envelope").setValue(intersectionEnvelope);
         return (GridCoverage2D) processor.doOperation(param, GeoTools.getDefaultHints());
     }
 
-    /**
-     * Method for mosaicking two input images and setting the final BoundingBox
-     *
-     * @param coverages
-     * @param renderingEnvelope
-     * @param hints
-     * @return
-     */
+    /** Method for mosaicking two input images and setting the final BoundingBox */
     private GridCoverage2D mosaic(
             List<GridCoverage2D> coverages, GeneralEnvelope renderingEnvelope, Hints hints) {
         // setup the grid geometry
@@ -1009,8 +985,8 @@ public class MosaicTest extends GridProcessingTestBase {
             }
 
             MathTransform2D mt = coverages.get(0).getGridGeometry().getCRSToGrid2D();
-            Rectangle rasterSpaceEnvelope;
-            rasterSpaceEnvelope = CRS.transform(mt, targetEnvelope).toRectangle2D().getBounds();
+            Rectangle rasterSpaceEnvelope =
+                    CRS.transform(mt, targetEnvelope).toRectangle2D().getBounds();
             GridEnvelope2D gridRange = new GridEnvelope2D(rasterSpaceEnvelope);
             GridGeometry2D gridGeometry = new GridGeometry2D(gridRange, targetEnvelope);
 
@@ -1060,7 +1036,7 @@ public class MosaicTest extends GridProcessingTestBase {
         ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
 
         // Creation of a List of the input Sources
-        List<GridCoverage2D> sources = new ArrayList<GridCoverage2D>(2);
+        List<GridCoverage2D> sources = new ArrayList<>(2);
         sources.add(coverage1);
         // Setting of the sources
         param.parameter("Sources").setValue(sources);
@@ -1082,5 +1058,73 @@ public class MosaicTest extends GridProcessingTestBase {
 
         // Coverage and RenderedImage disposal
         disposeCoveragePlanarImage(mosaic);
+    }
+
+    @Test
+    public void testPreserveROI() throws Exception {
+        // Creates coverages with model space coordinates, mind the ROI, it's in raster space
+        // The two coverages are side by side, the ROIs cover the second half of the first
+        // image, and the first half of the second:
+        // +---------------+---------------+
+        // |       xxxxxxxx|xxxxxxxx       |
+        // |       xxxxxxxx|xxxxxxxx       |
+        // |       xxxxxxxx|xxxxxxxx       |
+        // |       xxxxxxxx|xxxxxxxx       |
+        // |       xxxxxxxx|xxxxxxxx       |
+        // +---------------|---------------|
+        GridCoverage2D c1 =
+                createGradientCoverage(0, 0, 50, 50, new ROIShape(new Rectangle(25, 0, 25, 50)));
+        GridCoverage2D c2 =
+                createGradientCoverage(50, 0, 50, 50, new ROIShape(new Rectangle(0, 0, 25, 50)));
+
+        // setup the mosaic
+        ParameterValueGroup param = processor.getOperation("Mosaic").getParameters();
+        List<GridCoverage2D> sources = new ArrayList<>(2);
+        sources.add(c1);
+        sources.add(c2);
+        param.parameter("Sources").setValue(sources);
+
+        GridCoverage2D mosaic = (GridCoverage2D) processor.doOperation(param);
+
+        Object roiObject = mosaic.getRenderedImage().getProperty("roi");
+        assertThat(roiObject, CoreMatchers.instanceOf(ROI.class));
+
+        ROI roi = (ROI) roiObject;
+        assertFalse(roi.contains(15, 5));
+        assertFalse(roi.contains(15, 45));
+        assertTrue(roi.contains(45, 5));
+        assertTrue(roi.contains(45, 45));
+        assertTrue(roi.contains(55, 5));
+        assertTrue(roi.contains(55, 45));
+        assertFalse(roi.contains(85, 5));
+        assertFalse(roi.contains(85, 45));
+    }
+
+    /**
+     * Creates a grid coverage with real world coordinates x0, y0, and given width and height. The
+     * raster backing it has the same dimensions, but it's always located in the origin.
+     */
+    public GridCoverage2D createGradientCoverage(int x0, int y0, int width, int height, ROI roi) {
+        final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        final WritableRaster raster = (WritableRaster) image.getData();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                raster.setSample(x, y, 0, x + y);
+            }
+        }
+        image.setData(raster);
+        PlanarImage pi = PlanarImage.wrapRenderedImage(image);
+        Map<String, Object> coverageProperties = new HashMap<>();
+        if (roi != null) {
+            pi.setProperty("roi", roi);
+            CoverageUtilities.setROIProperty(coverageProperties, roi);
+        }
+        return GRID_COVERAGE_FACTORY.create(
+                "Test coverage",
+                pi,
+                new Envelope2D(DefaultEngineeringCRS.GENERIC_2D, x0, y0, width, height),
+                null,
+                null,
+                coverageProperties);
     }
 }

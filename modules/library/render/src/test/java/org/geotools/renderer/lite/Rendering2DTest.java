@@ -16,7 +16,8 @@
  */
 package org.geotools.renderer.lite;
 
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
@@ -24,7 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-import junit.framework.TestCase;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.memory.MemoryDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -55,6 +55,8 @@ import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.UserLayer;
 import org.geotools.test.TestData;
 import org.geotools.xml.styling.SLDParser;
+import org.junit.Assert;
+import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -76,7 +78,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 
 /** @author jamesm */
-public class Rendering2DTest extends TestCase {
+public class Rendering2DTest {
 
     /** The logger for the rendering module. */
     private static final Logger LOGGER =
@@ -96,16 +98,12 @@ public class Rendering2DTest extends TestCase {
 
     static final String COLLECTION = "collfeature";
 
-    protected static final Map rendererHints = new HashMap();
+    protected static final Map<Object, Object> rendererHints = new HashMap<>();
 
     protected static final FilterFactory filterFactory = CommonFactoryFinder.getFilterFactory(null);
 
     {
-        rendererHints.put("optimizedDataLoadingEnabled", Boolean.valueOf(true));
-    }
-
-    public Rendering2DTest(java.lang.String testName) {
-        super(testName);
+        rendererHints.put("optimizedDataLoadingEnabled", Boolean.TRUE);
     }
 
     Style loadTestStyle() throws IOException {
@@ -127,12 +125,12 @@ public class Rendering2DTest extends TestCase {
 
         Rule rule = sFac.createRule();
         rule.symbolizers().add(polysym(sFac));
-        FeatureTypeStyle fts = sFac.createFeatureTypeStyle(new Rule[] {rule});
+        FeatureTypeStyle fts = sFac.createFeatureTypeStyle(rule);
         fts.featureTypeNames().add(new NameImpl("polygonfeature"));
 
         Rule rule1 = sFac.createRule();
         rule.symbolizers().add(polysym(sFac));
-        FeatureTypeStyle fts1 = sFac.createFeatureTypeStyle(new Rule[] {rule1});
+        FeatureTypeStyle fts1 = sFac.createFeatureTypeStyle(rule1);
         fts1.featureTypeNames().add(new NameImpl("polygonfeature"));
 
         Rule rule2 = sFac.createRule();
@@ -175,26 +173,12 @@ public class Rendering2DTest extends TestCase {
     }
 
     private PolygonSymbolizer polysym(StyleFactory sFac) throws IllegalFilterException {
-        Stroke myStroke;
         PolygonSymbolizer polysym = sFac.createPolygonSymbolizer();
         Fill myFill = sFac.getDefaultFill();
         myFill.setColor(filterFactory.literal("#ff0000"));
         polysym.setFill(myFill);
-        myStroke = sFac.getDefaultStroke();
+        Stroke myStroke = sFac.getDefaultStroke();
         myStroke.setColor(filterFactory.literal("#0000ff"));
-        myStroke.setWidth(filterFactory.literal(Integer.valueOf(2)));
-        polysym.setStroke(myStroke);
-        return polysym;
-    }
-
-    private PolygonSymbolizer polysym1(StyleFactory sFac) throws IllegalFilterException {
-        Stroke myStroke;
-        PolygonSymbolizer polysym = sFac.createPolygonSymbolizer();
-        Fill myFill = sFac.getDefaultFill();
-        myFill.setColor(filterFactory.literal("#00ff00"));
-        polysym.setFill(myFill);
-        myStroke = sFac.getDefaultStroke();
-        myStroke.setColor(filterFactory.literal("#00ff00"));
         myStroke.setWidth(filterFactory.literal(Integer.valueOf(2)));
         polysym.setStroke(myStroke);
         return polysym;
@@ -266,6 +250,7 @@ public class Rendering2DTest extends TestCase {
         return data.getFeatureSource(typeName).getFeatures();
     }
 
+    @Test
     public void testSimplePolygonRender() throws Exception {
 
         LOGGER.finer("starting rendering2DTest");
@@ -329,6 +314,7 @@ public class Rendering2DTest extends TestCase {
     //
     // }
 
+    @Test
     public void testSimpleLineRender() throws Exception {
 
         // ////////////////////////////////////////////////////////////////////
@@ -379,6 +365,7 @@ public class Rendering2DTest extends TestCase {
         RendererBaseTest.showRender("testSimpleLineRender", renderer, 1000, env);
     }
 
+    @Test
     public void testSimplePointRender() throws Exception {
 
         // ////////////////////////////////////////////////////////////////////
@@ -429,6 +416,7 @@ public class Rendering2DTest extends TestCase {
         RendererBaseTest.showRender("testSimplePointRender", renderer, 1000, env);
     }
 
+    @Test
     public void testReprojectionWithPackedCoordinateSequence() throws Exception {
 
         // same as the datasource test, load in some features into a table
@@ -493,7 +481,7 @@ public class Rendering2DTest extends TestCase {
         // Set the new AOI
         //
         // //
-        final ReferencedEnvelope env = (ReferencedEnvelope) map.getMaxBounds();
+        final ReferencedEnvelope env = map.getMaxBounds();
         final ReferencedEnvelope bounds =
                 new ReferencedEnvelope(JTS.transform(env, null, t, 10), crs);
 
@@ -502,6 +490,7 @@ public class Rendering2DTest extends TestCase {
         LOGGER.finer(stringBuffer.toString());
     }
 
+    @Test
     public void testLineReprojection() throws Exception {
         // ///////////////////////////////////////////////////////////////////
         //
@@ -573,6 +562,7 @@ public class Rendering2DTest extends TestCase {
         RendererBaseTest.showRender("testLineReprojection", renderer, 1000, newbounds);
     }
 
+    @Test
     public void testPointReprojection() throws Exception {
 
         // ///////////////////////////////////////////////////////////////////
@@ -654,9 +644,8 @@ public class Rendering2DTest extends TestCase {
      * Tests the layer definition query behavior as implemented by StreamingRenderer.
      *
      * <p>This method relies on the features created on createTestFeatureCollection()
-     *
-     * @throws Exception
      */
+    @Test
     public void testDefinitionQueryProcessing() throws Exception {
 
         // LOGGER.info("starting definition query test");
@@ -773,6 +762,7 @@ public class Rendering2DTest extends TestCase {
 
     }
 
+    @Test
     public void testDefinitionQuerySLDProcessing() throws Exception {
         // final SimpleFeatureCollection ft = createTestDefQueryFeatureCollection();
         // final Style style = createDefQueryTestStyle();
@@ -841,92 +831,6 @@ public class Rendering2DTest extends TestCase {
 
     }
 
-    private SimpleFeatureCollection createTestDefQueryFeatureCollection() throws Exception {
-        MemoryDataStore data = new MemoryDataStore();
-        SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-        builder.setName("querytest");
-        builder.add("id", String.class);
-        builder.add("point", Point.class);
-        builder.add("line", LineString.class);
-        builder.add("polygon", Polygon.class);
-        SimpleFeatureType type = builder.buildFeatureType();
-
-        GeometryFactory gf = new GeometryFactory();
-        SimpleFeature f;
-        LineString l;
-        Polygon p;
-
-        l = line(gf, new int[] {20, 20, 100, 20, 100, 100});
-        p = (Polygon) l.convexHull();
-        f =
-                SimpleFeatureBuilder.build(
-                        type, new Object[] {"ft1", point(gf, 20, 20), l, p}, "test.1");
-        data.addFeature(f);
-
-        l = line(gf, new int[] {130, 130, 110, 110, 110, 130, 30, 130});
-        p = (Polygon) l.convexHull();
-        f =
-                SimpleFeatureBuilder.build(
-                        type, new Object[] {"ft2", point(gf, 130, 130), l, p}, "test.2");
-        data.addFeature(f);
-
-        l = line(gf, new int[] {150, 150, 190, 140, 190, 190});
-        p = (Polygon) l.convexHull();
-        f =
-                SimpleFeatureBuilder.build(
-                        type, new Object[] {"ft3", point(gf, 150, 150), l, p}, "test.3");
-        data.addFeature(f);
-
-        String typeName = type.getTypeName();
-        return data.getFeatureSource(typeName).getFeatures();
-    }
-
-    private Style createDefQueryTestStyle() throws IllegalFilterException {
-        StyleFactory sFac = CommonFactoryFinder.getStyleFactory();
-
-        PointSymbolizer pointsym = sFac.createPointSymbolizer();
-        pointsym.setGraphic(sFac.getDefaultGraphic());
-        pointsym.setGeometryPropertyName("point");
-
-        Rule rulep = sFac.createRule();
-        rulep.symbolizers().add(pointsym);
-        FeatureTypeStyle ftsP = sFac.createFeatureTypeStyle();
-        ftsP.rules().add(rulep);
-        ftsP.featureTypeNames().add(new NameImpl("querytest"));
-
-        LineSymbolizer linesym = sFac.createLineSymbolizer();
-        linesym.setGeometryPropertyName("line");
-
-        Stroke myStroke = sFac.getDefaultStroke();
-        myStroke.setColor(filterFactory.literal("#0000ff"));
-        myStroke.setWidth(filterFactory.literal(Integer.valueOf(3)));
-        LOGGER.info("got new Stroke " + myStroke);
-        linesym.setStroke(myStroke);
-
-        Rule rule2 = sFac.createRule();
-        rule2.symbolizers().add(linesym);
-        FeatureTypeStyle ftsL = sFac.createFeatureTypeStyle();
-        ftsL.rules().add(rule2);
-        ftsL.featureTypeNames().add(new NameImpl("querytest"));
-
-        PolygonSymbolizer polysym = sFac.createPolygonSymbolizer();
-        polysym.setGeometryPropertyName("polygon");
-        Fill myFill = sFac.getDefaultFill();
-        myFill.setColor(filterFactory.literal("#ff0000"));
-        polysym.setFill(myFill);
-        polysym.setStroke(sFac.getDefaultStroke());
-        Rule rule = sFac.createRule();
-        rule.symbolizers().add(polysym);
-        FeatureTypeStyle ftsPoly = sFac.createFeatureTypeStyle(new Rule[] {rule});
-        // ftsPoly.setRules(new Rule[]{rule});
-        ftsPoly.featureTypeNames().add(new NameImpl("querytest"));
-
-        Style style = sFac.createStyle();
-        style.featureTypeStyles().addAll(Arrays.asList(ftsPoly, ftsL, ftsP));
-
-        return style;
-    }
-
     public LineString line(final GeometryFactory gf, int[] xy) {
         Coordinate[] coords = new Coordinate[xy.length / 2];
 
@@ -979,7 +883,7 @@ public class Rendering2DTest extends TestCase {
             Polygon polyg = geomFac.createPolygon(ring, null);
             return polyg;
         } catch (TopologyException te) {
-            fail("Error creating sample polygon for testing " + te);
+            Assert.fail("Error creating sample polygon for testing " + te);
         }
         return null;
     }
@@ -990,7 +894,7 @@ public class Rendering2DTest extends TestCase {
             Geometry lineString = buildShiftedGeometry(makeSampleLineString(geomFac), 50, 50);
             return geomFac.createGeometryCollection(new Geometry[] {polyg, lineString});
         } catch (TopologyException te) {
-            fail("Error creating sample polygon for testing " + te);
+            Assert.fail("Error creating sample polygon for testing " + te);
         }
         return null;
     }
@@ -998,9 +902,9 @@ public class Rendering2DTest extends TestCase {
     private LinearRing makeSampleLinearRing(final GeometryFactory geomFac) {
         try {
             Polygon polyg = (Polygon) buildShiftedGeometry(makeSamplePolygon(geomFac), 0, 100);
-            return (LinearRing) polyg.getExteriorRing();
+            return polyg.getExteriorRing();
         } catch (TopologyException te) {
-            fail("Error creating sample polygon for testing " + te);
+            Assert.fail("Error creating sample polygon for testing " + te);
         }
         return null;
     }
@@ -1008,9 +912,7 @@ public class Rendering2DTest extends TestCase {
     private Geometry buildShiftedGeometry(Geometry g, double shiftX, double shiftY) {
         Geometry clone = g.copy();
         Coordinate[] coords = clone.getCoordinates();
-        final int length = coords.length;
-        for (int i = 0; i < length; i++) {
-            Coordinate coord = coords[i];
+        for (Coordinate coord : coords) {
             coord.x += shiftX;
             coord.y += shiftY;
         }
@@ -1018,11 +920,8 @@ public class Rendering2DTest extends TestCase {
         return clone;
     }
 
-    /**
-     * I am not sure this is really correct. We should check it with more care.
-     *
-     * @throws Exception
-     */
+    /** I am not sure this is really correct. We should check it with more care. */
+    @Test
     public void testScaleCalc() throws Exception {
 
         // 1388422.8746916912, 639551.3924667436
@@ -1061,6 +960,7 @@ public class Rendering2DTest extends TestCase {
         // assertTrue(Math.abs(102355 - s) < 10); // 102355.1639202933
     }
 
+    @Test
     public void testRenderEmptyLine() throws SchemaException, IllegalAttributeException {
         GeometryFactory gf = new GeometryFactory();
         StyleBuilder sb = new StyleBuilder();
@@ -1076,6 +976,7 @@ public class Rendering2DTest extends TestCase {
         renderEmptyGeometry(f, style);
     }
 
+    @Test
     public void testRenderEmptyCollection() throws SchemaException, IllegalAttributeException {
         GeometryFactory gf = new GeometryFactory();
         StyleBuilder sb = new StyleBuilder();
@@ -1083,14 +984,13 @@ public class Rendering2DTest extends TestCase {
                 DataUtilities.createType("emptyPolygon", "geom:MultiPolygon,name:String");
         SimpleFeature f =
                 SimpleFeatureBuilder.build(
-                        pointType,
-                        new Object[] {gf.createMultiPolygon((Polygon[]) null), "name"},
-                        null);
+                        pointType, new Object[] {gf.createMultiPolygon(null), "name"}, null);
         Style style = sb.createStyle(sb.createPolygonSymbolizer());
 
         renderEmptyGeometry(f, style);
     }
 
+    @Test
     public void testRenderCollectionWithEmptyItems()
             throws SchemaException, IllegalAttributeException {
         GeometryFactory gf = new GeometryFactory();
@@ -1115,6 +1015,7 @@ public class Rendering2DTest extends TestCase {
         renderEmptyGeometry(f, style);
     }
 
+    @Test
     public void testRenderPolygonEmptyRings() throws SchemaException, IllegalAttributeException {
         GeometryFactory gf = new GeometryFactory();
         StyleBuilder sb = new StyleBuilder();
@@ -1138,6 +1039,7 @@ public class Rendering2DTest extends TestCase {
         renderEmptyGeometry(f, style);
     }
 
+    @Test
     public void testMixedEmptyMultiLine() throws SchemaException, IllegalAttributeException {
         GeometryFactory gf = new GeometryFactory();
         StyleBuilder sb = new StyleBuilder();
@@ -1168,7 +1070,7 @@ public class Rendering2DTest extends TestCase {
                     public void errorOccurred(Exception e) {
                         java.util.logging.Logger.getGlobal()
                                 .log(java.util.logging.Level.INFO, "", e);
-                        fail(
+                        Assert.fail(
                                 "Got an exception during rendering, this should not happen, "
                                         + "not even with emtpy geometries");
                     }

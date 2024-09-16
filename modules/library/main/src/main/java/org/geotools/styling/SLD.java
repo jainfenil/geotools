@@ -164,12 +164,7 @@ public class SLD {
         }
     }
 
-    /**
-     * Sets the Colour for the given Line symbolizer
-     *
-     * @param symbolizer
-     * @param colour
-     */
+    /** Sets the Colour for the given Line symbolizer */
     public static void setLineColour(LineSymbolizer symbolizer, Color colour) {
         if (symbolizer == null || colour == null) {
             return;
@@ -546,12 +541,7 @@ public class SLD {
         return color(symbolizer);
     }
 
-    /**
-     * Sets the Colour for the point symbolizer
-     *
-     * @param style
-     * @param colour
-     */
+    /** Sets the Colour for the point symbolizer */
     public static void setPointColour(Style style, Color colour) {
         if (style == null) {
             return;
@@ -938,8 +928,7 @@ public class SLD {
                                 if (rgb != null) {
                                     return sf.createChannelSelection(rgb);
                                 } else {
-                                    return sf.createChannelSelection(
-                                            new SelectedChannelType[] {gray});
+                                    return sf.createChannelSelection(gray);
                                 }
                             }
                         };
@@ -1054,7 +1043,6 @@ public class SLD {
     /**
      * Retrieve the opacity from the provided fill; or return the default.
      *
-     * @param fill
      * @return opacity from the above fill; or return the Fill.DEFAULT value
      */
     public static double opacity(Fill fill) {
@@ -1465,9 +1453,7 @@ public class SLD {
             return null;
         }
 
-        for (int i = 0; i < styles.length; i++) {
-            Style style = styles[i];
-
+        for (Style style : styles) {
             if (featureTypeStyle(style, schema) != null) {
                 return style;
             }
@@ -1541,15 +1527,15 @@ public class SLD {
      */
     public static Style[] styles(StyledLayerDescriptor sld) {
         StyledLayer[] layers = sld.getStyledLayers();
-        List<Style> styles = new ArrayList<Style>();
+        List<Style> styles = new ArrayList<>();
 
-        for (int i = 0; i < layers.length; i++) {
-            if (layers[i] instanceof UserLayer) {
-                UserLayer layer = (UserLayer) layers[i];
+        for (StyledLayer styledLayer : layers) {
+            if (styledLayer instanceof UserLayer) {
+                UserLayer layer = (UserLayer) styledLayer;
                 styles.addAll(layer.userStyles());
 
-            } else if (layers[i] instanceof NamedLayer) {
-                NamedLayer layer = (NamedLayer) layers[i];
+            } else if (styledLayer instanceof NamedLayer) {
+                NamedLayer layer = (NamedLayer) styledLayer;
                 styles.addAll(layer.styles());
             }
         }
@@ -1565,9 +1551,9 @@ public class SLD {
      */
     public static FeatureTypeStyle[] featureTypeStyles(StyledLayerDescriptor sld) {
         Style[] style = styles(sld);
-        List<FeatureTypeStyle> fts = new ArrayList<FeatureTypeStyle>();
-        for (int i = 0; i < style.length; i++) {
-            fts.addAll(style[i].featureTypeStyles());
+        List<FeatureTypeStyle> fts = new ArrayList<>();
+        for (Style value : style) {
+            fts.addAll(value.featureTypeStyles());
         }
         return fts.toArray(new FeatureTypeStyle[0]);
     }
@@ -1584,8 +1570,8 @@ public class SLD {
             StyledLayerDescriptor sld, SimpleFeatureType type) {
         // alternatively, we could use a StyleVisitor here
         Style[] styles = styles(sld);
-        for (int i = 0; i < styles.length; i++) {
-            for (FeatureTypeStyle fts : styles[i].featureTypeStyles()) {
+        for (Style style : styles) {
+            for (FeatureTypeStyle fts : style.featureTypeStyles()) {
                 if (type.getTypeName().equalsIgnoreCase(fts.getName())) {
                     return fts;
                 }
@@ -1603,9 +1589,9 @@ public class SLD {
      */
     public static Style defaultStyle(StyledLayerDescriptor sld) {
         Style[] style = styles(sld);
-        for (int i = 0; i < style.length; i++) {
-            if (style[i].isDefault()) {
-                return style[i];
+        for (Style value : style) {
+            if (value.isDefault()) {
+                return value;
             }
         }
         // no default, so just grab the first one
@@ -1621,7 +1607,7 @@ public class SLD {
      * @param rule the rule
      * @return array of filters
      */
-    public static Filter[] filters(Rule[] rule) {
+    public static Filter[] filters(Rule... rule) {
         Filter[] filter = new Filter[rule.length];
         for (int i = 0; i < rule.length; i++) {
             filter[i] = rule[0].getFilter();
@@ -1647,15 +1633,15 @@ public class SLD {
      * @return an array of unique rules
      */
     public static Rule[] rules(Style style) {
-        Set<Rule> ruleSet = new HashSet<Rule>();
+        Set<Rule> ruleSet = new HashSet<>();
         for (FeatureTypeStyle fts : style.featureTypeStyles()) {
             ruleSet.addAll(fts.rules());
         }
 
-        if (ruleSet.size() > 0) {
-            return ruleSet.toArray(new Rule[0]);
-        } else {
+        if (ruleSet.isEmpty()) {
             return new Rule[0];
+        } else {
+            return ruleSet.toArray(new Rule[0]);
         }
     }
 
@@ -1666,17 +1652,17 @@ public class SLD {
      * @return an array of unique symbolizers
      */
     public static Symbolizer[] symbolizers(Style style) {
-        Set<Symbolizer> symbolizers = new HashSet<Symbolizer>();
+        Set<Symbolizer> symbolizers = new HashSet<>();
         for (FeatureTypeStyle fts : style.featureTypeStyles()) {
             for (Rule rule : fts.rules()) {
                 symbolizers.addAll(rule.symbolizers());
             }
         }
 
-        if (symbolizers.size() > 0) {
-            return symbolizers.toArray(new Symbolizer[0]);
-        } else {
+        if (symbolizers.isEmpty()) {
             return new Symbolizer[0];
+        } else {
+            return symbolizers.toArray(new Symbolizer[0]);
         }
     }
 
@@ -1687,13 +1673,13 @@ public class SLD {
      * @return an array of unique symbolizers
      */
     public static Symbolizer[] symbolizers(Rule rule) {
-        Set<Symbolizer> symbolizers = new HashSet<Symbolizer>();
+        Set<Symbolizer> symbolizers = new HashSet<>();
         symbolizers.addAll(rule.symbolizers());
 
-        if (symbolizers.size() > 0) {
-            return symbolizers.toArray(new Symbolizer[0]);
-        } else {
+        if (symbolizers.isEmpty()) {
             return new Symbolizer[0];
+        } else {
+            return symbolizers.toArray(new Symbolizer[0]);
         }
     }
 
@@ -1704,21 +1690,21 @@ public class SLD {
      * @return an array of unique colour names
      */
     public static String[] colors(Style style) {
-        Set<String> colorSet = new HashSet<String>();
+        Set<String> colorSet = new HashSet<>();
 
         for (FeatureTypeStyle fts : style.featureTypeStyles()) {
             for (Rule rule : fts.rules()) {
                 String[] color = colors(rule);
-                for (int j = 0; j < color.length; j++) {
-                    colorSet.add(color[j]);
+                for (String s : color) {
+                    colorSet.add(s);
                 }
             }
         }
 
-        if (colorSet.size() > 0) {
-            return colorSet.toArray(new String[0]);
-        } else {
+        if (colorSet.isEmpty()) {
             return new String[0];
+        } else {
+            return colorSet.toArray(new String[0]);
         }
     }
 
@@ -1729,7 +1715,7 @@ public class SLD {
      * @return an array of unique colour names
      */
     public static String[] colors(Rule rule) {
-        Set<String> colorSet = new HashSet<String>();
+        Set<String> colorSet = new HashSet<>();
 
         Color color = null;
         for (Symbolizer sym : rule.symbolizers()) {
@@ -1751,10 +1737,10 @@ public class SLD {
             }
         }
 
-        if (colorSet.size() > 0) {
-            return colorSet.toArray(new String[0]);
-        } else {
+        if (colorSet.isEmpty()) {
             return new String[0];
+        } else {
+            return colorSet.toArray(new String[0]);
         }
     }
 
@@ -2113,7 +2099,7 @@ public class SLD {
             rule.symbolizers().add(sym);
         }
 
-        FeatureTypeStyle fts = sf.createFeatureTypeStyle(new Rule[] {rule});
+        FeatureTypeStyle fts = sf.createFeatureTypeStyle(rule);
 
         Style style = sf.createStyle();
         style.featureTypeStyles().add(fts);

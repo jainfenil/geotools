@@ -47,12 +47,11 @@ public class S3GeoTiffFormat extends GeoTiffFormat {
     private static final Logger LOGGER = Logger.getLogger(S3GeoTiffFormat.class.getName());
 
     private static final DefaultParameterDescriptor<String> AWS_REGION =
-            new DefaultParameterDescriptor<String>(
-                    "AwsRegion", String.class, (String[]) null, "US_EAST_1");
+            new DefaultParameterDescriptor<>("AwsRegion", String.class, null, "US_EAST_1");
 
     public S3GeoTiffFormat() {
         writeParameters = null;
-        mInfo = new HashMap<String, String>();
+        mInfo = new HashMap<>();
         mInfo.put("name", "S3GeoTiff");
         mInfo.put(
                 "description", "Tagged Image File Format with Geographic information hosted on S3");
@@ -86,8 +85,9 @@ public class S3GeoTiffFormat extends GeoTiffFormat {
                 prop = new Properties();
                 String property = System.getProperty(S3Connector.S3_GEOTIFF_CONFIG_PATH);
                 if (property != null) {
-                    InputStream resourceAsStream = new FileInputStream(property);
-                    prop.load(resourceAsStream);
+                    try (InputStream resourceAsStream = new FileInputStream(property)) {
+                        prop.load(resourceAsStream);
+                    }
                 } else {
                     LOGGER.severe(
                             "Properties are missing! The system property 's3.properties.location' should be set "

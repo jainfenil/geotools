@@ -19,11 +19,12 @@ package org.geotools.xs.bindings;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 import javax.xml.namespace.QName;
+import org.apache.commons.lang3.StringUtils;
 import org.geotools.util.Converters;
 import org.geotools.xml.impl.DatatypeConverterImpl;
 import org.geotools.xs.XS;
+import org.geotools.xs.XSUtils;
 import org.geotools.xsd.InstanceComponent;
 import org.geotools.xsd.SimpleBinding;
 
@@ -99,7 +100,9 @@ public class XSDateTimeBinding implements SimpleBinding {
      * @generated modifiable
      */
     public Timestamp parse(InstanceComponent instance, Object value) throws Exception {
-        Calendar calendar = DatatypeConverterImpl.getInstance().parseDateTime((String) value, true);
+        String str = (String) value;
+        if (StringUtils.isEmpty(str)) return null;
+        Calendar calendar = DatatypeConverterImpl.getInstance().parseDateTime(str, true);
         Timestamp dateTime = new Timestamp(calendar.getTimeInMillis());
         return dateTime;
     }
@@ -113,9 +116,9 @@ public class XSDateTimeBinding implements SimpleBinding {
      */
     public String encode(Object object, String value) {
         final Date timestamp = Converters.convert(object, Date.class);
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        cal.clear();
-        cal.setTimeInMillis(timestamp.getTime());
-        return DatatypeConverterImpl.getInstance().printDateTime(cal);
+        Calendar calendar = XSUtils.getConfiguredCalendar();
+        calendar.clear();
+        calendar.setTimeInMillis(timestamp.getTime());
+        return DatatypeConverterImpl.getInstance().printDateTime(calendar);
     }
 }

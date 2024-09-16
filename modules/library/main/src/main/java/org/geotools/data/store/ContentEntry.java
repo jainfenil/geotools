@@ -69,7 +69,7 @@ public class ContentEntry {
         this.typeName = typeName;
         this.dataStore = dataStore;
 
-        this.state = new ConcurrentHashMap<Transaction, ContentState>();
+        this.state = new ConcurrentHashMap<>();
 
         // create a state for the auto commit transaction
         ContentState autoState = dataStore.createContentState(this);
@@ -110,7 +110,7 @@ public class ContentEntry {
             return state.get(transaction);
         } else {
             ContentState auto = state.get(Transaction.AUTO_COMMIT);
-            ContentState copy = (ContentState) auto.copy();
+            ContentState copy = auto.copy();
             Transaction t = (transaction != null ? transaction : Transaction.AUTO_COMMIT);
             copy.setTransaction(t);
             state.put(t, copy);
@@ -150,11 +150,7 @@ public class ContentEntry {
         }
     }
 
-    /**
-     * Removes a closed transaction from the state cache.
-     *
-     * @param transaction
-     */
+    /** Removes a closed transaction from the state cache. */
     public void clearTransaction(Transaction transaction) {
         if (state.containsKey(transaction)) {
             state.remove(transaction);

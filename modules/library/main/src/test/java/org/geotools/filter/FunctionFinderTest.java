@@ -16,7 +16,10 @@
  */
 package org.geotools.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import org.geotools.factory.CommonFactoryFinder;
@@ -63,7 +66,7 @@ public class FunctionFinderTest {
     @Test
     public void testAllFunctionDescriptions() throws Exception {
         List<FunctionName> all = finder.getAllFunctionDescriptions();
-        assertTrue(all.size() > 0);
+        assertFalse(all.isEmpty());
         boolean found = false;
         for (FunctionName name : all) {
             if (name.getName().equals("Interpolate")) {

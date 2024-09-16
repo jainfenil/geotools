@@ -111,7 +111,7 @@ public class MongoInferredMapper extends AbstractCollectionMapper {
 
         // remove geometries from indexed and mapped sets
         indexedFields.removeAll(indexedGeometries);
-        for (String mappedProperty : new ArrayList<String>(mappedFields.keySet())) {
+        for (String mappedProperty : new ArrayList<>(mappedFields.keySet())) {
             for (String indexedGeometry : indexedGeometries) {
                 if (mappedProperty.startsWith(indexedGeometry)) {
                     mappedFields.remove(mappedProperty);
@@ -181,12 +181,14 @@ public class MongoInferredMapper extends AbstractCollectionMapper {
 
     private Map<String, Class> generateMappedFields(DBCollection collection) {
         final Map<String, Class> resultMap = new HashMap<>();
+        @SuppressWarnings("PMD.CloseResource") // closed in findMappings
         final DBCursor idsCursor = obtainCursorByIds(collection);
         Map<String, Class> idsMappings =
                 idsCursor != null
                         ? MongoComplexUtilities.findMappings(idsCursor)
                         : Collections.emptyMap();
         int max = schemainitParams.getMaxObjects() - idsMappings.size();
+        @SuppressWarnings("PMD.CloseResource") // closed in findMappings
         final DBCursor maxObjectsCursor = obtainCursorByMaxObjects(collection, max);
         if (maxObjectsCursor != null)
             resultMap.putAll(MongoComplexUtilities.findMappings(maxObjectsCursor));

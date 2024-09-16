@@ -225,7 +225,7 @@ public abstract class VPFInputStream implements FileConstants, DataTypesDefiniti
      * @exception IOException if an error occurs
      */
     public List readAllRows() throws IOException {
-        LinkedList list = new LinkedList();
+        LinkedList<VPFRow> list = new LinkedList<>();
         try {
             setPosition(1);
         } catch (IOException exc) {
@@ -499,8 +499,7 @@ public abstract class VPFInputStream implements FileConstants, DataTypesDefiniti
     }
 
     protected DirectPosition[] readCoord2DDouble(int instancesCount) throws IOException {
-        DirectPosition[] result = null;
-        result = new DirectPosition[instancesCount];
+        DirectPosition[] result = new DirectPosition[instancesCount];
 
         for (int inx = 0; inx < instancesCount; inx++) {
             result[inx] = new DirectPosition2D(readDouble(), readDouble());
@@ -510,8 +509,7 @@ public abstract class VPFInputStream implements FileConstants, DataTypesDefiniti
     }
 
     protected DirectPosition[] readCoord3DDouble(int instancesCount) throws IOException {
-        DirectPosition[] result = null;
-        result = new DirectPosition[instancesCount];
+        DirectPosition[] result = new DirectPosition[instancesCount];
 
         for (int inx = 0; inx < instancesCount; inx++) {
             result[inx] = new GeneralDirectPosition(readDouble(), readDouble(), readDouble());

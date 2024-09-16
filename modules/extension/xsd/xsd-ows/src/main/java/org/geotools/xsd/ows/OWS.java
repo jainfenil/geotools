@@ -48,6 +48,10 @@ public final class OWS extends XSD {
     public static final QName AddressType = new QName("http://www.opengis.net/ows", "AddressType");
 
     /** @generated */
+    public static final QName BasicIdentificationType =
+            new QName("http://www.opengis.net/ows/1.1", "BasicIdentificationType");
+
+    /** @generated */
     public static final QName BoundingBoxType =
             new QName("http://www.opengis.net/ows", "BoundingBoxType");
 
@@ -277,7 +281,7 @@ public final class OWS extends XSD {
         return instance;
     }
 
-    protected void addDependencies(Set dependencies) {
+    protected void addDependencies(Set<XSD> dependencies) {
         dependencies.add(XLINK.getInstance());
         dependencies.add(OGC.getInstance());
     }

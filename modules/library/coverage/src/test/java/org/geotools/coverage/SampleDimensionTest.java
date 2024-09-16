@@ -65,9 +65,6 @@ public final class SampleDimensionTest {
     /** The offset value for the sample dimension to test. */
     private static final double offset = 5.0;
 
-    /** Small number for comparaison. */
-    private static final double EPS = 1E-7;
-
     /** The sample dimension to test. */
     private GridSampleDimension test;
 
@@ -100,8 +97,7 @@ public final class SampleDimensionTest {
     /** Tests the {@link GridSampleDimension}'s cloning. */
     @Test
     public void testCloningSampleDimension() {
-        GridSampleDimension original;
-        original = test;
+        GridSampleDimension original = test;
         assertEquals("Temperature", original.getDescription().toString());
 
         GridSampleDimension wrapped = new WrappedGridSampleDimension(original);
